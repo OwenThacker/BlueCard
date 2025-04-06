@@ -3,6 +3,7 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 from flask import Flask
 import secrets
+import os
 
 # Create Flask server
 server = Flask(__name__)
@@ -25,5 +26,6 @@ app.layout = html.Div([
 ])
 
 # Run the app
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 8050))
+    app.run_server(debug=True, host='0.0.0.0', port=port)

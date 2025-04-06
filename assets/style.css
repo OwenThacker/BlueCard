@@ -1,0 +1,508 @@
+/* Base styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+
+  /* Navigation bar styles */
+.nav-bar {
+    display: flex;
+    background-color: #001233;
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .nav-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+  
+  .nav-item {
+    padding: 0;
+    margin: 0;
+  }
+  
+  .nav-link {
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    padding: 16px 24px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+  
+  .nav-link.active {
+    background-color: #0466c8;
+    color: white;
+  }
+  
+  .nav-icon {
+    margin-right: 8px;
+    font-size: 18px;
+  }
+  
+  /* Mobile navigation adjustments */
+  .mobile-nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 12px 16px;
+  }
+  
+  /* Mobile responsive styles */
+  @media (max-width: 768px) {
+    .nav-bar {
+      flex-direction: column;
+    }
+    
+    .mobile-nav-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    
+    .mobile-nav-toggle-text {
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .nav-menu {
+      flex-direction: column;
+      width: 100%;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .nav-menu.active {
+      max-height: 500px;
+    }
+    
+    .nav-link {
+      padding: 14px 20px;
+    }
+  }
+  
+  /* Breadcrumb styles */
+  .breadcrumb {
+    display: flex;
+    padding: 12px 24px;
+    background-color: #f5f7fa;
+    margin: 0;
+    list-style: none;
+    font-size: 13px;
+    color: #666;
+    border-bottom: 1px solid #e5e9f0;
+  }
+  
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .breadcrumb-item:not(:last-child):after {
+    content: "›";
+    margin: 0 8px;
+    color: #aaa;
+  }
+  
+  .breadcrumb-link {
+    color: #0466c8;
+    text-decoration: none;
+  }
+  
+  .breadcrumb-link:hover {
+    text-decoration: underline;
+  }
+  
+  .breadcrumb-current {
+    font-weight: 500;
+    color: #333;
+  }
+  
+  /* Dashboard header */
+  .dashboard-header {
+    background-color: white;
+    padding: 16px 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .dashboard-title {
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0466c8;
+  }
+  
+  .dashboard-logo {
+    font-size: 28px;
+  }
+  
+  /* Main container */
+  .main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  
+  /* Section title */
+  .section-title {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  /* Metric container */
+  .metric-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  /* Summary tiles */
+  .summary-tile {
+    background-color: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .summary-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .summary-icon {
+    font-size: 22px;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .icon-blue {
+    background-color: rgba(4, 102, 200, 0.1);
+    color: #0466c8;
+  }
+  
+  .icon-red {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+  }
+  
+  .icon-green {
+    background-color: rgba(56, 176, 0, 0.1);
+    color: #38b000;
+  }
+  
+  .icon-orange {
+    background-color: rgba(244, 140, 6, 0.1);
+    color: #f48c06;
+  }
+  
+  .summary-value {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 8px 0;
+  }
+  
+  .summary-subtitle {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+  }
+  
+  /* Row container */
+  .row-container {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  
+  /* Columns */
+  .column-left, .column-right {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .column-left-small {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .column-right-large {
+    flex: 2;
+    min-width: 300px;
+  }
+  
+  /* Dashboard cards */
+  .dashboard-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  .card-header {
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .card-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .card-content {
+    padding: 16px;
+    height: calc(100% - 60px);
+  }
+  
+  /* Insights container */
+  .insights-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .column-insight {
+    flex: 1;
+    min-width: 220px;
+  }
+  
+  /* Info and warning boxes */
+  .info-box, .warning-box {
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #0466c8;
+    background-color: rgba(4, 102, 200, 0.05);
+  }
+  
+  .warning-box {
+    border-left: 3px solid #f48c06;
+    background-color: rgba(244, 140, 6, 0.05);
+  }
+  
+  .info-message {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  /* Transaction list */
+  .transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .transaction-item:last-child {
+    border-bottom: none;
+  }
+  
+  .transaction-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(4, 102, 200, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 16px;
+  }
+  
+  .transaction-details {
+    flex: 1;
+  }
+  
+  .transaction-title {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .transaction-meta {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+  
+  .transaction-amount {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .row-container {
+      flex-direction: column;
+    }
+    
+    .column-left, .column-right, .column-left-small, .column-right-large {
+      width: 100%;
+    }
+  }
+
+    /* income */
+    /* Card styling */
+.card {
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+
+.card-header {
+    background-color: rgba(0,0,0,0.02);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    padding: 12px 16px;
+}
+
+.card-title {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+/* Stats styling */
+.stat-card {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: rgba(0,0,0,0.02);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+/* Income source cards */
+.income-source-card {
+    cursor: grab;
+    position: relative;
+    border-left: 4px solid #4E79A7;
+}
+
+.income-source-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.income-source-card .income-actions {
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+.income-source-card:hover .income-actions {
+    opacity: 1;
+}
+
+.drag-handle {
+    cursor: move;
+    color: #aaa;
+    user-select: none;
+}
+
+.income-sources-list {
+    min-height: 200px;
+}
+
+/* Color indicators for income categories */
+.income-source-card[data-category="employment"] {
+    border-left-color: #4E79A7;
+}
+
+.income-source-card[data-category="business"] {
+    border-left-color: #F28E2B;
+}
+
+.income-source-card[data-category="investments"] {
+    border-left-color: #59A14F;
+}
+
+.income-source-card[data-category="rental"] {
+    border-left-color: #B07AA1;
+}
+
+.income-source-card[data-category="freelance"] {
+    border-left-color: #76B7B2;
+}
+
+.income-source-card[data-category="other"] {
+    border-left-color: #9C755F;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .income-actions {
+        opacity: 1 !important;
+    }
+}
+
+/* Graph container */
+.graph-container {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Form styling improvements */
+.form-label {
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.form-check-inline .form-check-input {
+    margin-right: 0.3rem;
+}
+
+.form-check-inline .form-check-label {
+    margin-right: 1rem;
+}

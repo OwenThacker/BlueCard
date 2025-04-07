@@ -506,3 +506,69 @@ body {
 .form-check-inline .form-check-label {
     margin-right: 1rem;
 }
+
+/* filepath: c:\Users\Owent\Desktop\CV\BlueCard\assets\styles.css */
+.chart-container {
+  border-radius: 8px;
+  overflow: hidden;
+}
+.expense-card {
+  transition: transform 0.2s ease;
+  border-radius: 8px;
+  border: none;
+}
+.expense-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+.accent-radio:checked {
+  background-color: #3498DB;
+  border-color: #3498DB;
+}
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.nav-tabs .nav-link.active {
+  color: #3498DB;
+  border-color: #3498DB;
+  border-bottom-width: 2px;
+  font-weight: 500;
+}
+.nav-tabs .nav-link {
+  color: #95A5A6;
+}
+
+/* Progress Wheel Container */
+.progress-wheel-container {
+  text-align: center;
+}
+
+/* Insights Container */
+.insights-container {
+  background-color: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+/* Insight Item */
+.insight-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Text Colors */
+.text-success {
+  color: #38b000;
+}
+
+.text-danger {
+  color: #d00000;
+}
+
+.text-primary {
+  color: #0466c8;
+}

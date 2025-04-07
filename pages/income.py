@@ -139,59 +139,58 @@ def create_timeline_chart(income_sources):
             font=dict(size=14, color="#555")
         )
         fig.update_layout(
-            height=400, 
+            height=400,
             margin=dict(t=10, b=10, l=10, r=10),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
         return fig
 
-    # Generate date range for x-axis with actual dates
+    # Generate date range for x-axis
     today = datetime.now()
     past_dates = [(today - timedelta(days=30 * i)) for i in range(12, 0, -1)]
     future_dates = [(today + timedelta(days=30 * i)) for i in range(0, 13)]
-    
-    # Combine past and future dates
     all_dates = past_dates + future_dates[1:]  # Exclude duplicate of current month
     date_labels = [date.strftime("%b %Y") for date in all_dates]
-    date_keys = [f"month_{i}" for i in range(-12, 13)]
-    
+
     # Initialize data for each source
     data = []
     total_monthly = np.zeros(len(date_labels))
-    forecasted_total = np.zeros(len(date_labels))
-    
-    # Custom color palette
-    colors = px.colors.qualitative.Bold
+
+    # Blue color palette
+    blue_palette = [
+        '#E6F2FF', '#B3D9FF', '#80BFFF', '#4DA6FF', '#1A8CFF',
+        '#0073E6', '#0059B3', '#004080', '#00264D', '#001F3F'
+    ]
 
     # Create forecast for each source
     for i, source in enumerate(income_sources):
         monthly_amount = source.get("monthly_amount", 0)
         name = source.get("name", "Income")
-        color_idx = i % len(colors)
-        
+        color_idx = i % len(blue_palette)
+
         # Initialize y values with the default monthly amount
         y_values = [monthly_amount] * len(date_labels)
-        
+
         # Update with historical values if they exist
         historical_data = source.get("historical_data", {})
-        
+
         # Check if we have enough historical data for Prophet forecasting
         if len(historical_data) >= 3 and source.get("consistency", "fixed") == "variable":
             # Prepare data for Prophet
             prophet_data = []
-            
+
             # Convert historical data to Prophet format
-            for j, key in enumerate(date_keys[:12]):  # Only historical keys
+            for j, key in enumerate([f"month_{k}" for k in range(-12, 0)]):  # Only historical keys
                 if key in historical_data:
                     ds = past_dates[j]
                     y = historical_data[key]
                     prophet_data.append({"ds": ds, "y": y})
-            
+
             if prophet_data:
                 # Create Prophet DataFrame
                 prophet_df = pd.DataFrame(prophet_data)
-                
+
                 # Initialize and fit Prophet model
                 m = Prophet(
                     changepoint_prior_scale=0.1,  # Lower value to reduce sensitivity to trend changes
@@ -202,37 +201,45 @@ def create_timeline_chart(income_sources):
                     interval_width=0.95
                 )
                 m.fit(prophet_df)
-                
+
                 # Create future dataframe for forecasting
                 future = pd.DataFrame({"ds": all_dates})
                 forecast = m.predict(future)
-                
+
                 # Update y_values with forecasted values
                 for j, (date, yhat) in enumerate(zip(all_dates, forecast["yhat"])):
                     y_values[j] = max(0, yhat)  # Ensure no negative values
         else:
             # For fixed income or insufficient historical data, use actual values and then constant
-            for j, key in enumerate(date_keys[:12]):  # Only historical keys
+            for j, key in enumerate([f"month_{k}" for k in range(-12, 0)]):  # Only historical keys
                 if key in historical_data:
                     y_values[j] = historical_data[key]
-        
+
         # Add this source to the plot
         data.append(go.Scatter(
             x=date_labels,
             y=y_values,
             mode='lines+markers',
             name=name,
-            line=dict(width=2, color=colors[color_idx]),
-            marker=dict(size=6, color=colors[color_idx])
+            line=dict(width=2, color=blue_palette[color_idx]),
+            marker=dict(size=6, color=blue_palette[color_idx])
         ))
 
         # Add to total
         total_monthly += np.array(y_values)
 
-    # Find index where date is today
-    forecast_start_idx = 12  # This is where our historical data ends (after 12 months in the past)
-    
-    # Add vertical line to separate historical from forecast
+    # Add total line
+    data.append(go.Scatter(
+        x=date_labels,
+        y=total_monthly,
+        mode='lines+markers',
+        name='Total Income',
+        line=dict(width=4, color='#004080'),  # Dark blue for total
+        marker=dict(size=8, color='#004080')
+    ))
+
+    # Add vertical line to indicate "Today"
+    forecast_start_idx = 12  # Index where forecast begins
     data.append(go.Scatter(
         x=[date_labels[forecast_start_idx], date_labels[forecast_start_idx]],
         y=[0, max(total_monthly) * 1.1],
@@ -241,34 +248,24 @@ def create_timeline_chart(income_sources):
         line=dict(width=2, color='rgba(0, 0, 0, 0.5)', dash='dash'),
         hoverinfo='none'
     ))
-    
-    # Add annotation for History and Forecast
+
+    # Add annotations for "Historical Data" and "Forecast"
     annotations = [
         dict(
             x=date_labels[max(0, forecast_start_idx - 3)],
             y=max(total_monthly) * 1.05,
             text="Historical Data",
             showarrow=False,
-            font=dict(size=12, color='rgba(0, 0, 0, 0.7)')
+            font=dict(size=12, color='#004080')
         ),
         dict(
             x=date_labels[min(len(date_labels) - 1, forecast_start_idx + 3)],
             y=max(total_monthly) * 1.05,
             text="Forecast",
             showarrow=False,
-            font=dict(size=12, color='rgba(0, 0, 0, 0.7)')
+            font=dict(size=12, color='#004080')
         )
     ]
-
-    # Add total line
-    data.append(go.Scatter(
-        x=date_labels,
-        y=total_monthly,
-        mode='lines+markers',
-        name='Total Income',
-        line=dict(width=4, color='rgba(0, 0, 0, 0.8)'),
-        marker=dict(size=8, color='rgba(0, 0, 0, 0.8)')
-    ))
 
     # Create the figure
     fig = go.Figure(data=data)
@@ -284,40 +281,29 @@ def create_timeline_chart(income_sources):
             yanchor="bottom",
             y=1.02,
             xanchor="right",
-            x=1
+            x=1,
+            font=dict(size=12, color="#333")
         ),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0.02)',
         font=dict(family="Arial, sans-serif"),
         xaxis=dict(
             showgrid=True,
-            gridcolor='rgba(0,0,0,0.05)',
-            tickangle=-45  # Angle the date labels for better readability
+            gridcolor='rgba(0,0,0,0.1)',
+            tickangle=-45,  # Angle the date labels for better readability
+            tickfont=dict(size=10, color="#333")
         ),
         yaxis=dict(
             showgrid=True,
-            gridcolor='rgba(0,0,0,0.05)',
-            tickprefix="$"
+            gridcolor='rgba(0,0,0,0.1)',
+            tickprefix="$",
+            tickfont=dict(size=10, color="#333")
         ),
         annotations=annotations
     )
-    
-    # Add a marker for "Today"
-    fig.add_annotation(
-        x=date_labels[forecast_start_idx],
-        y=0,
-        text="Today",
-        showarrow=True,
-        arrowhead=1,
-        arrowsize=1,
-        arrowwidth=2,
-        arrowcolor="rgba(0, 0, 0, 0.5)",
-        font=dict(size=10, color="rgba(0, 0, 0, 0.7)")
-    )
-    
+
     return fig
 
-# Function to generate income source cards
 # Function to generate income source cards
 def generate_income_cards(income_sources):
     if not income_sources:
@@ -514,9 +500,6 @@ layout = html.Div([
             html.Li(html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/", className="nav-link"), className="nav-item"),
             html.Li(html.A([html.Span("📈", className="nav-icon"), "Income"], href="/income", className="nav-link active"), className="nav-item"),
             html.Li(html.A([html.Span("💰", className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("📝", className="nav-icon"), "Transactions"], href="/transactions", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("🎯", className="nav-icon"), "Goals"], href="/goals", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("⚙️", className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
         ], className="nav-menu", id="nav-menu")
     ], className="nav-bar"),
 
@@ -531,7 +514,7 @@ layout = html.Div([
         html.H2("Income Management", className="section-title mb-4"),
 
         dbc.Row([
-            # Summary Dashboard Section
+            # Left Column: Summary and Pie Chart
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader([
@@ -554,7 +537,7 @@ layout = html.Div([
                             ], width=6)
                         ], className="mb-3"),
 
-                        # Income Graph
+                        # Income Pie Chart
                         dbc.Row([
                             dbc.Col([
                                 html.Div([
@@ -562,12 +545,18 @@ layout = html.Div([
                                               config={'displayModeBar': False})
                                 ], className="graph-container")
                             ], width=12)
-                        ])
+                        ]),
+
+                        # Togglable Buttons for Forecast and What-If Analysis
+                        dbc.ButtonGroup([
+                            dbc.Button("Income Forecast", id="toggle-forecast", color="primary", outline=True, className="toggle-button"),
+                            dbc.Button("What-If Analysis", id="toggle-whatif", color="primary", outline=True, className="toggle-button"),
+                        ], className="mt-3"),
                     ])
-                ], className="shadow-sm mb-4")
+                ], className="shadow-sm mb-4"),
             ], width=12, lg=5),
 
-            # Add Income Source Section
+            # Right Column: Add Income Source
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader([
@@ -617,6 +606,25 @@ layout = html.Div([
 
                         dbc.Row([
                             dbc.Col([
+                                html.Label("Category", className="form-label fw-bold"),
+                                dcc.Dropdown(
+                                    id="income-category",
+                                    options=[
+                                        {"label": "Employment", "value": "employment"},
+                                        {"label": "Business", "value": "business"},
+                                        {"label": "Investments", "value": "investments"},
+                                        {"label": "Rental", "value": "rental"},
+                                        {"label": "Freelance", "value": "freelance"},
+                                        {"label": "Other", "value": "other"}
+                                    ],
+                                    value="employment",
+                                    className="mb-4"
+                                ),
+                            ], width=12),
+                        ]),
+
+                        dbc.Row([
+                            dbc.Col([
                                 html.Label("Income Type", className="form-label fw-bold"),
                                 dbc.RadioItems(
                                     id="income-type",
@@ -644,91 +652,89 @@ layout = html.Div([
                             ], width=6),
                         ]),
 
-                        dbc.Row([
-                            dbc.Col([
-                                html.Label("Category", className="form-label fw-bold"),
-                                dcc.Dropdown(
-                                    id="income-category",
-                                    options=[
-                                        {"label": "Employment", "value": "employment"},
-                                        {"label": "Business", "value": "business"},
-                                        {"label": "Investments", "value": "investments"},
-                                        {"label": "Rental", "value": "rental"},
-                                        {"label": "Freelance", "value": "freelance"},
-                                        {"label": "Other", "value": "other"}
-                                    ],
-                                    value="employment",
-                                    className="mb-4"
-                                ),
-                            ], width=12),
-                        ]),
-
                         html.Button("Add Income Source", id="add-income-button", className="btn btn-primary w-100"),
-                        html.Div(id="income-add-success-message", className="mt-3")
+                        html.Div(id="income-add-success-message", className="mt-3"),
                     ])
                 ], className="shadow-sm mb-4 h-100")
             ], width=12, lg=7),
         ]),
 
-        # Income Sources List
+        # New Row for Collapsible Sections
         dbc.Row([
             dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader([
-                        html.H4("Your Income Sources", className="text-primary m-0 d-flex align-items-center"),
-                        html.Small("Manage your income streams", className="text-muted")
-                    ], className="d-flex flex-column"),
-                    dbc.CardBody([
-                        html.Div(id="income-sources-container", className="income-sources-list"),
-                        html.Div(id="no-income-sources-message", className="text-center py-4")
-                    ])
-                ], className="shadow-sm")
-            ], width=12)
-        ]),
-
-        # Income Timeline and What-If Analysis
-        dbc.Row([
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader([
-                        html.H4("Income Forecast", className="text-primary m-0"),
-                        html.Small("Your projected income over the next 12 months", className="text-muted")
-                    ], className="d-flex flex-column"),
-                    dbc.CardBody([
-                        dcc.Graph(id="income-timeline-chart", config={'displayModeBar': False})
-                    ])
-                ], className="shadow-sm my-4")
-            ], width=12, lg=8),
-
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader([
-                        html.H4("What-If Analysis", className="text-primary m-0"),
-                        html.Small("See how losing an income source affects you", className="text-muted")
-                    ], className="d-flex flex-column"),
-                    dbc.CardBody([
-                        html.Label("Remove Income Source", className="form-label fw-bold"),
-                        dcc.Dropdown(id="income-source-whatif-dropdown", className="mb-3"),
-                        html.Div(id="whatif-analysis-result", className="py-3")
-                    ])
-                ], className="shadow-sm my-4 h-100")
-            ], width=12, lg=4)
-        ]),
-        
-        # Historical Income Modal
-        dbc.Modal(
-            [
-                dbc.ModalHeader(dbc.ModalTitle("Edit Historical Income")),
-                dbc.ModalBody(id="historical-income-modal-body"),
-                dbc.ModalFooter(
-                    dbc.Button("Close", id="close-history-modal", className="ms-auto", n_clicks=0)
+                dbc.Collapse(
+                    dbc.Card([
+                        dbc.CardHeader(html.H4("Income Forecast", className="text-primary m-0")),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    dcc.Graph(id="income-timeline-chart", config={'displayModeBar': False})
+                                ], width=12)
+                            ])
+                        ])
+                    ], className="shadow-sm mb-4"),
+                    id="collapse-forecast",
+                    is_open=False
                 ),
-            ],
-            id="historical-income-modal",
-            size="lg",
-            is_open=False,
-        ),
-    ], className="container-fluid mt-4"),
+
+                dbc.Collapse(
+                    dbc.Card([
+                        dbc.CardHeader(html.H4("What-If Analysis", className="text-primary m-0")),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Label("Remove Income Source", className="form-label fw-bold"),
+                                    dcc.Dropdown(
+                                        id="income-source-whatif-dropdown",
+                                        className="mb-3",
+                                        style={"width": "100%"}
+                                    )
+                                ], width=12)
+                            ]),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Div(id="whatif-analysis-result", className="py-3")
+                                ], width=12)
+                            ])
+                        ])
+                    ], className="shadow-sm mb-4"),
+                    id="collapse-whatif",
+                    is_open=False
+                ),
+            ], width=12),
+
+                # Income Sources List
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardHeader([
+                                html.H4("Your Income Sources", className="text-primary m-0 d-flex align-items-center"),
+                                html.Small("Manage your income streams", className="text-muted")
+                            ], className="d-flex flex-column"),
+                            dbc.CardBody([
+                                html.Div(id="income-sources-container", className="income-sources-list"),
+                                html.Div(id="no-income-sources-message", className="text-center py-4")
+                            ])
+                        ], className="shadow-sm")
+                    ], width=12)
+                ]),
+
+                # Historical Income Modal
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader(dbc.ModalTitle("Edit Historical Income")),
+                        dbc.ModalBody(id="historical-income-modal-body"),
+                        dbc.ModalFooter(
+                            dbc.Button("Close", id="close-history-modal", className="ms-auto", n_clicks=0)
+                        ),
+                    ],
+                    id="historical-income-modal",
+                    size="lg",
+                    is_open=False,
+                ),
+
+            ]),
+        ], className="container-fluid mt-4"),
 
     # Client-side storage - use localStorage for better persistence across tab changes
     dcc.Store(id="income-sources-store", storage_type="local"),
@@ -1145,3 +1151,38 @@ def toggle_mobile_nav(n_clicks, current_class):
 
 # Import json for pattern-matching callbacks
 import json
+
+@callback(
+    [Output("collapse-forecast", "is_open"),
+     Output("collapse-whatif", "is_open")],
+    [Input("toggle-forecast", "n_clicks"),
+     Input("toggle-whatif", "n_clicks")],
+    [State("collapse-forecast", "is_open"),
+     State("collapse-whatif", "is_open")],
+    prevent_initial_call=True
+)
+def toggle_sections(forecast_clicks, whatif_clicks, forecast_open, whatif_open):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if triggered_id == "toggle-forecast":
+        return not forecast_open, False
+    elif triggered_id == "toggle-whatif":
+        return False, not whatif_open
+
+    return False, False
+
+@callback(
+    [Output("toggle-forecast", "outline"),
+     Output("toggle-whatif", "outline")],
+    [Input("collapse-forecast", "is_open"),
+     Input("collapse-whatif", "is_open")],
+)
+def update_button_styles(forecast_open, whatif_open):
+    # If the section is open, remove the outline (highlight the button)
+    forecast_outline = not forecast_open
+    whatif_outline = not whatif_open
+    return forecast_outline, whatif_outline

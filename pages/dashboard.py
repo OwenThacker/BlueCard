@@ -1,5 +1,6 @@
 import dash
 from dash import html, dcc, callback, Input, Output, register_page
+import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
 import datetime
@@ -77,26 +78,19 @@ layout = html.Div([
                 ], href="/expenses", className="nav-link")
             ], className="nav-item"),
             
-            html.Li([
-                html.A([
-                    html.Span("📝", className="nav-icon"),
-                    "Transactions"
-                ], href="/transactions", className="nav-link")
-            ], className="nav-item"),
+            # html.Li([
+            #     html.A([
+            #         html.Span("🎯", className="nav-icon"),
+            #         "Goals"
+            #     ], href="/goals", className="nav-link")
+            # ], className="nav-item"),
             
-            html.Li([
-                html.A([
-                    html.Span("🎯", className="nav-icon"),
-                    "Goals"
-                ], href="/goals", className="nav-link")
-            ], className="nav-item"),
-            
-            html.Li([
-                html.A([
-                    html.Span("⚙️", className="nav-icon"),
-                    "Settings"
-                ], href="/settings", className="nav-link")
-            ], className="nav-item")
+            # html.Li([
+            #     html.A([
+            #         html.Span("⚙️", className="nav-icon"),
+            #         "Settings"
+            #     ], href="/settings", className="nav-link")
+            # ], className="nav-item")
         ], className="nav-menu", id="nav-menu")
     ], className="nav-bar"),
 
@@ -200,6 +194,7 @@ layout = html.Div([
     dcc.Store(id='expenses-store', storage_type='local'),
     dcc.Store(id='total-expenses-store', storage_type='local'),
     dcc.Store(id='savings-target-store', storage_type='local'),
+    dcc.Store(id='Transaction-store', storage_type='local'),
     
     # Include CSS
     html.Link(rel="stylesheet", href="/assets/style.css")
@@ -310,7 +305,6 @@ def update_summary_tiles(total_income, total_expenses, savings_target):
             ], className="summary-header"),
             html.P(f"${savings_target:,.2f}", className="summary-value"),
             html.P(f"Your savings target is {savings_progress:.1f}% of total income after expenses", className="summary-subtitle"),
-            html.P(f"Daily spending budget to meet target: ${(total_income - total_expenses)/30 - savings_target/30:,.2f}", className="summary-subtitle"),
         ], className="summary-tile")
     ]
 
@@ -363,7 +357,7 @@ def update_expense_breakdown(total_expenses, expenses_store, session_data):
     fig.update_traces(textposition='outside', textinfo='percent+label')
     fig.update_layout(
         margin=dict(t=10, b=10, l=10, r=10),
-        height=350,
+        height=450,
         legend=dict(orientation="h", y=-0.2),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
@@ -375,30 +369,52 @@ def update_expense_breakdown(total_expenses, expenses_store, session_data):
 
 @callback(
     Output('savings-progress-content', 'children'),
+    Input('Transaction-store', 'data'),
     Input('total-income-store', 'data'),
-    Input('total-expenses-store', 'data'),
-    Input('savings-target-store', 'data')
+    Input('savings-target-store', 'data'),
+    prevent_initial_call=True
 )
-def update_savings_progress(total_income, total_expenses, saving_target):
-
-    if saving_target <= 0:
+def update_savings_progress_with_adjusted_budget(transaction_data, total_income, savings_target):
+    if not transaction_data or total_income is None or savings_target is None:
         return html.Div([
-            html.P("Set a savings target in the Expenses tab to track your progress.", className="info-message")
+            html.P("Add transactions and set a savings goal to track your progress.", className="info-message")
         ], className="info-box")
-    
-    # Calculate savings progress using total_income and total_expenses
-    if total_income is None:
-        total_income = total_income  # Fallback to salary if total_income not available
-    if total_expenses is None:
-        total_expenses = 0
-        
-    remaining = total_income - total_expenses if total_income > 0 else 0
-    savings_percent = min((saving_target / remaining * 100), 100) / 100 if remaining > 0 and saving_target > 0 else 0
-    
-    # Create gauge chart
-    fig = go.Figure(go.Indicator(
+
+    # Convert transaction data to a DataFrame
+    df_transactions = pd.DataFrame(transaction_data)
+    df_transactions['due_date'] = pd.to_datetime(df_transactions['due_date'])
+
+    # Filter transactions for the current month
+    today = datetime.datetime.now()
+    start_of_month = today.replace(day=1)
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    end_of_month = today.replace(day=days_in_month)
+
+    current_month_transactions = df_transactions[
+        (df_transactions['due_date'] >= start_of_month) & (df_transactions['due_date'] <= today)
+    ]
+
+    # Calculate total spent so far
+    total_spent = current_month_transactions['amount'].sum()
+
+    # Calculate remaining budget
+    remaining_budget = total_income - total_spent - savings_target
+    days_left = (end_of_month - today).days + 1  # Include today
+    adjusted_daily_budget = max(0, remaining_budget / days_left)  # Ensure no negative budget
+
+    # Analyze daily spending
+    daily_totals = current_month_transactions.groupby(current_month_transactions['due_date'].dt.date)['amount'].sum()
+    daily_budget = (total_income - savings_target) / days_in_month
+    days_under_budget = len(daily_totals[daily_totals <= daily_budget])
+    days_over_budget = len(daily_totals[daily_totals > daily_budget])
+
+    # Calculate savings progress
+    savings_progress = min((savings_target / (total_income - total_spent)) * 100, 100) if total_income > total_spent else 0
+
+    # Create progress wheel (gauge chart)
+    progress_wheel = go.Figure(go.Indicator(
         mode="gauge+number",
-        value=savings_percent * 100,
+        value=savings_progress,
         domain={'x': [0, 1], 'y': [0, 1]},
         gauge={
             'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#404040"},
@@ -413,48 +429,87 @@ def update_savings_progress(total_income, total_expenses, saving_target):
             ],
         },
         title={
-            'text': f"${saving_target:,.2f}",
-            'font': {'size': 20, 'color': '#262626', 'family': 'Inter, sans-serif'}
+            'text': "Savings Progress",
+            'font': {'size': 17, 'color': '#262626', 'family': 'Inter, sans-serif'}
         },
         number={
             'suffix': "%",
-            'font': {'size': 26, 'color': '#0466c8', 'family': 'Inter, sans-serif'}
+            'font': {'size': 23, 'color': '#0466c8', 'family': 'Inter, sans-serif'}
         }
     ))
-    
-    fig.update_layout(
-        height=300,
+    progress_wheel.update_layout(
+        height=250,
         margin=dict(t=60, b=0, l=30, r=30),
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif")
     )
-    
-    return dcc.Graph(figure=fig, config={'displayModeBar': False})
+
+    # Create simplified insights
+    insights = [
+        html.Div([
+            html.Span("✔️", className="me-2 text-success"),
+            html.Span(f"You stayed under your daily budget on {days_under_budget} day(s).")
+        ], className="insight-item text-success"),
+        html.Div([
+            html.Span("⚠️", className="me-2 text-danger"),
+            html.Span(f"You exceeded your daily budget on {days_over_budget} day(s).")
+        ], className="insight-item text-danger"),
+        html.Div([
+            html.Span("💡", className="me-2 text-primary"),
+            html.Span(f"To achieve your savings goal by {end_of_month.strftime('%b %d')}, your daily budget is ${adjusted_daily_budget:,.2f}.")
+        ], className="insight-item text-primary")
+    ]
+
+    # Combine progress wheel and insights with refined layout
+    return html.Div([
+        html.Div([
+            dcc.Graph(figure=progress_wheel, config={'displayModeBar': False}),
+        ], className="progress-wheel-container mb-4"),
+        html.Div(insights, className="insights-container p-3 border rounded shadow-sm")
+    ], className="savings-progress-card")
 
 @callback(
     Output('recent-activity-content', 'children'),
-    Input('session-data-store', 'data')
+    Input('Transaction-store', 'data'),
+    prevent_initial_call=True
 )
-def update_recent_activity(data):
-    if not data['daily_expenses']:
+def update_recent_activity(transaction_data):
+    if not transaction_data:
         return html.Div([
-            html.P("No recent transactions. Record your spending in the Transactions tab.", className="info-message")
+            html.P("No recent transactions. Record your spending in the Expenses tab.", className="info-message")
         ], className="info-box")
     
-    # Convert to DataFrame and sort
-    df_recent = pd.DataFrame(data['daily_expenses'])
-    df_recent['date'] = pd.to_datetime(df_recent['date'])
-    df_recent = df_recent.sort_values('date', ascending=False).head(5)
-    
+    # Convert transaction data to a DataFrame and sort by date
+    df_recent = pd.DataFrame(transaction_data)
+    df_recent['due_date'] = pd.to_datetime(df_recent['due_date'])
+    df_recent = df_recent.sort_values('due_date', ascending=False).head(5)  # Show the 5 most recent transactions
+
+    # Define category icons
+    category_icons = {
+        "Housing": "🏠",
+        "Transportation": "🚗",
+        "Food": "🍔",
+        "Utilities": "💡",
+        "Health": "💊",
+        "Insurance": "🛡️",
+        "Debt": "💳",
+        "Entertainment": "🎮",
+        "Personal": "🧴",
+        "Education": "📚",
+        "Savings": "💰",
+        "Other": "❓"
+    }
+
     # Create transaction items
     transaction_items = []
     for _, row in df_recent.iterrows():
+        category_icon = category_icons.get(row['category'], "❓")  # Default to "❓" if category not found
         transaction_items.append(html.Div([
             html.Div([
-                html.Div(row['emoji'], className="transaction-icon"),
+                html.Div(category_icon, className="transaction-icon"),  # Dynamic icon
                 html.Div([
                     html.Div(row['description'], className="transaction-title"),
-                    html.Div(pd.to_datetime(row['date']).strftime('%b %d, %Y'), className="transaction-meta")
+                    html.Div(row['due_date'].strftime('%b %d, %Y'), className="transaction-meta")
                 ], className="transaction-details")
             ], style={"display": "flex", "alignItems": "center"}),
             html.Div(f"${row['amount']:.2f}", className="transaction-amount")
@@ -464,39 +519,45 @@ def update_recent_activity(data):
 
 @callback(
     Output('spending-trends-content', 'children'),
-    Input('total-income-store', 'data'),
-    Input('total-expenses-store', 'data'),
-    Input('session-data-store', 'data')
+    Input('Transaction-store', 'data'),
+    prevent_initial_call=True
 )
-def update_spending_trends(total_income, total_expenses, data):
-    if not data['daily_expenses']:
+def update_spending_trends(transaction_data):
+    if not transaction_data:
         return html.Div([
-            html.P("No transaction data available. Record your daily expenses to see trends.", className="info-message")
+            html.P("No transaction data available. Record your spending in the Expenses tab to see trends.", className="info-message")
         ], className="info-box")
     
-    # Convert to DataFrame for analysis
-    df_daily = pd.DataFrame(data['daily_expenses'])
-    df_daily['date'] = pd.to_datetime(df_daily['date'])
+    # Convert transaction data to a DataFrame
+    df_transactions = pd.DataFrame(transaction_data)
+    df_transactions['due_date'] = pd.to_datetime(df_transactions['due_date'])  # Use due_date instead of date_added
     
-    # Group by date and sum amounts
-    daily_totals = df_daily.groupby(df_daily['date'].dt.date)['amount'].sum().reset_index()
-    daily_totals['date'] = pd.to_datetime(daily_totals['date'])
-    daily_totals = daily_totals.sort_values('date')
-    
-    # Calculate daily budget using total_income and total_expenses
-    if total_income is None:
-        total_income = data['salary']  # Fallback to salary if not available
-    if total_expenses is None:
-        total_expenses = 0
-        
-    remaining_after_expenses = total_income - total_expenses
-    daily_budget = (remaining_after_expenses - data['savings_target']) / 30
-    daily_totals['budget_line'] = daily_budget
-    
+    # Debug: Print the input data
+    print("Transaction Data with Due Dates:", df_transactions)
+
+    # Group by due date and sum amounts
+    daily_totals = df_transactions.groupby(df_transactions['due_date'].dt.date)['amount'].sum().reset_index()
+    daily_totals['due_date'] = pd.to_datetime(daily_totals['due_date'])
+    daily_totals = daily_totals.sort_values('due_date')
+
+    # Debug: Print the grouped data
+    print("Daily Totals After Grouping by Due Date:", daily_totals)
+
+    # Ensure daily frequency
+    date_range = pd.date_range(start=daily_totals['due_date'].min(), end=daily_totals['due_date'].max())
+    daily_totals = daily_totals.set_index('due_date').reindex(date_range, fill_value=0).reset_index()
+    daily_totals.columns = ['due_date', 'amount']
+
+    # Debug: Print the reindexed data
+    print("Daily Totals After Reindexing:", daily_totals)
+
+    # Dynamically adjust y-axis range
+    y_max = daily_totals['amount'].max() * 1.2 if not daily_totals.empty else 100
+
     # Create line chart
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=daily_totals['date'],
+        x=daily_totals['due_date'],
         y=daily_totals['amount'],
         mode='lines+markers',
         name='Daily Spending',
@@ -504,38 +565,34 @@ def update_spending_trends(total_income, total_expenses, data):
         marker=dict(size=8, color='#0466c8')
     ))
     
-    # Add budget reference line
-    fig.add_trace(go.Scatter(
-        x=daily_totals['date'],
-        y=daily_totals['budget_line'],
-        mode='lines',
-        name='Daily Budget',
-        line=dict(color='#38b000', width=2, dash='dash')
-    ))
-    
     fig.update_layout(
         margin=dict(t=10, b=10, l=10, r=10),
-        height=250,
+        height=300,
         legend=dict(orientation="h", y=1.1),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif", size=12, color="#404040"),
         xaxis=dict(
-            showgrid=False,
+            showgrid=True,
+            gridcolor='#e5e5e5',
             showline=True,
-            linecolor='#e5e5e5'
+            linecolor='#e5e5e5',
+            title="Date",
+            tickformat="%b %d"
         ),
         yaxis=dict(
             showgrid=True,
             gridcolor='#e5e5e5',
             showline=True,
             linecolor='#e5e5e5',
+            title="Amount ($)",
+            range=[0, y_max],  # Dynamically adjust y-axis range
             tickprefix='$'
         ),
         hovermode="x unified"
     )
     
-    return dcc.Graph(figure=fig, config={'displayModeBar': False})
+    return dcc.Graph(figure=fig, config={'displayModeBar': True})
 
 @callback(
     Output('savings-rate-insight', 'children'),

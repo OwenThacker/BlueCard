@@ -13,7 +13,20 @@ import os
 # from app import app
 
 # Register this file as the dashboard page
-register_page(__name__, path='/', name='Dashboard')
+register_page(__name__, path='/dashboard', name='Dashboard')
+
+COLORS = {
+    'primary': '#2C3E50',
+    'accent': '#3498DB', 
+    'success': '#2ECC71',
+    'white': '#FFFFFF',
+    'light': '#F8F9FA',
+    'warning': '#F39C12',
+    'danger-light': '#e0796e',
+    'danger': '#E74C3C',
+    'gray': '#95A5A6',
+    'dark': '#212529'
+}
 
 # Load session data
 def get_session_data():
@@ -55,13 +68,22 @@ layout = html.Div([
             html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
             html.Span("≡")
         ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
-        
+
+        # Navigation Menu
         html.Ul([
+
+            html.Li([
+                html.A([
+                    html.Span("🏠", className="nav-icon"),
+                    "Home"
+                ], href="/", className="nav-link")
+            ], className="nav-item"),
+
             html.Li([
                 html.A([
                     html.Span("📊", className="nav-icon"),
                     "Dashboard"
-                ], href="/", className="nav-link active")
+                ], href="/dashboard", className="nav-link active")
             ], className="nav-item"),
             
             html.Li([
@@ -76,6 +98,11 @@ layout = html.Div([
                     html.Span("💰", className="nav-icon"),
                     "Expenses"
                 ], href="/expenses", className="nav-link")
+            ], className="nav-item"),
+
+            html.Li([html.A([html.Span("🎯", className="nav-icon"), 
+                            "Savings Analysis"], href="/savings",
+                    className="nav-link")
             ], className="nav-item"),
             
             # html.Li([
@@ -105,7 +132,8 @@ layout = html.Div([
     # Main Content
     html.Div([
         # Summary tiles
-        html.H3("Financial Summary", className="section-title"),
+        html.H3("Financial Summary", className="section-title", 
+                style={'color': COLORS['primary'], 'borderBottom': f'2px solid {COLORS["accent"]}', 'paddingBottom': '10px'}),
         html.Div(id="summary-tiles", className="metric-container"),
         
         html.Div(style={"height": "24px"}),
@@ -166,27 +194,29 @@ layout = html.Div([
         
         # Finance insights
         html.Div([
+        html.Div([
             html.Div([
+                html.H3("Finance Insights", className="card-title")
+            ], className="card-header"),
+            
+            # Restructured insights container with better spacing and layout
+            html.Div([
+                # Each insight gets its own card-like container with proper padding and margins
                 html.Div([
-                    html.H3("Finance Insights", className="card-title")
-                ], className="card-header"),
+                    html.Div(id="savings-rate-insight", className="insight-card")
+                ], className="insight-container"),
                 
                 html.Div([
-                    html.Div([
-                        html.Div(id="savings-rate-insight", className="insight-item")
-                    ], className="column-insight"),
-                    
-                    html.Div([
-                        html.Div(id="budget-balance-insight", className="insight-item")
-                    ], className="column-insight"),
-                    
-                    html.Div([
-                        html.Div(id="spending-trend-insight", className="insight-item")
-                    ], className="column-insight")
-                ], className="insights-container")
-            ], className="dashboard-card")
-        ], className="row-container")
-    ], className="main-container"),
+                    html.Div(id="budget-balance-insight", className="insight-card")
+                ], className="insight-container"),
+                
+                html.Div([
+                    html.Div(id="spending-trend-insight", className="insight-card")
+                ], className="insight-container")
+            ], className="insights-grid")
+        ], className="dashboard-card")
+    ], className="row-container")
+    ], className="main-content-container p-3", style={"width": "100%", "maxWidth": "100%"}),
     
     # Store components for data
     dcc.Store(id='session-data-store', data=get_session_data()),
@@ -197,8 +227,26 @@ layout = html.Div([
     dcc.Store(id='Transaction-store', storage_type='local'),
     
     # Include CSS
-    html.Link(rel="stylesheet", href="/assets/style.css")
-])
+    html.Link(rel="stylesheet", href="/assets/style.css"),
+
+    # Footer
+    html.Footer([
+        html.Div("© 2025 BlueCard Finance. All rights reserved.", className="footer-text"),
+        html.Div([
+            html.A("Privacy Policy", href="#", className="footer-link"),
+            html.Span(" | "),
+            html.A("Terms of Service", href="#", className="footer-link")
+        ], className="footer-links")
+    ], className="dashboard-footer", style={
+        "backgroundColor": "#f8f9fa",
+        "padding": "20px",
+        "textAlign": "center",
+        "fontSize": "14px",
+        "color": "#6c757d",
+        "marginTop": "20px"
+    }),
+
+], style={"width": "100%", "margin": "0", "padding": "0"})
 
 @callback(
     Output("total-income-store", "data", allow_duplicate=True),
@@ -259,7 +307,7 @@ def update_summary_tiles(total_income, total_expenses, savings_target):
 
     # Avoid division by zero errors
     if total_income is None:
-        total_income = 1
+        total_income = 0
     if total_expenses is None:
         total_expenses = 0
 
@@ -438,7 +486,7 @@ def update_savings_progress_with_adjusted_budget(transaction_data, total_income,
         }
     ))
     progress_wheel.update_layout(
-        height=250,
+        height=300,
         margin=dict(t=60, b=0, l=30, r=30),
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif")
@@ -506,14 +554,20 @@ def update_recent_activity(transaction_data):
         category_icon = category_icons.get(row['category'], "❓")  # Default to "❓" if category not found
         transaction_items.append(html.Div([
             html.Div([
-                html.Div(category_icon, className="transaction-icon"),  # Dynamic icon
+                html.Div(category_icon, className="transaction-icon", style={"fontSize": "28px", "marginRight": "15px"}),  # Larger icon
                 html.Div([
-                    html.Div(row['description'], className="transaction-title"),
-                    html.Div(row['due_date'].strftime('%b %d, %Y'), className="transaction-meta")
+                    html.Div(row['description'], className="transaction-title", style={"fontSize": "18px", "fontWeight": "bold"}),
+                    html.Div(row['due_date'].strftime('%b %d, %Y'), className="transaction-meta", style={"fontSize": "14px", "color": "#6c757d"})
                 ], className="transaction-details")
             ], style={"display": "flex", "alignItems": "center"}),
-            html.Div(f"${row['amount']:.2f}", className="transaction-amount")
-        ], className="transaction-item"))
+            html.Div(f"${row['amount']:.2f}", className="transaction-amount", style={"fontSize": "18px", "fontWeight": "bold", "color": "#0466c8"})
+        ], className="transaction-item", style={
+            "padding": "20px",
+            "marginBottom": "15px",
+            "border": "1px solid #e5e5e5",
+            "borderRadius": "10px",
+            "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)"
+        }))
     
     return html.Div(transaction_items)
 
@@ -602,8 +656,12 @@ def update_spending_trends(transaction_data):
 def update_savings_rate_insight(total_income, total_expenses):
     if total_income is None or total_income <= 0:
         return html.Div([
-            html.P("Set your income to see savings rate insights.", className="info-message")
-        ], className="info-box")
+            html.Div("📊", className="insight-icon"),
+            html.Div([
+                html.H4("Savings Rate", className="insight-title"),
+                html.P("Set your income to see savings rate insights.", className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
     
     # Calculate savings rate with total_expenses
     if total_expenses is None:
@@ -613,31 +671,188 @@ def update_savings_rate_insight(total_income, total_expenses):
     
     if savings_rate >= 20:
         return html.Div([
-            html.P([
-                "✓ Excellent Savings Rate"
-            ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#38b000"}),
-            html.P([
-                f"Your savings rate is above 20%, which is excellent for long-term financial health."
-            ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="info-box", style={"borderLeftColor": "#38b000"})
+            html.Div("✓", className="insight-icon success"),
+            html.Div([
+                html.H4("Excellent Savings Rate", className="insight-title success"),
+                html.P([
+                    f"Your savings rate is ",
+                    html.Strong(f"{savings_rate:.1f}%"),
+                    ", which is excellent for long-term financial health."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
     elif savings_rate >= 10:
         return html.Div([
-            html.P([
-                "✓ Good Savings Rate"
-            ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#0466c8"}),
-            html.P([
-                f"Your savings rate is between 10-20%, which is a good foundation."
-            ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="info-box")
+            html.Div("✓", className="insight-icon good"),
+            html.Div([
+                html.H4("Good Savings Rate", className="insight-title good"),
+                html.P([
+                    f"Your savings rate is ",
+                    html.Strong(f"{savings_rate:.1f}%"),
+                    ", which is a good foundation."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
     else:
         return html.Div([
-            html.P([
-                "! Low Savings Rate"
-            ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#f48c06"}),
-            html.P([
-                f"Your savings rate is below 10%. Try to reduce non-essential expenses."
-            ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="warning-box")
+            html.Div("!", className="insight-icon warning"),
+            html.Div([
+                html.H4("Low Savings Rate", className="insight-title warning"),
+                html.P([
+                    f"Your savings rate is only ",
+                    html.Strong(f"{savings_rate:.1f}%"),
+                    ". Try to reduce non-essential expenses."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+
+@callback(
+    Output('budget-balance-insight', 'children', allow_duplicate=True),
+    Input('expenses-store', 'data'),
+    Input('session-data-store', 'data'),
+    prevent_initial_call=True
+)
+def update_budget_balance_insight(expenses_store, data):
+    # First try to use expenses from the expenses-store
+    if expenses_store:
+        expenses = expenses_store
+    # Fall back to session data if expenses-store is empty
+    else:
+        expenses = data.get('expenses', [])
+    
+    if not expenses:
+        return html.Div([
+            html.Div("💼", className="insight-icon"),
+            html.Div([
+                html.H4("Budget Balance", className="insight-title"),
+                html.P("Add expenses in the Expenses tab to get budget balance insights.", className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+    
+    # Find the largest expense category
+    expense_by_category = {}
+    total_expenses = 0
+    for expense in expenses:
+        category = expense["category"]
+        amount = expense["amount"]
+        total_expenses += amount
+        if category in expense_by_category:
+            expense_by_category[category] += amount
+        else:
+            expense_by_category[category] = amount
+    
+    largest_category = max(expense_by_category.items(), key=lambda x: x[1])
+    largest_percent = largest_category[1] / total_expenses * 100
+    
+    if largest_percent > 50:
+        return html.Div([
+            html.Div("!", className="insight-icon warning"),
+            html.Div([
+                html.H4(f"High {largest_category[0]} Expenses", className="insight-title warning"),
+                html.P([
+                    f"{largest_category[0]} makes up ",
+                    html.Strong(f"{largest_percent:.1f}%"),
+                    " of your expenses. Consider rebalancing your budget."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+    else:
+        return html.Div([
+            html.Div("✓", className="insight-icon success"),
+            html.Div([
+                html.H4("Balanced Budget", className="insight-title success"),
+                html.P([
+                    f"Your largest expense category (",
+                    html.Strong(f"{largest_category[0]}"),
+                    f") is {largest_percent:.1f}% of total expenses."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+
+@callback(
+    Output('spending-trend-insight', 'children'),
+    Input('Transaction-store', 'data'),
+    prevent_initial_call=True
+)
+def update_spending_trend_insight(transaction_data):
+    if not transaction_data:
+        return html.Div([
+            html.Div("📈", className="insight-icon"),
+            html.Div([
+                html.H4("Spending Trends", className="insight-title"),
+                html.P("Record daily transactions to get spending trend insights.", className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+
+    # Convert transaction data to a DataFrame
+    df_transactions = pd.DataFrame(transaction_data)
+    df_transactions['due_date'] = pd.to_datetime(df_transactions['due_date'])
+
+    # Group by date and calculate daily totals
+    daily_totals = df_transactions.groupby(df_transactions['due_date'].dt.date)['amount'].sum().reset_index()
+    daily_totals.columns = ['date', 'amount']
+
+    # Get last 7 days and previous 7 days
+    today = datetime.datetime.now().date()
+    last_week = daily_totals[daily_totals['date'] >= (today - datetime.timedelta(days=7))]
+    prev_week = daily_totals[(daily_totals['date'] < (today - datetime.timedelta(days=7))) &
+                             (daily_totals['date'] >= (today - datetime.timedelta(days=14)))]
+
+    # Calculate totals for last week and previous week
+    last_week_total = last_week['amount'].sum() if not last_week.empty else 0
+    prev_week_total = prev_week['amount'].sum() if not prev_week.empty else 0
+
+    # Calculate percentage change
+    if prev_week_total > 0:
+        percent_change = (last_week_total - prev_week_total) / prev_week_total * 100
+    else:
+        percent_change = None
+
+    # Generate insights based on percentage change
+    if percent_change is None:
+        return html.Div([
+            html.Div("📊", className="insight-icon"),
+            html.Div([
+                html.H4("Spending Trends", className="insight-title"),
+                html.P("Not enough data to analyze spending trends.", className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+    elif percent_change > 20:
+        return html.Div([
+            html.Div("!", className="insight-icon warning"),
+            html.Div([
+                html.H4("Spending Increase", className="insight-title warning"),
+                html.P([
+                    "Your spending increased by ",
+                    html.Strong(f"{percent_change:.1f}%"),
+                    " compared to the previous week."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+    elif percent_change < -10:
+        return html.Div([
+            html.Div("✓", className="insight-icon success"),
+            html.Div([
+                html.H4("Reduced Spending", className="insight-title success"),
+                html.P([
+                    "Great job! You reduced spending by ",
+                    html.Strong(f"{abs(percent_change):.1f}%"),
+                    " from last week."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
+    else:
+        return html.Div([
+            html.Div("✓", className="insight-icon good"),
+            html.Div([
+                html.H4("Consistent Spending", className="insight-title good"),
+                html.P([
+                    "Your spending is within ",
+                    html.Strong(f"{abs(percent_change):.1f}%"),
+                    " of last week."
+                ], className="insight-message")
+            ], className="insight-content")
+        ], className="insight-layout")
 
 @callback(
     Output('budget-balance-insight', 'children'),
@@ -692,61 +907,62 @@ def update_budget_balance_insight(expenses_store, data):
         ], className="info-box", style={"borderLeftColor": "#38b000"})
 
 @callback(
-    Output('spending-trend-insight', 'children'),
-    Input('session-data-store', 'data')
+    Output('spending-trend-insight', 'children', allow_duplicate=True),
+    Input('Transaction-store', 'data'),
+    prevent_initial_call=True
 )
-def update_spending_trend_insight(data):
-    if not data['daily_expenses']:
+def update_spending_trend_insight(transaction_data):
+    if not transaction_data:
         return html.Div([
             html.P("Record daily transactions to get spending trend insights.", className="info-message")
         ], className="info-box")
-    
-    # Analyze recent spending trends
-    df_daily = pd.DataFrame(data['daily_expenses'])
-    df_daily['date'] = pd.to_datetime(df_daily['date'])
-    
-    # Get last 7 days vs previous 7 days
+
+    # Convert transaction data to a DataFrame
+    df_transactions = pd.DataFrame(transaction_data)
+    df_transactions['due_date'] = pd.to_datetime(df_transactions['due_date'])
+
+    # Group by date and calculate daily totals
+    daily_totals = df_transactions.groupby(df_transactions['due_date'].dt.date)['amount'].sum().reset_index()
+    daily_totals.columns = ['date', 'amount']
+
+    # Get last 7 days and previous 7 days
     today = datetime.datetime.now().date()
-    last_week = df_daily[df_daily['date'] >= (pd.Timestamp(today) - pd.Timedelta(days=7))]
-    prev_week = df_daily[(df_daily['date'] < (pd.Timestamp(today) - pd.Timedelta(days=7))) & 
-                          (df_daily['date'] >= (pd.Timestamp(today) - pd.Timedelta(days=14)))]
-    
+    last_week = daily_totals[daily_totals['date'] >= (today - datetime.timedelta(days=7))]
+    prev_week = daily_totals[(daily_totals['date'] < (today - datetime.timedelta(days=7))) &
+                             (daily_totals['date'] >= (today - datetime.timedelta(days=14)))]
+
+    # Calculate totals for last week and previous week
     last_week_total = last_week['amount'].sum() if not last_week.empty else 0
     prev_week_total = prev_week['amount'].sum() if not prev_week.empty else 0
-    
+
+    # Calculate percentage change
     if prev_week_total > 0:
         percent_change = (last_week_total - prev_week_total) / prev_week_total * 100
-        
-        if percent_change > 20:
-            return html.Div([
-                html.P([
-                    "! Spending Increase"
-                ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#d00000"}),
-                html.P([
-                    f"Your spending increased by {percent_change:.1f}% compared to previous week."
-                ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-            ], className="warning-box")
-        elif percent_change < -10:
-            return html.Div([
-                html.P([
-                    "✓ Reduced Spending"
-                ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#38b000"}),
-                html.P([
-                    f"Great job! You reduced spending by {abs(percent_change):.1f}% from last week."
-                ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-            ], className="info-box", style={"borderLeftColor": "#38b000"})
-        else:
-            return html.Div([
-                html.P([
-                    "✓ Consistent Spending"
-                ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#0466c8"}),
-                html.P([
-                    f"Your spending is within {abs(percent_change):.1f}% of last week."
-                ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-            ], className="info-box")
+    else:
+        percent_change = None
+
+    # Generate insights based on percentage change
+    if percent_change is None:
+        return html.Div([
+            html.P("Not enough data to analyze spending trends.", className="info-message")
+        ], className="info-box")
+    elif percent_change > 20:
+        return html.Div([
+            html.P("! Spending Increase", style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#d00000"}),
+            html.P(f"Your spending increased by {percent_change:.1f}% compared to the previous week.",
+                   style={"margin": "5px 0 0 0", "fontSize": "13px"})
+        ], className="warning-box")
+    elif percent_change < -10:
+        return html.Div([
+            html.P("✓ Reduced Spending", style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#38b000"}),
+            html.P(f"Great job! You reduced spending by {abs(percent_change):.1f}% from last week.",
+                   style={"margin": "5px 0 0 0", "fontSize": "13px"})
+        ], className="info-box", style={"borderLeftColor": "#38b000"})
     else:
         return html.Div([
-            html.P("Need more data to analyze spending trends.", className="info-message")
+            html.P("✓ Consistent Spending", style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#0466c8"}),
+            html.P(f"Your spending is within {abs(percent_change):.1f}% of last week.",
+                   style={"margin": "5px 0 0 0", "fontSize": "13px"})
         ], className="info-box")
     
 @callback(

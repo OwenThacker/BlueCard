@@ -57,7 +57,8 @@ layout = html.Div([
         ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
 
         html.Ul([
-            html.Li([html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/", className="nav-link")], className="nav-item"),
+            html.Li(html.A([html.Span("🏠", className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
+            html.Li([html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link")], className="nav-item"),
             html.Li([html.A([html.Span("📈", className="nav-icon"), "Income"], href="/income", className="nav-link")], className="nav-item"),
             html.Li([html.A([html.Span("💰", className="nav-icon"), "Expenses"], href="/expenses", className="nav-link")], className="nav-item"),
             html.Li([html.A([html.Span("🎯", className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link active")], className="nav-item"),
@@ -153,18 +154,28 @@ layout = html.Div([
                     ], style={'padding': '20px'})
                 ], style=CARD_STYLE),
                 
-                # Data Tables Section
+                # Data Tables Section - Modified to use dropdown instead of tabs
                 html.Div([
                     html.Div("Data Management", style=HEADER_STYLE),
                     html.Div([
-                        dbc.Tabs([
-                            dbc.Tab([
-                                html.Div(id='savings-table-container', className='mt-3')
-                            ], label="Savings Entries", tab_id="savings-tab"),
-                            dbc.Tab([
-                                html.Div(id='goals-table-container', className='mt-3')
-                            ], label="Goals", tab_id="goals-tab"),
-                        ], id="data-tabs", active_tab="savings-tab")
+                        # Dropdown for selecting data view
+                        html.Div([
+                            html.Label("Select Data View", className="form-label"),
+                            dcc.Dropdown(
+                                id='data-view-dropdown',
+                                options=[
+                                    {'label': 'Hide Tables', 'value': 'none'},
+                                    {'label': 'Savings Entries', 'value': 'savings'},
+                                    {'label': 'Goals', 'value': 'goals'}
+                                ],
+                                value='none',
+                                clearable=False,
+                                className='mb-3'
+                            ),
+                        ]),
+                        
+                        # Container for the selected data view
+                        html.Div(id='data-view-container', className='mt-3')
                     ], style={'padding': '20px'})
                 ], style=CARD_STYLE),
             ], md=4),
@@ -401,11 +412,8 @@ def update_forecast(data, goal_data):
     return fig, forecast_data
 
 
-@callback(
-    Output('savings-table-container', 'children'),
-    Input('savings-store', 'data')
-)
-def render_savings_table(data):
+# Create savings table content
+def create_savings_table(data):
     if not data or not data.get('records'):
         return html.Div([
             html.I(className="fas fa-info-circle mr-2", style={'color': COLORS['accent']}),
@@ -507,12 +515,8 @@ def check_goal_status(goal, forecast_data):
         return "Off Track"
 
 
-@callback(
-    Output('goals-table-container', 'children'),
-    Input('goals-store', 'data'),
-    Input('forecast-data-store', 'data')
-)
-def render_goals_table(data, forecast_data):
+# Create goals table content
+def create_goals_table(data, forecast_data):
     if not data or not data.get('goals'):
         return html.Div([
             html.I(className="fas fa-info-circle mr-2", style={'color': COLORS['accent']}),
@@ -624,6 +628,29 @@ def render_goals_table(data, forecast_data):
     ], style={'padding': '5px'})
 
 
+# New callback to handle the data view dropdown
+@callback(
+    Output('data-view-container', 'children'),
+    Input('data-view-dropdown', 'value'),
+    Input('savings-store', 'data'),
+    Input('goals-store', 'data'),
+    Input('forecast-data-store', 'data')
+)
+def update_data_view(view_type, savings_data, goals_data, forecast_data):
+    if view_type == 'none':
+        return html.Div([
+            html.I(className="fas fa-info-circle mr-2", style={'color': COLORS['accent']}),
+            html.Span("Select a data view from the dropdown above.", className="text-muted")
+        ], className="text-center py-4")
+    elif view_type == 'savings':
+        return create_savings_table(savings_data)
+    elif view_type == 'goals':
+        return create_goals_table(goals_data, forecast_data)
+    
+    # Default empty state
+    return html.Div()
+
+
 @callback(
     Output('savings-store', 'data'),
     Input({'type': 'delete-entry-btn', 'index': ALL}, 'n_clicks'),
@@ -641,8 +668,7 @@ def delete_savings_entry(n_clicks_list, store_data):
 
 
 @callback(
-    Output('goals-store', 'data'),
-    Input({'type': 'delete-goal-btn', 'index': ALL}, 'n_clicks'),
+    Output('goals-store', 'data', allow_duplicate=True),  # Added allow_duplicate
     Input('btn-add-goal', 'n_clicks'),
     State('goals-store', 'data'),
     State('goal-name', 'value'),
@@ -650,30 +676,36 @@ def delete_savings_entry(n_clicks_list, store_data):
     State('goal-date', 'date'),
     prevent_initial_call=True
 )
-def manage_goals(n_clicks_list, add_clicks, goals_data, name, amount, target_date):
-    trigger = ctx.triggered_id
+def add_goal(add_clicks, goals_data, name, amount, target_date):
+    if add_clicks is None or not amount or not target_date:
+        raise dash.exceptions.PreventUpdate
     
     # Initialize goals data if it doesn't exist
     if goals_data is None:
         goals_data = {'goals': []}
+        
+    # Add new goal
+    new_goal = {
+        'name': name or "Unnamed Goal",  # Fallback to "Unnamed Goal" if name is missing
+        'amount': amount,
+        'date': target_date
+    }
+    goals_data['goals'].append(new_goal)
     
-    # Handle goal deletion
-    if isinstance(trigger, dict) and trigger.get('type') == 'delete-goal-btn':
-        triggered_index = trigger['index']
-        if 'goals' in goals_data:
-            goals_data['goals'].pop(triggered_index)
-    
-    # Handle goal addition
-    elif trigger == 'btn-add-goal':
-        if not name or not amount or not target_date:
-            raise dash.exceptions.PreventUpdate
-            
-        # Add new goal
-        new_goal = {
-            'name': name or "Unnamed Goal",  # Fallback to "Unnamed Goal" if name is missing
-            'amount': amount,
-            'date': target_date
-        }
-        goals_data['goals'].append(new_goal)
-    
+    return goals_data
+
+
+@callback(
+    Output('goals-store', 'data'),
+    Input({'type': 'delete-goal-btn', 'index': ALL}, 'n_clicks'),
+    State('goals-store', 'data'),
+    prevent_initial_call=True
+)
+def delete_goal(n_clicks_list, goals_data):
+    if not any(n_clicks for n_clicks in n_clicks_list if n_clicks):
+        raise dash.exceptions.PreventUpdate
+
+    triggered_index = ctx.triggered_id['index']
+    if goals_data and 'goals' in goals_data:
+        goals_data['goals'].pop(triggered_index)
     return goals_data

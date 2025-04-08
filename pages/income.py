@@ -15,6 +15,19 @@ import json  # Make sure json is imported at the top level
 # Register this file as a page
 dash.register_page(__name__, path='/income')
 
+COLORS = {
+    'primary': '#2C3E50',
+    'accent': '#3498DB', 
+    'success': '#2ECC71',
+    'white': '#FFFFFF',
+    'light': '#F8F9FA',
+    'warning': '#F39C12',
+    'danger-light': '#e0796e',
+    'danger': '#E74C3C',
+    'gray': '#95A5A6',
+    'dark': '#212529'
+}
+
 # Helper function to create pie chart
 def create_pie_chart(income_sources):
     if not income_sources:
@@ -497,9 +510,11 @@ layout = html.Div([
         ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
 
         html.Ul([
-            html.Li(html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/", className="nav-link"), className="nav-item"),
+            html.Li(html.A([html.Span("🏠", className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
+            html.Li(html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
             html.Li(html.A([html.Span("📈", className="nav-icon"), "Income"], href="/income", className="nav-link active"), className="nav-item"),
             html.Li(html.A([html.Span("💰", className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
+            html.Li([html.A([html.Span("🎯", className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
         ], className="nav-menu", id="nav-menu")
     ], className="nav-bar"),
 
@@ -511,7 +526,8 @@ layout = html.Div([
 
     # Page Content
     html.Div([
-        html.H2("Income Management", className="section-title mb-4"),
+        html.H2("Income Management", className="section-title mb-4",
+                style={'color': COLORS['primary'], 'borderBottom': f'2px solid {COLORS["accent"]}', 'paddingBottom': '10px'}),
 
         dbc.Row([
             # Left Column: Summary and Pie Chart
@@ -748,7 +764,25 @@ layout = html.Div([
     dcc.Interval(id="income-tab-interval", interval=500, n_intervals=0, max_intervals=1),
     
     # Hidden div for triggering callbacks
-    html.Div(id="hidden-div-trigger", style={"display": "none"})
+    html.Div(id="hidden-div-trigger", style={"display": "none"}),
+
+    # Footer
+    html.Footer([
+        html.Div("© 2025 BlueCard Finance. All rights reserved.", className="footer-text"),
+        html.Div([
+            html.A("Privacy Policy", href="#", className="footer-link"),
+            html.Span(" | "),
+            html.A("Terms of Service", href="#", className="footer-link")
+        ], className="footer-links")
+    ], className="dashboard-footer", style={
+        "backgroundColor": "#f8f9fa",
+        "padding": "20px",
+        "textAlign": "center",
+        "fontSize": "14px",
+        "color": "#6c757d",
+        "marginTop": "20px"
+    }),
+
 ])
 
 # Modified page initialization callback - handle initial page load

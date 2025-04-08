@@ -82,10 +82,11 @@ layout = html.Div([
         ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
 
         html.Ul([
-            html.Li(html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/", className="nav-link"), className="nav-item"),
+            html.Li(html.A([html.Span("🏠", className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
+            html.Li(html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
             html.Li(html.A([html.Span("📈", className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
             html.Li(html.A([html.Span("💰", className="nav-icon"), "Expenses"], href="/expenses", className="nav-link active"), className="nav-item"),
-            # html.Li(html.A([html.Span("🎯", className="nav-icon"), "Goals"], href="/goals", className="nav-link"), className="nav-item"),
+            html.Li([html.A([html.Span("🎯", className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
             # html.Li(html.A([html.Span("⚙️", className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
         ], className="nav-menu", id="nav-menu")
     ], className="nav-bar"),
@@ -100,6 +101,10 @@ layout = html.Div([
 
     # Main Content Container
     html.Div([
+
+        html.H2("Expense Management", className="section-title mb-4",
+                style={'color': COLORS['primary'], 'borderBottom': f'2px solid {COLORS["accent"]}', 'paddingBottom': '10px'}),
+
         dbc.Row([
             # Left Column: Expense Form & List with Categories
             dbc.Col([
@@ -171,7 +176,7 @@ layout = html.Div([
                     ])
                 ], className='mb-4', style=CARD_STYLE),
 
-                # Expense Categories and Filters with enhanced styling
+                # Expense Categories Card
                 dbc.Card([
                     dbc.CardHeader(html.H5("Expense Categories", className="card-title m-0"), style=HEADER_STYLE),
                     dbc.CardBody([
@@ -181,72 +186,41 @@ layout = html.Div([
                             ], width=12),
                         ]),
                         html.Hr(style={'margin': '15px 0', 'backgroundColor': COLORS['light']}),
-                        dbc.Row([
-                            dbc.Col([
-                                html.H6("Filter Expenses", className="mb-3 text-muted"),
-                                dbc.Row([
-                                    dbc.Col([
-                                        dbc.Label("Category", className="text-muted small mb-1"),
-                                        dcc.Dropdown(
-                                            id='category-filter',
-                                            options=[{'label': 'All Categories', 'value': 'all'}] + [
-                                                {'label': cat, 'value': cat} for cat in CATEGORY_COLORS.keys()
-                                            ],
-                                            value='all',
-                                            className='mb-3',
-                                            style={'borderRadius': '6px'}
-                                        ),
-                                    ], width=12),
-                                ]),
-                                dbc.Row([
-                                    dbc.Col([
-                                        dbc.Label("Expense Type", className="text-muted small mb-1"),
-                                        dbc.RadioItems(
-                                            options=[
-                                                {"label": "All Expenses", "value": "all"},
-                                                {"label": "Monthly Only", "value": "recurring"},
-                                                {"label": "One-time Only", "value": "non-recurring"},
-                                            ],
-                                            value="all",
-                                            id="recurring-filter",
-                                            inline=True,
-                                            className="mb-0",
-                                            inputClassName="accent-radio"
-                                        ),
-                                    ], width=12),
-                                ]),
-                            ], width=12),
-                        ]),
                     ])
                 ], className='mb-4', style=CARD_STYLE),
 
-                # Current Expenses with Improved Display
+                # Current Monthly Expenses Card
                 dbc.Card([
                     dbc.CardHeader([
                         html.Div([
                             html.H5("Current Monthly Expenses", className="card-title m-0"),
                             html.Span(id="total-expense-badge", className="badge",
-                                    style={'backgroundColor': COLORS['accent'], 'borderRadius': '20px', 'padding': '8px 12px'})
-                        ], style={"display": "flex", "justifyContent": "space-between", "alignItems": "center"})
+                                    style={
+                                        'backgroundColor': COLORS['accent'],
+                                        'borderRadius': '20px',
+                                        'padding': '8px 12px',
+                                        'fontSize': '14px',
+                                        'color': COLORS['white'],
+                                        'marginLeft': 'auto'  # Push the badge to the right
+                                    })
+                        ], style={"display": "flex", "alignItems": "center", "width": "100%", "justifyContent": "space-between"  })
                     ], style=HEADER_STYLE),
                     dbc.CardBody([
-                        # Added tabs for better organization
+                        # Tabs for filtering expenses
                         dbc.Tabs([
-                            dbc.Tab(label="All Expenses", tab_id="tab-all", 
-                                   children=html.Div(id='expense-list-all', className="expense-list-container")),
+                            dbc.Tab(label="All Expenses", tab_id="tab-all",
+                                    children=html.Div(id='expense-list-all', className="expense-list-container")),
                             dbc.Tab(label="Monthly Recurring", tab_id="tab-recurring",
-                                   children=html.Div(id='expense-list-recurring', className="expense-list-container")),
+                                    children=html.Div(id='expense-list-recurring', className="expense-list-container")),
                             dbc.Tab(label="One-time Expenses", tab_id="tab-non-recurring",
-                                   children=html.Div(id='expense-list-non-recurring', className="expense-list-container")),
+                                    children=html.Div(id='expense-list-non-recurring', className="expense-list-container")),
                         ], id="expense-tabs", active_tab="tab-all"),
                     ])
-                ], style=CARD_STYLE)
-            ], md=8),
+                ], className='mb-4', style=CARD_STYLE),
+            ], md=8), 
 
             # Right Column: Summary & Savings
             dbc.Col([
-                # Expense Summary Card with enhanced styling
-
                 # Monthly Overview with enhanced styling
                 dbc.Card([
                     dbc.CardHeader(html.H5("Monthly Overview", className="card-title m-0"), style=HEADER_STYLE),
@@ -295,7 +269,25 @@ layout = html.Div([
     dcc.Store(id='expense-data-filtered', storage_type='memory'),
     
     # Interval for initialization (runs once)
-    dcc.Interval(id='interval-component', interval=1000, max_intervals=1)
+    dcc.Interval(id='interval-component', interval=1000, max_intervals=1),
+
+    # Footer
+    html.Footer([
+        html.Div("© 2025 BlueCard Finance. All rights reserved.", className="footer-text"),
+        html.Div([
+            html.A("Privacy Policy", href="#", className="footer-link"),
+            html.Span(" | "),
+            html.A("Terms of Service", href="#", className="footer-link")
+        ], className="footer-links")
+    ], className="dashboard-footer", style={
+        "backgroundColor": "#f8f9fa",
+        "padding": "20px",
+        "textAlign": "center",
+        "fontSize": "14px",
+        "color": "#6c757d",
+        "marginTop": "20px"
+    }),
+
 ])
 
 # Sample data for initial testing
@@ -412,41 +404,31 @@ def add_expense(n_clicks, desc, amount, category, due_date, recurring, expenses_
 @callback(
     Output('expense-data-filtered', 'data'),
     Input('expenses-store', 'data'),
-    Input('category-filter', 'value'),
-    Input('recurring-filter', 'value')
+    Input('expense-tabs', 'active_tab')  # Use the active tab as the input
 )
-def filter_expenses(expenses, category_filter, recurring_filter):
+def filter_expenses(expenses, active_tab):
     if not expenses:
         return {'all': [], 'recurring': [], 'non_recurring': [], 'total': 0}
-    
+
     # Get recurring and non-recurring expenses
     recurring_expenses = [exp for exp in expenses if exp.get('recurring') is True]
     non_recurring_expenses = [exp for exp in expenses if exp.get('recurring') is not True]
-    
-    # Apply category filter if needed
-    if category_filter and category_filter != 'all':
-        filtered_expenses = [exp for exp in expenses if exp.get('category') == category_filter]
-        recurring_filtered = [exp for exp in recurring_expenses if exp.get('category') == category_filter]
-        non_recurring_filtered = [exp for exp in non_recurring_expenses if exp.get('category') == category_filter]
-    else:
+
+    # Filter based on the active tab
+    if active_tab == 'tab-recurring':
+        filtered_expenses = recurring_expenses
+    elif active_tab == 'tab-non-recurring':
+        filtered_expenses = non_recurring_expenses
+    else:  # Default to 'tab-all'
         filtered_expenses = expenses
-        recurring_filtered = recurring_expenses
-        non_recurring_filtered = non_recurring_expenses
-    
-    # Apply recurring filter
-    if recurring_filter == 'recurring':
-        filtered_expenses = recurring_filtered
-    elif recurring_filter == 'non-recurring':
-        filtered_expenses = non_recurring_filtered
-    # else keep all expenses (already filtered by category if needed)
-    
+
     # Calculate totals
     total_expenses = sum(exp.get('amount', 0) for exp in expenses)
-    
+
     return {
-        'all': filtered_expenses,
-        'recurring': recurring_filtered,
-        'non_recurring': non_recurring_filtered,
+        'all': expenses,
+        'recurring': recurring_expenses,
+        'non_recurring': non_recurring_expenses,
         'total': total_expenses,
         'total_recurring': sum(exp.get('amount', 0) for exp in recurring_expenses),
         'total_non_recurring': sum(exp.get('amount', 0) for exp in non_recurring_expenses)
@@ -678,7 +660,7 @@ def update_recurring_analysis(data):
     # Update layout
     fig.update_layout(
         margin=dict(l=10, r=10, t=10, b=10),
-        height=300,
+        height=350,
         showlegend=True,
         legend=dict(
             orientation="h",

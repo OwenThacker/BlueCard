@@ -1,679 +1,1160 @@
 import dash
-from dash import dcc, html, Input, Output, State, callback, ALL, ctx
+from dash import html, dcc
 import dash_bootstrap_components as dbc
-from prophet import Prophet
-import pandas as pd
-import plotly.graph_objs as go
-from datetime import date
 
-dash.register_page(__name__, path="/savings", title="Savings Forecast", name="Savings Forecast")
+# Register this file as the home page
+dash.register_page(__name__, path="/", name="Home")
 
+# Define a cohesive color palette with different shades of blue
 COLORS = {
-    'primary': '#2C3E50',
-    'accent': '#3498DB', 
-    'success': '#2ECC71',
-    'white': '#FFFFFF',
-    'light': '#F8F9FA',
-    'warning': '#F39C12',
-    'danger-light': '#e0796e',
-    'danger': '#E74C3C',
-    'gray': '#95A5A6',
-    'dark': '#212529'
+    'primary': '#1a365d',      # Dark blue - primary brand color
+    'secondary': '#2a4a7f',    # Medium-dark blue
+    'accent': '#4299e1',       # Bright blue - accent color
+    'accent-light': '#90cdf4', # Light blue
+    'background': '#f8fafc',   # Very light blue/grey background
+    'white': '#ffffff',
+    'grey-light': '#e2e8f0',
+    'grey': '#718096',         # Medium grey for text
+    'dark': '#2d3748'          # Dark grey/blue for headings
 }
 
-CARD_STYLE = {
-    'boxShadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
-    'borderRadius': '8px',
-    'backgroundColor': COLORS['white'],
-    'marginBottom': '20px'
-}
-
-HEADER_STYLE = {
-    'backgroundColor': COLORS['primary'],
-    'color': COLORS['white'],
-    'borderBottom': f'2px solid {COLORS["accent"]}',
-    'borderRadius': '8px 8px 0 0',
-    'padding': '15px 20px',
-    'fontWeight': 'bold',
-    'fontSize': '16px'
-}
-
+# Layout for the Home page
 layout = html.Div([
-    # Hidden div for initialization
-    html.Div(id='initialization-trigger', style={'display': 'none'}),
-    
-    # Header
+    # Dashboard Header and Navigation Bar
     html.Div([
+        # Logo and Title
         html.Div([
             html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
-        ], className="dashboard-title"),
-    ], className="dashboard-header"),
+        ], className="header-logo"),
 
-    # Navigation Bar
-    html.Nav([
-        html.Button([
-            html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
-            html.Span("≡")
-        ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
+        # Navigation Bar
+        html.Nav([
+            html.Button([
+                html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
+                html.Span("≡")
+            ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
 
-        html.Ul([
-            html.Li([html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/", className="nav-link")], className="nav-item"),
-            html.Li([html.A([html.Span("📈", className="nav-icon"), "Income"], href="/income", className="nav-link")], className="nav-item"),
-            html.Li([html.A([html.Span("💰", className="nav-icon"), "Expenses"], href="/expenses", className="nav-link")], className="nav-item"),
-            html.Li([html.A([html.Span("🎯", className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link active")], className="nav-item"),
-        ], className="nav-menu", id="nav-menu")
-    ], className="nav-bar"),
+            html.Ul([
+                html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link active"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link"), className="nav-item"),
+            ], className="nav-menu", id="nav-menu")
+        ], className="nav-bar"),
+    ], className="header-container", style={
+        'backgroundColor': COLORS['white'],
+        'borderBottom': f'1px solid {COLORS["accent-light"]}'
+    }),
 
-    # Main Content Container
+    # Hero Section with Enhanced Design
     html.Div([
-        # Breadcrumb
-        html.Ul([
-            html.Li([html.A("Home", href="/", className="breadcrumb-link")], className="breadcrumb-item"),
-            html.Li("Savings Analysis", className="breadcrumb-item breadcrumb-current")
-        ], className="breadcrumb mb-4", style={'backgroundColor': COLORS['light'], 'borderRadius': '8px'}),
-
-        html.H3("Savings Forecast", className="section-title mb-4", 
-                style={'color': COLORS['primary'], 'borderBottom': f'2px solid {COLORS["accent"]}', 'paddingBottom': '10px'}),
-
-        # Main content row with cards
-        dbc.Row([
-            # Left column with input forms
-            dbc.Col([
-                # Savings Entry Card
-                html.Div([
-                    html.Div("Add Savings Entry", style=HEADER_STYLE),
-                    html.Div([
-                        dbc.Row([
-                            dbc.Col([
-                                html.Label("Amount (£)", className="form-label"),
-                                dcc.Input(
-                                    id='input-savings-amount',
-                                    type='number',
-                                    placeholder='Enter amount',
-                                    value=100,
-                                    className='form-control mb-3'
-                                ),
-                            ]),
-                            dbc.Col([
-                                html.Label("Date", className="form-label"),
-                                dcc.DatePickerSingle(
-                                    id='input-savings-date',
-                                    date=date.today(),
-                                    display_format='YYYY-MM-DD',
-                                    className='mb-3 w-100'
-                                ),
-                            ]),
-                        ]),
-                        dbc.Button(
-                            [html.I(className="fas fa-plus mr-2"), "Add Savings"], 
-                            id='btn-add-savings', 
-                            color='primary', 
-                            className='w-100 mb-3'
-                        ),
-                    ], style={'padding': '20px'})
-                ], style=CARD_STYLE),
-                
-                # Goal Setting Card
-                html.Div([
-                    html.Div("Set a Savings Goal", style=HEADER_STYLE),
-                    html.Div([
-                        html.Label("Goal Name", className="form-label"),
-                        dcc.Input(
-                            id='goal-name',
-                            type='text',
-                            placeholder='Goal name (e.g. New Car)',
-                            className='form-control mb-3'
-                        ),
-                        dbc.Row([
-                            dbc.Col([
-                                html.Label("Target Amount (£)", className="form-label"),
-                                dcc.Input(
-                                    id='goal-amount',
-                                    type='number',
-                                    placeholder='Target Amount',
-                                    className='form-control mb-3'
-                                ),
-                            ]),
-                            dbc.Col([
-                                html.Label("Target Date", className="form-label"),
-                                dcc.DatePickerSingle(
-                                    id='goal-date',
-                                    date=date.today(),
-                                    display_format='YYYY-MM-DD',
-                                    className='mb-3 w-100'
-                                ),
-                            ]),
-                        ]),
-                        dbc.Button(
-                            [html.I(className="fas fa-bullseye mr-2"), "Add Goal"], 
-                            id='btn-add-goal', 
-                            color='primary', 
-                            className='w-100 mb-2'
-                        ),
-                    ], style={'padding': '20px'})
-                ], style=CARD_STYLE),
-                
-                # Data Tables Section
-                html.Div([
-                    html.Div("Data Management", style=HEADER_STYLE),
-                    html.Div([
-                        dbc.Tabs([
-                            dbc.Tab([
-                                html.Div(id='savings-table-container', className='mt-3')
-                            ], label="Savings Entries", tab_id="savings-tab"),
-                            dbc.Tab([
-                                html.Div(id='goals-table-container', className='mt-3')
-                            ], label="Goals", tab_id="goals-tab"),
-                        ], id="data-tabs", active_tab="savings-tab")
-                    ], style={'padding': '20px'})
-                ], style=CARD_STYLE),
-            ], md=4),
-
-            # Right column with graph
-            dbc.Col([
-                html.Div([
-                    html.Div("Forecast Visualization", style=HEADER_STYLE),
-                    html.Div([
-                        dcc.Graph(
-                            id='savings-forecast-graph',
-                            config={'displayModeBar': True, 'scrollZoom': True},
-                            style={'height': '700px'}
-                        )
-                    ], style={'padding': '20px'})
-                ], style=CARD_STYLE)
-            ], md=8)
-        ]),
-
-        dcc.Store(id='savings-store', storage_type='local'),
-        dcc.Store(id='goals-store', storage_type='local'),
-        dcc.Store(id='forecast-data-store', storage_type='session')  # Store for tracking forecast data
-    ], style={'padding': '20px', 'backgroundColor': COLORS['light']})
-])
-
-# Add callback to initialize the stores when the page loads
-@callback(
-    [Output('savings-store', 'data', allow_duplicate=True),
-     Output('goals-store', 'data', allow_duplicate=True)],
-    Input('initialization-trigger', 'children'),  # Using a guaranteed page load trigger
-    State('savings-store', 'data'),
-    State('goals-store', 'data'),
-    prevent_initial_call='initial_duplicate'  # This special value allows both initial call and duplicates
-)
-def initialize_stores(_, savings_data, goals_data):
-    # Only initialize if data doesn't exist
-    if savings_data is None:
-        savings_data = {'records': []}
-    if goals_data is None:
-        goals_data = {'goals': []}
-    return savings_data, goals_data
-
-@callback(
-    Output('savings-store', 'data', allow_duplicate=True),
-    Input('btn-add-savings', 'n_clicks'),
-    State('savings-store', 'data'),
-    State('input-savings-amount', 'value'),
-    State('input-savings-date', 'date'),
-    prevent_initial_call=True
-)
-def save_savings(n_clicks, store_data, amount, date_val):
-    if not amount or not date_val or n_clicks is None:
-        raise dash.exceptions.PreventUpdate
-
-    if store_data is None:
-        store_data = {'records': []}
-
-    new_record = {'amount': amount, 'date': date_val}
-    store_data['records'].append(new_record)
-
-    return store_data
-
-
-@callback(
-    [Output('savings-forecast-graph', 'figure'),
-     Output('forecast-data-store', 'data')],  # Store the forecast data for status checking
-    Input('savings-store', 'data'),
-    Input('goals-store', 'data')
-)
-def update_forecast(data, goal_data):
-    forecast_data = None  # Initialize forecast data
-    
-    if not data or not data.get('records'):
-        return go.Figure().update_layout(
-            title='No Data to Forecast',
-            template='plotly_white',
-            height=700,
-            font={'family': 'Arial, sans-serif'},
-        ), forecast_data
-
-    # Prepare the data
-    df = pd.DataFrame(data['records'])
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.groupby('date').sum().reset_index()
-    df = df.sort_values('date')
-
-    df_prophet = df.rename(columns={'date': 'ds', 'amount': 'y'})
-
-    if len(df_prophet) < 2:
-        return go.Figure().update_layout(
-            title='Not enough data to forecast',
-            template='plotly_white',
-            height=700,
-            font={'family': 'Arial, sans-serif'}
-        ), forecast_data
-
-    # Fit the Prophet model
-    model = Prophet(
-        changepoint_prior_scale=0.2,  # Lower value to reduce sensitivity to trend changes
-        yearly_seasonality=False,
-        weekly_seasonality=True,
-        daily_seasonality=True,
-        seasonality_mode='additive',
-        interval_width=0.95
-    )
-    model.fit(df_prophet)
-
-    # Make future predictions
-    future = model.make_future_dataframe(periods=30 * 12)
-    forecast = model.predict(future)
-    
-    # Store forecast data for goal tracking
-    forecast_data = forecast.to_dict('records')
-
-    # Create the Plotly figure
-    fig = go.Figure()
-
-    # Add confidence intervals (shaded region)
-    fig.add_trace(go.Scatter(
-        x=forecast['ds'],
-        y=forecast['yhat_upper'],
-        mode='lines',
-        line=dict(width=0),
-        name='Upper Confidence',
-        showlegend=False
-    ))
-    fig.add_trace(go.Scatter(
-        x=forecast['ds'],
-        y=forecast['yhat_lower'],
-        mode='lines',
-        fill='tonexty',
-        fillcolor='rgba(52, 152, 219, 0.2)',  # Light blue fill
-        line=dict(width=0),
-        name='Confidence Interval',
-        showlegend=True
-    ))
-
-    # Add forecast points (line)
-    fig.add_trace(go.Scatter(
-        x=forecast['ds'],
-        y=forecast['yhat'],
-        mode='lines',
-        name='Forecast',
-        line=dict(color=COLORS['accent'], width=3),
-    ))
-
-    # Add actual data points (scatter + line combo)
-    fig.add_trace(go.Scatter(
-        x=df_prophet['ds'],
-        y=df_prophet['y'],
-        mode='lines+markers',
-        name='Actual',
-        line=dict(color=COLORS['primary'], width=3),
-        marker=dict(color=COLORS['primary'], size=8)
-    ))
-
-    # Plot goals if any - using horizontal line with center dot as requested
-    if goal_data and goal_data.get('goals'):
-        for goal in goal_data['goals']:
-            goal_date = pd.to_datetime(goal['date'])
-            goal_amount = goal['amount']
-            goal_name = goal.get('name', "Unnamed Goal")  # Use "Unnamed Goal" if 'name' is missing
-
-            # Draw a small horizontal dash
-            fig.add_trace(go.Scatter(
-                x=[goal_date - pd.Timedelta(days=5), goal_date + pd.Timedelta(days=5)],  # Creates a small dash
-                y=[goal_amount, goal_amount],
-                mode='lines',
-                line=dict(color='darkorange', width=2),
-                showlegend=False
-            ))
-
-            # Add a dot in the center with label
-            fig.add_trace(go.Scatter(
-                x=[goal_date],
-                y=[goal_amount],
-                mode='markers+text',
-                marker=dict(color='darkorange', size=10, symbol='circle'),
-                text=[goal_name],
-                textposition="top center",
-                textfont=dict(color='darkorange', size=12),
-                showlegend=False  # Hide goal from legend
-            ))
-
-    # Update layout with more professional styling
-    fig.update_layout(
-        title={
-            'text': 'Savings Forecast with Confidence Intervals',
-            'y': 0.98,
-            'x': 0.5,
-            'xanchor': 'center',
-            'yanchor': 'top',
-            'font': dict(size=18, color=COLORS['dark'])
-        },
-        xaxis_title={
-            'text': 'Date',
-            'font': dict(size=14, color=COLORS['dark'])
-        },
-        yaxis_title={
-            'text': 'Cumulative Savings (£)',
-            'font': dict(size=14, color=COLORS['dark'])
-        },
-        template='plotly_white',
-        height=700,
-        legend={
-            'orientation': "h",
-            'y': -0.15,
-            'x': 0.5,
-            'xanchor': 'center',
-            'font': dict(size=12)
-        },
-        margin=dict(t=60, b=80, l=60, r=40),
-        paper_bgcolor='white',
-        plot_bgcolor='white',
-        font={'family': 'Arial, sans-serif'},
-        hovermode='closest',
-        xaxis=dict(
-            showgrid=True,
-            gridcolor='rgba(230, 230, 230, 0.8)',
-            showline=True,
-            linecolor='rgba(200, 200, 200, 1)',
-            linewidth=1
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridcolor='rgba(230, 230, 230, 0.8)',
-            showline=True,
-            linecolor='rgba(200, 200, 200, 1)',
-            linewidth=1,
-            tickprefix='£'
-        )
-    )
-
-    return fig, forecast_data
-
-
-@callback(
-    Output('savings-table-container', 'children'),
-    Input('savings-store', 'data')
-)
-def render_savings_table(data):
-    if not data or not data.get('records'):
-        return html.Div([
-            html.I(className="fas fa-info-circle mr-2", style={'color': COLORS['accent']}),
-            html.Span("No savings data available. Add your first entry above.", className="text-muted")
-        ], className="text-center py-4")
-
-    df = pd.DataFrame(data['records'])
-    if df.empty:
-        return html.Div([
-            html.I(className="fas fa-info-circle mr-2", style={'color': COLORS['accent']}),
-            html.Span("No savings data available. Add your first entry above.", className="text-muted")
-        ], className="text-center py-4")
-        
-    df['index'] = df.index  # Add index for deletion
-
-    table_header = [
-        html.Thead(html.Tr([
-            html.Th("Date", style={'width': '40%', 'fontWeight': '600', 'color': COLORS['primary']}),
-            html.Th("Amount (£)", style={'width': '40%', 'fontWeight': '600', 'color': COLORS['primary']}),
-            html.Th("Action", style={'width': '20%', 'fontWeight': '600', 'color': COLORS['primary']})
-        ], className="table-header", style={'backgroundColor': COLORS['light']}))
-    ]
-
-    rows = []
-    for _, row in df.iterrows():
-        rows.append(html.Tr([
-            html.Td(pd.to_datetime(row['date']).strftime('%Y-%m-%d'), 
-                   style={'verticalAlign': 'middle'}),
-            html.Td(f"£{row['amount']:,.2f}", 
-                   style={'verticalAlign': 'middle', 'fontWeight': '500'}),
-            html.Td(
+        html.Div([
+            html.Div([
+                html.H1("BlueCard Finance", className="hero-title", style={
+                    'color': COLORS['white'],
+                    'fontSize': '3.5rem',
+                    'fontWeight': '700',
+                    'marginBottom': '1rem',
+                    'textShadow': '0 2px 4px rgba(0, 0, 0, 0.2)'
+                }),
+                html.P([
+                    "Your trusted partner in ",
+                    html.Span("financial management", style={'color': COLORS['accent-light'], 'fontWeight': '600'})
+                ], className="hero-subtitle", style={
+                    'color': COLORS['white'],
+                    'fontSize': '1.5rem',
+                    'marginBottom': '2rem'
+                }),
                 dbc.Button(
-                    "Remove",
-                    id={'type': 'delete-entry-btn', 'index': row['index']},
-                    color='light',
-                    size='sm',
-                    outline=True,
+                    "Get Started",
+                    href="/dashboard",
+                    className="hero-button",
                     style={
-                        'borderRadius': '4px',
-                        'fontSize': '12px',
-                        'fontWeight': '500',
-                        'color': COLORS['danger'],
-                        'borderColor': COLORS['danger'],
-                        'transition': 'all 0.2s',
-                        'width': '100%'
+                        'backgroundColor': COLORS['accent'],
+                        'border': 'none',
+                        'color': COLORS['white'],
+                        'padding': '12px 30px',
+                        'fontSize': '1.2rem',
+                        'borderRadius': '8px',
+                        'fontWeight': '600',
+                        'boxShadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        'transition': 'all 0.3s ease'
                     }
-                ),
-                style={'textAlign': 'center', 'verticalAlign': 'middle'}
-            )
-        ], style={'borderBottom': f'1px solid {COLORS["light"]}'}, className='hover-row'))
+                )
+            ], className="hero-content")
+        ], className="hero-overlay", style={
+            'backgroundColor': 'rgba(26, 54, 93, 0.75)',  # Semi-transparent dark blue
+            'width': '100%',
+            'height': '100%',
+            'display': 'flex',
+            'alignItems': 'center',
+            'justifyContent': 'center',
+            'padding': '0 20px'
+        })
+    ], className="hero-section", style={
+        'backgroundImage': 'url("/assets/home_background.PNG")',
+        'backgroundSize': 'cover',
+        'backgroundPosition': 'center',
+        'height': '85vh',
+        'position': 'relative',
+        'display': 'flex',
+        'alignItems': 'center',
+        'justifyContent': 'center',
+        'textAlign': 'center'
+    }),
 
-    table_body = [html.Tbody(rows)]
-
-    return html.Div([
-        dbc.Table(
-            table_header + table_body, 
-            bordered=False,
-            striped=False,
-            hover=True, 
-            responsive=True, 
-            className='mt-3 table-sm shadow-sm',
-            style={
-                'borderCollapse': 'separate',
-                'borderSpacing': '0',
-                'width': '100%',
-                'borderRadius': '8px',
-                'overflow': 'hidden',
-                'backgroundColor': COLORS['white']
-            }
-        )
-    ], style={'padding': '5px'})
-
-
-def check_goal_status(goal, forecast_data):
-    """Check if a goal is on track based on forecast data"""
-    if not forecast_data:
-        return None  # No forecast data to determine status
-        
-    # Convert forecast data to DataFrame
-    forecast_df = pd.DataFrame(forecast_data)
-    
-    # Convert date strings to datetime objects
-    forecast_df['ds'] = pd.to_datetime(forecast_df['ds'])
-    goal_date = pd.to_datetime(goal['date'])
-    
-    # Find the forecast value closest to the goal date
-    closest_forecast = forecast_df.iloc[forecast_df['ds'].sub(goal_date).abs().argsort()[:1]]
-    
-    if closest_forecast.empty:
-        return None
-    
-    # Get the predicted value
-    predicted_value = closest_forecast['yhat'].values[0]
-    
-    # Compare with goal amount
-    if predicted_value >= goal['amount']:
-        return "On Track"
-    else:
-        return "Off Track"
-
-
-@callback(
-    Output('goals-table-container', 'children'),
-    Input('goals-store', 'data'),
-    Input('forecast-data-store', 'data')
-)
-def render_goals_table(data, forecast_data):
-    if not data or not data.get('goals'):
-        return html.Div([
-            html.I(className="fas fa-info-circle mr-2", style={'color': COLORS['accent']}),
-            html.Span("No goals set yet. Add your first goal above.", className="text-muted")
-        ], className="text-center py-4")
-
-    df = pd.DataFrame(data['goals'])
-    if df.empty:
-        return html.Div([
-            html.I(className="fas fa-info-circle mr-2", style={'color': COLORS['accent']}),
-            html.Span("No goals set yet. Add your first goal above.", className="text-muted")
-        ], className="text-center py-4")
-        
-    df['index'] = df.index  # Add index for deletion
-    
-    # Add status column
-    df['status'] = df.apply(lambda row: check_goal_status(row, forecast_data), axis=1)
-
-    table_header = [
-        html.Thead(html.Tr([
-            html.Th("Goal Name", style={'width': '25%', 'fontWeight': '600', 'color': COLORS['primary']}),
-            html.Th("Amount (£)", style={'width': '20%', 'fontWeight': '600', 'color': COLORS['primary']}),
-            html.Th("Target Date", style={'width': '20%', 'fontWeight': '600', 'color': COLORS['primary']}),
-            html.Th("Status", style={'width': '20%', 'fontWeight': '600', 'color': COLORS['primary']}),
-            html.Th("Action", style={'width': '15%', 'fontWeight': '600', 'color': COLORS['primary']})
-        ], className="table-header", style={'backgroundColor': COLORS['light']}))
-    ]
-
-    rows = []
-    for _, row in df.iterrows():
-        # Define professional status indicator
-        status_style = {
-            'padding': '6px 12px',
-            'borderRadius': '20px',
-            'fontSize': '12px',
+    # Features Section with Enhanced Design
+    html.Div([
+        html.H2("Why Choose BlueCard Finance?", className="section-title", style={
+            'color': COLORS['primary'],
+            'textAlign': 'center',
+            'fontSize': '2.5rem',
             'fontWeight': '600',
-            'display': 'inline-block',
-            'minWidth': '90px',
-            'textAlign': 'center'
-        }
+            'marginBottom': '3rem',
+            'position': 'relative',
+            'paddingBottom': '15px'
+        }),
         
-        if row['status'] == 'On Track':
-            status_badge = html.Span("ON TRACK", style={
-                **status_style,
-                'backgroundColor': 'rgba(46, 204, 113, 0.15)',
-                'color': COLORS['success'],
-                'border': f'1px solid {COLORS["success"]}'
-            })
-        elif row['status'] == 'Off Track':
-            status_badge = html.Span("OFF TRACK", style={
-                **status_style,
-                'backgroundColor': 'rgba(231, 76, 60, 0.15)',  
-                'color': COLORS['danger'],
-                'border': f'1px solid {COLORS["danger"]}'
-            })
-        else:
-            status_badge = html.Span("PENDING", style={
-                **status_style,
-                'backgroundColor': 'rgba(149, 165, 166, 0.15)',
-                'color': COLORS['gray'],
-                'border': f'1px solid {COLORS["gray"]}'
-            })
+        # Decorative line under the section title
+        html.Div(style={
+            'position': 'absolute',
+            'width': '80px',
+            'height': '4px',
+            'backgroundColor': COLORS['accent'],
+            'left': '50%',
+            'transform': 'translateX(-50%)',
+            'marginTop': '-2.7rem'
+        }),
+        
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        html.Img(
+                            src="/assets/bar-chart.png",
+                            alt="Bar Chart Icon",
+                            className="feature-icon",
+                            style={
+                                "width": "60px", 
+                                "height": "60px",
+                                "marginBottom": "10px"
+                            }
+                        )
+                    ], style={
+                        'backgroundColor': COLORS['primary'],
+                        'borderRadius': '50%',
+                        'width': '100px',
+                        'height': '100px',
+                        'display': 'flex',
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'margin': '0 auto 25px auto'
+                    }),
+                    html.H4("Track Your Finances", className="feature-title", style={
+                        'color': COLORS['primary'],
+                        'fontSize': '1.5rem',
+                        'fontWeight': '600',
+                        'marginBottom': '15px',
+                        'textAlign': 'center'
+                    }),
+                    html.P("Monitor your income, expenses, and savings all in one place with intuitive visualizations and real-time updates.", 
+                        className="feature-description",
+                        style={
+                            'color': COLORS['grey'],
+                            'fontSize': '1.1rem',
+                            'lineHeight': '1.6',
+                            'textAlign': 'center'
+                        }
+                    )
+                ], className="feature-card", style={
+                    'padding': '30px 20px',
+                    'backgroundColor': COLORS['white'],
+                    'borderRadius': '10px',
+                    'boxShadow': '0 5px 15px rgba(0, 0, 0, 0.05)',
+                    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                    'height': '100%',
+                    'display': 'flex',
+                    'flexDirection': 'column',
+                    'alignItems': 'center'
+                })
+            ], md=4, style={'marginBottom': '30px'}),
             
-        rows.append(html.Tr([
-            html.Td(row['name'], style={'verticalAlign': 'middle', 'fontWeight': '500'}),
-            html.Td(f"£{row['amount']:,.2f}", style={'verticalAlign': 'middle', 'fontWeight': '500'}),
-            html.Td(pd.to_datetime(row['date']).strftime('%Y-%m-%d'), style={'verticalAlign': 'middle'}),
-            html.Td(status_badge, style={'verticalAlign': 'middle'}),
-            html.Td(
-                dbc.Button(
-                    "Remove",
-                    id={'type': 'delete-goal-btn', 'index': row['index']},
-                    color='light',
-                    size='sm',
-                    outline=True,
-                    style={
-                        'borderRadius': '4px',
-                        'fontSize': '12px',
-                        'fontWeight': '500',
-                        'color': COLORS['danger'],
-                        'borderColor': COLORS['danger'],
-                        'transition': 'all 0.2s',
-                        'width': '100%'
-                    }
-                ),
-                style={'textAlign': 'center', 'verticalAlign': 'middle'}
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        html.Img(
+                            src="/assets/goals.png",
+                            alt="Goals Icon",
+                            className="feature-icon",
+                            style={
+                                "width": "60px", 
+                                "height": "60px",
+                                "marginBottom": "5px"
+                            }
+                        )
+                    ], style={
+                        'backgroundColor': COLORS['primary'],
+                        'borderRadius': '50%',
+                        'width': '100px',
+                        'height': '100px',
+                        'display': 'flex',
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'margin': '0 auto 25px auto'
+                    }),
+                    html.H4("Set & Achieve Goals", className="feature-title", style={
+                        'color': COLORS['primary'],
+                        'fontSize': '1.5rem',
+                        'fontWeight': '600',
+                        'marginBottom': '15px',
+                        'textAlign': 'center'
+                    }),
+                    html.P("Define your financial goals, track your progress, and receive personalized strategies to achieve them faster.", 
+                        className="feature-description",
+                        style={
+                            'color': COLORS['grey'],
+                            'fontSize': '1.1rem',
+                            'lineHeight': '1.6',
+                            'textAlign': 'center'
+                        }
+                    )
+                ], className="feature-card", style={
+                    'padding': '30px 20px',
+                    'backgroundColor': COLORS['white'],
+                    'borderRadius': '10px',
+                    'boxShadow': '0 5px 15px rgba(0, 0, 0, 0.05)',
+                    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                    'height': '100%',
+                    'display': 'flex',
+                    'flexDirection': 'column',
+                    'alignItems': 'center'
+                })
+            ], md=4, style={'marginBottom': '30px'}),
+            
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        html.Img(
+                            src="/assets/insight.png",
+                            alt="Insights Icon",
+                            className="feature-icon",
+                            style={
+                                "width": "60px", 
+                                "height": "60px",
+                                "marginBottom": "10px"
+                            }
+                        )
+                    ], style={
+                        'backgroundColor': COLORS['primary'],
+                        'borderRadius': '50%',
+                        'width': '100px',
+                        'height': '100px',
+                        'display': 'flex',
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'margin': '0 auto 25px auto'
+                    }),
+                    html.H4("Smart Insights", className="feature-title", style={
+                        'color': COLORS['primary'],
+                        'fontSize': '1.5rem',
+                        'fontWeight': '600',
+                        'marginBottom': '15px',
+                        'textAlign': 'center'
+                    }),
+                    html.P("Get actionable insights and recommendations based on your spending patterns to improve your financial health.", 
+                        className="feature-description",
+                        style={
+                            'color': COLORS['grey'],
+                            'fontSize': '1.1rem',
+                            'lineHeight': '1.6',
+                            'textAlign': 'center'
+                        }
+                    )
+                ], className="feature-card", style={
+                    'padding': '30px 20px',
+                    'backgroundColor': COLORS['white'],
+                    'borderRadius': '10px',
+                    'boxShadow': '0 5px 15px rgba(0, 0, 0, 0.05)',
+                    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                    'height': '100%',
+                    'display': 'flex',
+                    'flexDirection': 'column',
+                    'alignItems': 'center'
+                })
+            ], md=4, style={'marginBottom': '30px'})
+        ], className="features-row")
+    ], className="features-section", style={
+        'padding': '80px 40px',
+        'backgroundColor': COLORS['background']
+    }),
+
+    # Testimonials Section with a different shade of blue
+    html.Div([
+        html.H2("What Our Clients Say", className="section-title", style={
+            'color': COLORS['white'],
+            'textAlign': 'center',
+            'fontSize': '2.5rem',
+            'fontWeight': '600',
+            'marginBottom': '3rem',
+            'paddingBottom': '15px',
+            'position': 'relative'
+        }),
+        
+        # Decorative line under the section title
+        html.Div(style={
+            'position': 'absolute',
+            'width': '80px',
+            'height': '4px',
+            'backgroundColor': COLORS['accent-light'],
+            'left': '50%',
+            'transform': 'translateX(-50%)',
+            'marginTop': '-2.7rem'
+        }),
+        
+        # Testimonial Cards Row
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        html.Img(src="/assets/avatar.png", alt="Client Avatar", className="testimonial-avatar", style={
+                            'width': '70px',
+                            'height': '70px',
+                            'borderRadius': '50%',
+                            'objectFit': 'cover',
+                            'border': f'3px solid {COLORS["accent-light"]}',
+                        })
+                    ], style={
+                        'marginBottom': '15px',
+                        'display': 'flex',
+                        'justifyContent': 'center'
+                    }),
+                    html.Div([
+                        html.I(className="fas fa-quote-left", style={
+                            'fontSize': '24px',
+                            'color': COLORS['accent-light'],
+                            'marginRight': '8px',
+                            'opacity': '0.6'
+                        }),
+                    ], style={'marginBottom': '10px'}),
+                    html.P("BlueCard Finance transformed how I manage my finances. The dashboard is intuitive, and I've saved more in 6 months than I did all of last year!", 
+                        className="testimonial-text",
+                        style={
+                            'color': COLORS['white'],
+                            'fontSize': '1.1rem',
+                            'lineHeight': '1.7',
+                            'marginBottom': '20px',
+                            'fontStyle': 'italic'
+                        }
+                    ),
+                    html.H5("Sarah Johnson", style={
+                        'color': COLORS['white'],
+                        'fontSize': '1.1rem',
+                        'fontWeight': '600',
+                        'marginBottom': '5px'
+                    }),
+                    html.P("Small Business Owner", style={
+                        'color': COLORS['accent-light'],
+                        'fontSize': '0.9rem'
+                    })
+                ], className="testimonial-card", style={
+                    'padding': '30px 25px',
+                    'backgroundColor': 'rgba(255, 255, 255, 0.1)',
+                    'borderRadius': '10px',
+                    'height': '100%',
+                    'textAlign': 'center',
+                    'backdropFilter': 'blur(10px)',
+                    'boxShadow': '0 8px 20px rgba(0, 0, 0, 0.2)'
+                })
+            ], md=4, className="mb-4"),
+            
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        html.Img(src="/assets/avatar.png", alt="Client Avatar", className="testimonial-avatar", style={
+                            'width': '70px',
+                            'height': '70px',
+                            'borderRadius': '50%',
+                            'objectFit': 'cover',
+                            'border': f'3px solid {COLORS["accent-light"]}',
+                        })
+                    ], style={
+                        'marginBottom': '15px',
+                        'display': 'flex',
+                        'justifyContent': 'center'
+                    }),
+                    html.Div([
+                        html.I(className="fas fa-quote-left", style={
+                            'fontSize': '24px',
+                            'color': COLORS['accent-light'],
+                            'marginRight': '8px',
+                            'opacity': '0.6'
+                        }),
+                    ], style={'marginBottom': '10px'}),
+                    html.P("The insights feature highlighted spending patterns I never noticed before. I've cut unnecessary expenses by 30% and reached my savings goal earlier than expected.", 
+                        className="testimonial-text",
+                        style={
+                            'color': COLORS['white'],
+                            'fontSize': '1.1rem',
+                            'lineHeight': '1.7',
+                            'marginBottom': '20px',
+                            'fontStyle': 'italic'
+                        }
+                    ),
+                    html.H5("Michael Torres", style={
+                        'color': COLORS['white'],
+                        'fontSize': '1.1rem',
+                        'fontWeight': '600',
+                        'marginBottom': '5px'
+                    }),
+                    html.P("Financial Analyst", style={
+                        'color': COLORS['accent-light'],
+                        'fontSize': '0.9rem'
+                    })
+                ], className="testimonial-card", style={
+                    'padding': '30px 25px',
+                    'backgroundColor': 'rgba(255, 255, 255, 0.1)',
+                    'borderRadius': '10px',
+                    'height': '100%',
+                    'textAlign': 'center',
+                    'backdropFilter': 'blur(10px)',
+                    'boxShadow': '0 8px 20px rgba(0, 0, 0, 0.2)'
+                })
+            ], md=4, className="mb-4"),
+            
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        html.Img(src="/assets/avatar.png", alt="Client Avatar", className="testimonial-avatar", style={
+                            'width': '70px',
+                            'height': '70px',
+                            'borderRadius': '50%',
+                            'objectFit': 'cover',
+                            'border': f'3px solid {COLORS["accent-light"]}',
+                        })
+                    ], style={
+                        'marginBottom': '15px',
+                        'display': 'flex',
+                        'justifyContent': 'center'
+                    }),
+                    html.Div([
+                        html.I(className="fas fa-quote-left", style={
+                            'fontSize': '24px',
+                            'color': COLORS['accent-light'],
+                            'marginRight': '8px',
+                            'opacity': '0.6'
+                        }),
+                    ], style={'marginBottom': '10px'}),
+                    html.P("Setting financial goals has never been easier. The visual progress trackers keep me motivated, and the personalized tips have been invaluable for my long-term planning.", 
+                        className="testimonial-text",
+                        style={
+                            'color': COLORS['white'],
+                            'fontSize': '1.1rem',
+                            'lineHeight': '1.7',
+                            'marginBottom': '20px',
+                            'fontStyle': 'italic'
+                        }
+                    ),
+                    html.H5("Emma Chen", style={
+                        'color': COLORS['white'],
+                        'fontSize': '1.1rem',
+                        'fontWeight': '600',
+                        'marginBottom': '5px'
+                    }),
+                    html.P("Marketing Director", style={
+                        'color': COLORS['accent-light'],
+                        'fontSize': '0.9rem'
+                    })
+                ], className="testimonial-card", style={
+                    'padding': '30px 25px',
+                    'backgroundColor': 'rgba(255, 255, 255, 0.1)',
+                    'borderRadius': '10px',
+                    'height': '100%',
+                    'textAlign': 'center',
+                    'backdropFilter': 'blur(10px)',
+                    'boxShadow': '0 8px 20px rgba(0, 0, 0, 0.2)'
+                })
+            ], md=4, className="mb-4")
+        ])
+    ], className="testimonials-section", style={
+        'padding': '80px 40px',
+        'backgroundColor': COLORS['secondary'],  # Different shade of blue
+        'backgroundImage': 'linear-gradient(135deg, rgba(42, 74, 127, 0.95) 0%, rgba(26, 54, 93, 0.95) 100%)',
+        'color': COLORS['white'],
+        'position': 'relative',
+        'overflow': 'hidden'
+    }),
+
+    # Statistics Section with Stacked Blue Metric Icons
+    html.Div([
+        html.H2("BlueCard by the Numbers", className="section-title", style={
+            'color': COLORS['primary'],
+            'textAlign': 'center',
+            'fontSize': '2.5rem',
+            'fontWeight': '600',
+            'marginBottom': '3rem',
+            'position': 'relative',
+            'paddingBottom': '15px'
+        }),
+        
+        # Decorative line under the section title
+        html.Div(style={
+            'position': 'absolute',
+            'width': '80px',
+            'height': '4px',
+            'backgroundColor': COLORS['accent'],
+            'left': '50%',
+            'transform': 'translateX(-50%)',
+            'marginTop': '-2.7rem'
+        }),
+        
+        # Metrics Row with Stacked Icons
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        # Stacked Icons with 3D Effect
+                        html.Div([
+                            html.Img(src="/assets/users.png", alt="Users Icon", style={
+                                'width': '60px',
+                                'height': '60px',
+                                'position': 'absolute',
+                                'top': '0',
+                                'left': '0',
+                                'zIndex': '3',
+                                'filter': 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2))'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent-light'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '5px',
+                                'left': '5px',
+                                'zIndex': '1',
+                                'transform': 'rotate(15deg)'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '10px',
+                                'left': '10px',
+                                'zIndex': '2',
+                                'transform': 'rotate(30deg)'
+                            })
+                        ], style={
+                            'position': 'relative',
+                            'width': '100px',
+                            'height': '100px',
+                            'margin': '0 auto 40px auto'
+                        })
+                    ]),
+                    html.H2("50,000+", style={
+                        'color': COLORS['primary'],
+                        'fontSize': '2.5rem',
+                        'fontWeight': '700',
+                        'marginBottom': '10px'
+                    }),
+                    html.P("Active Users", style={
+                        'color': COLORS['grey'],
+                        'fontSize': '1.2rem',
+                        'fontWeight': '500'
+                    })
+                ], className="metric-card", style={
+                    'textAlign': 'center',
+                    'padding': '40px 20px',
+                    'backgroundColor': COLORS['white'],
+                    'borderRadius': '8px',
+                    'boxShadow': '0 10px 25px rgba(0, 0, 0, 0.05)',
+                    'height': '100%'
+                })
+            ], md=3, sm=6, className="mb-4"),
+            
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        # Stacked Icons with 3D Effect
+                        html.Div([
+                            html.Img(src="/assets/savings_vault.png", alt="Savings Icon", style={
+                                'width': '60px',
+                                'height': '60px',
+                                'position': 'absolute',
+                                'top': '0',
+                                'left': '0',
+                                'zIndex': '3',
+                                'filter': 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2))'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent-light'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '5px',
+                                'left': '5px',
+                                'zIndex': '1',
+                                'transform': 'rotate(15deg)'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '10px',
+                                'left': '10px',
+                                'zIndex': '2',
+                                'transform': 'rotate(30deg)'
+                            })
+                        ], style={
+                            'position': 'relative',
+                            'width': '100px',
+                            'height': '100px',
+                            'margin': '0 auto 40px auto'
+                        })
+                    ]),
+                    html.H2("£42M+", style={
+                        'color': COLORS['primary'],
+                        'fontSize': '2.5rem',
+                        'fontWeight': '700',
+                        'marginBottom': '10px'
+                    }),
+                    html.P("Savings Tracked", style={
+                        'color': COLORS['grey'],
+                        'fontSize': '1.2rem',
+                        'fontWeight': '500'
+                    })
+                ], className="metric-card", style={
+                    'textAlign': 'center',
+                    'padding': '40px 20px',
+                    'backgroundColor': COLORS['white'],
+                    'borderRadius': '8px',
+                    'boxShadow': '0 10px 25px rgba(0, 0, 0, 0.05)',
+                    'height': '100%'
+                })
+            ], md=3, sm=6, className="mb-4"),
+            
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        # Stacked Icons with 3D Effect
+                        html.Div([
+                            html.Img(src="/assets/goal.png", alt="Goals Icon", style={
+                                'width': '60px',
+                                'height': '60px',
+                                'position': 'absolute',
+                                'top': '0',
+                                'left': '0',
+                                'zIndex': '3',
+                                'filter': 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2))'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent-light'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '5px',
+                                'left': '5px',
+                                'zIndex': '1',
+                                'transform': 'rotate(15deg)'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '10px',
+                                'left': '10px',
+                                'zIndex': '2',
+                                'transform': 'rotate(30deg)'
+                            })
+                        ], style={
+                            'position': 'relative',
+                            'width': '100px',
+                            'height': '100px',
+                            'margin': '0 auto 40px auto'
+                        })
+                    ]),
+                    html.H2("100,000+", style={
+                        'color': COLORS['primary'],
+                        'fontSize': '2.5rem',
+                        'fontWeight': '700',
+                        'marginBottom': '10px'
+                    }),
+                    html.P("Goals Achieved", style={
+                        'color': COLORS['grey'],
+                        'fontSize': '1.2rem',
+                        'fontWeight': '500'
+                    })
+                ], className="metric-card", style={
+                    'textAlign': 'center',
+                    'padding': '40px 20px',
+                    'backgroundColor': COLORS['white'],
+                    'borderRadius': '8px',
+                    'boxShadow': '0 10px 25px rgba(0, 0, 0, 0.05)',
+                    'height': '100%'
+                })
+            ], md=3, sm=6, className="mb-4"),
+            
+            dbc.Col([
+                html.Div([
+                    html.Div([
+                        # Stacked Icons with 3D Effect
+                        html.Div([
+                            html.Img(src="/assets/globe.png", alt="Countries Icon", style={
+                                'width': '60px',
+                                'height': '60px',
+                                'position': 'absolute',
+                                'top': '0',
+                                'left': '0',
+                                'zIndex': '3',
+                                'filter': 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2))'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent-light'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '5px',
+                                'left': '5px',
+                                'zIndex': '1',
+                                'transform': 'rotate(15deg)'
+                            }),
+                            html.Div(style={
+                                'width': '60px',
+                                'height': '60px',
+                                'backgroundColor': COLORS['accent'],
+                                'borderRadius': '15px',
+                                'position': 'absolute',
+                                'top': '10px',
+                                'left': '10px',
+                                'zIndex': '2',
+                                'transform': 'rotate(30deg)'
+                            })
+                        ], style={
+                            'position': 'relative',
+                            'width': '100px',
+                            'height': '100px',
+                            'margin': '0 auto 40px auto'
+                        })
+                    ]),
+                    html.H2("25+", style={
+                        'color': COLORS['primary'],
+                        'fontSize': '2.5rem',
+                        'fontWeight': '700',
+                        'marginBottom': '10px'
+                    }),
+                    html.P("Countries Served", style={
+                        'color': COLORS['grey'],
+                        'fontSize': '1.2rem',
+                        'fontWeight': '500'
+                    })
+                ], className="metric-card", style={
+                    'textAlign': 'center',
+                    'padding': '40px 20px',
+                    'backgroundColor': COLORS['white'],
+                    'borderRadius': '8px',
+                    'boxShadow': '0 10px 25px rgba(0, 0, 0, 0.05)',
+                    'height': '100%'
+                })
+            ], md=3, sm=6, className="mb-4")
+        ])
+    ], className="stats-section", style={
+        'padding': '80px 40px',
+        'backgroundColor': COLORS['background'],  # Light blue-grey
+        'position': 'relative'
+    }),
+
+    # Image Collage Section with diagonal blue overlay
+    html.Div([
+        html.Div([
+            html.H2("Financial Success Stories", className="section-title", style={
+                'color': COLORS['white'],
+                'textAlign': 'center',
+                'fontSize': '2.5rem',
+                'fontWeight': '600',
+                'marginBottom': '3rem',
+                'position': 'relative',
+                'paddingBottom': '15px',
+                'zIndex': '2'
+            }),
+            
+            # Decorative line under the section title
+            html.Div(style={
+                'position': 'absolute',
+                'width': '80px',
+                'height': '4px',
+                'backgroundColor': COLORS['accent-light'],
+                'left': '50%',
+                'transform': 'translateX(-50%)',
+                'marginTop': '-2.7rem',
+                'zIndex': '2'
+            }),
+            
+            # Modern Image Collage
+            html.Div([
+                dbc.Row([
+                    # Left Column - Larger Images
+                    dbc.Col([
+                        html.Div([
+                            html.Img(src="/assets/finance-success1.png", alt="Finance Success Story", className="collage-img", style={
+                                'width': '100%',
+                                'height': '300px',
+                                'objectFit': 'cover',
+                                'borderRadius': '10px',
+                                'marginBottom': '20px',
+                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                            })
+                        ], className="collage-img-container"),
+                        html.Div([
+                            html.Img(src="/assets/finance-success2.png", alt="Finance Success Story", className="collage-img", style={
+                                'width': '100%',
+                                'height': '200px',
+                                'objectFit': 'cover',
+                                'borderRadius': '10px',
+                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                            })
+                        ], className="collage-img-container"),
+                    ], md=6, style={'padding': '10px'}),
+                    
+                    # Right Column - Smaller Images
+                    dbc.Col([
+                        html.Div([
+                            html.Img(src="/assets/finance-success3.png", alt="Finance Success Story", className="collage-img", style={
+                                'width': '100%',
+                                'height': '200px',
+                                'objectFit': 'cover',
+                                'borderRadius': '10px',
+                                'marginBottom': '20px',
+                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                            })
+                        ], className="collage-img-container"),
+                        html.Div([
+                            html.Img(src="/assets/finance-success4.png", alt="Finance Success Story", className="collage-img", style={
+                                'width': '100%',
+                                'height': '300px',
+                                'objectFit': 'cover',
+                                'borderRadius': '10px',
+                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                            })
+                        ], className="collage-img-container"),
+                    ], md=6, style={'padding': '10px'})
+                ]),
+                
+                # Bottom Row with 3 equal images
+                dbc.Row([
+                    dbc.Col([
+                        html.Div([
+                            html.Img(src="/assets/finance-success5.png", alt="Finance Success Story", className="collage-img", style={
+                                'width': '100%',
+                                'height': '180px',
+                                'objectFit': 'cover',
+                                'borderRadius': '10px',
+                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                            })
+                        ], className="collage-img-container"),
+                    ], md=4, style={'padding': '10px'}),
+                    
+                    dbc.Col([
+                        html.Div([
+                            html.Img(src="/assets/finance-success6.png", alt="Finance Success Story", className="collage-img", style={
+                                'width': '100%',
+                                'height': '180px',
+                                'objectFit': 'cover',
+                                'borderRadius': '10px',
+                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                            })
+                        ], className="collage-img-container"),
+                    ], md=4, style={'padding': '10px'}),
+                    
+                    dbc.Col([
+                        html.Div([
+                            html.Img(src="/assets/finance-success7.png", alt="Finance Success Story", className="collage-img", style={
+                                'width': '100%',
+                                'height': '180px',
+                                'objectFit': 'cover',
+                                'borderRadius': '10px',
+                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+                            })
+                        ], className="collage-img-container"),
+                    ], md=4, style={'padding': '10px'})
+                ], className="mt-3")
+            ], className="image-collage", style={'zIndex': '2', 'position': 'relative'})
+        ], className="collage-section-content", style={
+            'position': 'relative',
+            'zIndex': '2'
+        })
+    ], className="collage-section", style={
+        'padding': '80px 40px',
+        'backgroundColor': COLORS['accent'],  # Bright blue
+        'backgroundImage': f'linear-gradient(135deg, {COLORS["accent"]} 0%, {COLORS["primary"]} 100%)',
+        'position': 'relative',
+        'overflow': 'hidden'
+    }),
+
+# Call to Action Section with a different blue shade
+html.Div([
+    dbc.Row([
+        dbc.Col([
+            html.H2("Ready to Transform Your Financial Future?", className="cta-title", style={
+                'color': COLORS['white'],
+                'fontSize': '2.8rem',
+                'fontWeight': '700',
+                'marginBottom': '1.5rem',
+                'lineHeight': '1.2'
+            }),
+            html.P("Join thousands of satisfied users who are taking control of their finances with BlueCard Finance.", style={
+                'color': COLORS['white'],
+                'fontSize': '1.2rem',
+                'marginBottom': '2.5rem',
+                'opacity': '0.9',
+                'maxWidth': '600px'
+            }),
+            dbc.Button(
+                "Get Started Today",
+                href="/dashboard",
+                className="cta-button",
+                size="lg",
+                style={
+                    'backgroundColor': COLORS['white'],
+                    'color': COLORS['primary'],
+                    'border': 'none',
+                    'borderRadius': '8px',
+                    'padding': '15px 40px',
+                    'fontSize': '1.2rem',
+                    'fontWeight': '600',
+                    'boxShadow': '0 10px 20px rgba(0, 0, 0, 0.1)',
+                    'transition': 'all 0.3s ease'
+                }
             )
-        ], style={'borderBottom': f'1px solid {COLORS["light"]}'}, className='hover-row'))
+        ], md=7, className="cta-content", style={
+            'display': 'flex',
+            'flexDirection': 'column',
+            'justifyContent': 'center'
+        }),
+        dbc.Col([
+            # Stacked Device Mockups
+            html.Div([
+                html.Img(src="/assets/dashboard_pc.png", alt="Dashboard on Desktop", style={
+                    'width': '100%',
+                    'maxWidth': '400px',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 20px 40px rgba(0, 0, 0, 0.2)',
+                    'position': 'relative',
+                    'zIndex': '3'
+                }),
+                html.Img(src="/assets/savings_analysis_pc.png", alt="Dashboard on Mobile", style={
+                    'width': '100%',
+                    'maxWidth': '200px',
+                    'position': 'absolute',
+                    'right': '0',
+                    'bottom': '-20px',
+                    'zIndex': '4',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 15px 30px rgba(0, 0, 0, 0.25)'
+                })
+            ], style={
+                'position': 'relative',
+                'height': '350px',
+                'display': 'flex',
+                'alignItems': 'center',
+                'justifyContent': 'center'
+            })
+        ], md=5, className="d-none d-md-block")  # Hide on mobile
+    ])
+], className="cta-section", style={
+    'padding': '80px 40px',
+    'backgroundColor': COLORS['secondary'],  # Medium dark blue
+    'backgroundImage': 'linear-gradient(135deg, rgba(42, 74, 127, 0.98) 0%, rgba(20, 44, 82, 0.98) 100%)',
+    'position': 'relative'
+}),
 
-    table_body = [html.Tbody(rows)]
-
-    return html.Div([
-        dbc.Table(
-            table_header + table_body, 
-            bordered=False,
-            striped=False,
-            hover=True, 
-            responsive=True, 
-            className='mt-3 table-sm shadow-sm',
-            style={
-                'borderCollapse': 'separate',
-                'borderSpacing': '0',
-                'width': '100%',
-                'borderRadius': '8px',
-                'overflow': 'hidden',
-                'backgroundColor': COLORS['white']
-            }
-        )
-    ], style={'padding': '5px'})
-
-
-@callback(
-    Output('savings-store', 'data'),
-    Input({'type': 'delete-entry-btn', 'index': ALL}, 'n_clicks'),
-    State('savings-store', 'data'),
-    prevent_initial_call=True
-)
-def delete_savings_entry(n_clicks_list, store_data):
-    if not any(n_clicks for n_clicks in n_clicks_list if n_clicks):
-        raise dash.exceptions.PreventUpdate
-
-    triggered_index = ctx.triggered_id['index']
-    if store_data and 'records' in store_data:
-        store_data['records'].pop(triggered_index)
-    return store_data
-
-
-@callback(
-    Output('goals-store', 'data'),
-    Input({'type': 'delete-goal-btn', 'index': ALL}, 'n_clicks'),
-    Input('btn-add-goal', 'n_clicks'),
-    State('goals-store', 'data'),
-    State('goal-name', 'value'),
-    State('goal-amount', 'value'),
-    State('goal-date', 'date'),
-    prevent_initial_call=True
-)
-def manage_goals(n_clicks_list, add_clicks, goals_data, name, amount, target_date):
-    trigger = ctx.triggered_id
+    # Footer
+    html.Footer([
+    # Modern top section with logo and quick links
+    html.Div([
+        # Left side with logo and tagline
+        html.Div([
+            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
+                "height": "140px",
+                "marginBottom": "10px",
+                "filter": "brightness(1.1) contrast(1.1)"
+            }),
+            # html.P("Empowering your financial future", style={
+            #     "color": "#ffffff",
+            #     "fontSize": "14px",
+            #     "fontWeight": "300",
+            #     "letterSpacing": "0.5px",
+            #     "margin": "0"
+            # })
+        ], className="footer-branding", style={
+            "flex": "2",
+            "marginRight": "40px"
+        }),
+        
+        # Middle section with quick links
+        html.Div([
+            html.H4("Quick Links", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Ul([
+                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+            ], style={
+                "listStyleType": "none",
+                "padding": "0",
+                "margin": "0"
+            })
+        ], className="footer-links", style={"flex": "1"}),
+        
+        # Right section with contact info
+        html.Div([
+            html.H4("Contact", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Div([
+                html.P([
+                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
+                    "support@bluecardfinance.com"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
+                    "(+44) 555-0XXX"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
+                    "123 Finance St, London, LN"
+                ], style={"marginBottom": "10px", "fontSize": "14px"})
+            ])
+        ], className="footer-contact", style={"flex": "1"})
+    ], className="footer-top", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "40px 60px",
+        "backgroundColor": "rgba(0,0,0,0.1)",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)",
+        "flexWrap": "wrap",
+        "gap": "30px"
+    }),
     
-    # Initialize goals data if it doesn't exist
-    if goals_data is None:
-        goals_data = {'goals': []}
+    # Middle social media section
+    html.Div([
+        html.H4("Connect With Us", style={
+            "margin": "0 20px 0 0",
+            "color": "#ffffff",
+            "fontSize": "16px",
+            "fontWeight": "400"
+        }),
+        html.Div([
+            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            })
+        ], style={"display": "flex"})
+    ], className="footer-social", style={
+        "display": "flex",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "padding": "20px 60px",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+    }),
     
-    # Handle goal deletion
-    if isinstance(trigger, dict) and trigger.get('type') == 'delete-goal-btn':
-        triggered_index = trigger['index']
-        if 'goals' in goals_data:
-            goals_data['goals'].pop(triggered_index)
-    
-    # Handle goal addition
-    elif trigger == 'btn-add-goal':
-        if not name or not amount or not target_date:
-            raise dash.exceptions.PreventUpdate
-            
-        # Add new goal
-        new_goal = {
-            'name': name or "Unnamed Goal",  # Fallback to "Unnamed Goal" if name is missing
-            'amount': amount,
-            'date': target_date
-        }
-        goals_data['goals'].append(new_goal)
-    
-    return goals_data
+    # Bottom copyright section
+    html.Div([
+        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
+            "color": "rgba(255,255,255,0.7)",
+            "margin": "0",
+            "fontSize": "14px"
+        }),
+        html.Div([
+            html.A("Privacy Policy", href="#", className="footer-link"),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Terms of Service", href="#", className="footer-link"),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Cookie Policy", href="#", className="footer-link")
+        ])
+    ], className="footer-bottom", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "20px 60px",
+        "flexWrap": "wrap",
+        "gap": "15px"
+    })
+], className="dashboard-footer", style={
+    "backgroundColor": COLORS['primary'],
+    "color": "#ffffff",
+    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
+})
+
+], style={"width": "100%", "margin": "0", "padding": "0"})

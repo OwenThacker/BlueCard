@@ -28,6 +28,16 @@ COLORS = {
     'dark': '#212529'
 }
 
+HEADER_STYLE = {
+    'backgroundColor': COLORS['primary'],  # Dark blue header
+    'color': COLORS['white'],  # White text
+    'borderBottom': f'2px solid {COLORS["accent"]}',  # Accent border
+    'borderRadius': '12px 12px 0 0',  # Rounded top corners
+    'padding': '15px 20px',  # Add padding
+    'fontWeight': 'bold',  # Bold header text
+    'fontSize': '16px'  # Slightly larger font
+}
+
 # Helper function to create pie chart
 def create_pie_chart(income_sources):
     if not income_sources:
@@ -89,7 +99,7 @@ def create_pie_chart(income_sources):
         ),
         textfont=dict(size=12, color="#333", family="Arial, sans-serif"),
         hoverinfo='label+percent+value',
-        hovertemplate='<b>%{label}</b><br>%{percent:.1%}<br>$%{value:,.2f}<extra></extra>'
+        hovertemplate='<b>%{label}</b><br>%{percent:.1%}<br>£%{value:,.2f}<extra></extra>'
     )
     
     # Update layout with improved styling
@@ -107,7 +117,7 @@ def create_pie_chart(income_sources):
     # Add center text for total with currency formatting
     total = sum(categories.values())
     fig.add_annotation(
-        text=f"${total:,.0f}",
+        text=f"£{total:,.0f}",
         x=0.5, y=0.5,
         font=dict(size=18, color='#0066CC', family="Arial, sans-serif", weight="bold"),
         showarrow=False
@@ -287,7 +297,7 @@ def create_timeline_chart(income_sources):
         height=400,
         margin=dict(t=10, b=10, l=10, r=10),
         xaxis_title=None,
-        yaxis_title="Monthly Amount ($)",
+        yaxis_title="Monthly Amount (£)",
         hovermode="x unified",
         legend=dict(
             orientation="h",
@@ -309,7 +319,7 @@ def create_timeline_chart(income_sources):
         yaxis=dict(
             showgrid=True,
             gridcolor='rgba(0,0,0,0.1)',
-            tickprefix="$",
+            tickprefix="£",
             tickfont=dict(size=10, color="#333")
         ),
         annotations=annotations
@@ -323,21 +333,12 @@ def generate_income_cards(income_sources):
         return [], html.Div([
             html.I(className="fas fa-info-circle me-2"),
             "No income sources added yet. Add your first income source above."
-        ], className="text-muted"), "$0", "0"
+        ], className="text-muted"), "£0", "0"
 
     income_cards = []
     total_monthly_income = 0
     
-    # Category icons and display names
-    category_icons = {
-        "employment": "💼",
-        "business": "🏢",
-        "investments": "📈",
-        "rental": "🏠",
-        "freelance": "💻",
-        "other": "🔄"
-    }
-    
+    # Category display names without emojis
     category_display = {
         "employment": "Employment",
         "business": "Business",
@@ -360,9 +361,8 @@ def generate_income_cards(income_sources):
         monthly_amount = source.get("monthly_amount", 0)
         total_monthly_income += monthly_amount
         
-        # Get icon and category name
+        # Get category name
         category = source.get("category", "other")
-        icon = category_icons.get(category, "🔄")
         cat_display = category_display.get(category, "Other")
         freq = frequency_display.get(source.get("frequency", "monthly"), "Monthly")
         
@@ -378,18 +378,21 @@ def generate_income_cards(income_sources):
             if months_with_data > 0:
                 history_info = f" • {months_with_data} month{'s' if months_with_data > 1 else ''} history"
 
-        # Create a more compact, professional card
+        # Create a more refined, professional card
         income_cards.append(
             dbc.Card([
                 dbc.CardBody([
                     # Top row with name and buttons
                     html.Div([
-                        # Left side: icon and name
+                        # Left side: name and category
                         html.Div([
-                            html.Div(icon, className="income-icon fs-5 me-2"),
                             html.Div([
-                                html.H5(source.get("name", f"Income Source #{idx+1}"), className="mb-0 fw-bold"),
-                                html.Small(f"{cat_display} • {freq}{history_info}", className="text-muted")
+                                html.H5(source.get("name", f"Income Source #{idx+1}"), 
+                                        className="mb-0 fw-semibold", 
+                                        style={"color": "#2C3E50"}),
+                                html.Small(f"{cat_display} • {freq}{history_info}", 
+                                           className="text-muted",
+                                           style={"fontSize": "12px", "letterSpacing": "0.3px"})
                             ])
                         ], className="d-flex align-items-center"),
                         
@@ -397,51 +400,75 @@ def generate_income_cards(income_sources):
                         html.Div([
                             # Edit button
                             html.Button(
-                                "✏️", # Edit pencil emoji
+                                "Edit",
                                 id={"type": "edit-income", "index": source["id"]},
                                 className="btn btn-sm btn-outline-primary px-2 py-1 me-2",
                                 title="Edit historical income data",
-                                style={"fontSize": "16px", "borderRadius": "6px"}
+                                style={
+                                    'borderRadius': '4px',
+                                    'fontSize': '11px',
+                                    'fontWeight': '500',
+                                    'color': '#3498DB',
+                                    'border': '1px solid #3498DB',
+                                    'transition': 'all 0.2s',
+                                    'letterSpacing': '0.3px'
+                                }
                             ),
                             # Delete button
                             html.Button(
-                                "🗑️", # Trash emoji
+                                "Remove",
                                 id={"type": "delete-income", "index": source["id"]},
                                 className="btn btn-sm btn-outline-danger px-2 py-1",
                                 title="Delete this income source",
-                                style={"fontSize": "16px", "borderRadius": "6px"}
+                                style={
+                                    'borderRadius': '4px',
+                                    'fontSize': '11px',
+                                    'fontWeight': '500',
+                                    'color': '#E74C3C',
+                                    'border': '1px solid #E74C3C',
+                                    'transition': 'all 0.2s',
+                                    'letterSpacing': '0.3px'
+                                }
                             )
                         ], className="d-flex")
-                    ], className="d-flex justify-content-between align-items-center mb-2"),
+                    ], className="d-flex justify-content-between align-items-center mb-3"),
                     
                     # Amount row
                     html.Div([
                         # Left: Amount display 
                         html.Div([
-                            html.H4(f"${monthly_amount:,.2f}", className="mb-0 text-primary fw-bold"),
+                            html.H4(f"£{monthly_amount:,.2f}", 
+                                   className="mb-0 fw-bold", 
+                                   style={"color": "#3498DB", "fontFamily": "'Arial', sans-serif"}),
                             html.Small(
-                                "Variable avg" if is_variable else "Fixed",
-                                className="text-muted"
+                                "Variable average" if is_variable else "Fixed income",
+                                className="text-muted",
+                                style={"fontSize": "11px", "letterSpacing": "0.2px"}
                             ) if is_variable else None
                         ], className="pe-3"),
                         
                         # Right: Equivalents
                         html.Div([
                             html.Div([
-                                html.Span("Daily: ", className="small text-muted"),
-                                html.Span(f"${source.get('daily_amount', 0):,.2f}", className="small fw-semibold")
+                                html.Span("Daily: ", className="small text-muted", style={"fontSize": "11px"}),
+                                html.Span(f"£{source.get('daily_amount', 0):,.2f}", 
+                                          className="small fw-semibold",
+                                          style={"fontSize": "11px", "color": "#2C3E50"})
                             ], className="d-flex justify-content-between"),
                             html.Div([
-                                html.Span("Weekly: ", className="small text-muted"),
-                                html.Span(f"${source.get('weekly_amount', 0):,.2f}", className="small fw-semibold")
+                                html.Span("Weekly: ", className="small text-muted", style={"fontSize": "11px"}),
+                                html.Span(f"£{source.get('weekly_amount', 0):,.2f}", 
+                                          className="small fw-semibold",
+                                          style={"fontSize": "11px", "color": "#2C3E50"})
                             ], className="d-flex justify-content-between")
                         ], className="flex-grow-1")
                     ], className="d-flex align-items-center mt-2")
-                ], className="p-3")  # Smaller padding for more compact look
-            ], className="income-source-card mb-3 shadow-sm")  # Reduced margin-bottom
+                ], className="p-3")
+            ], className="income-source-card mb-3 shadow-sm", 
+            style={"borderLeft": f"3px solid #3498DB", "borderRadius": "3px"})
         )
 
-    return income_cards, "", f"${total_monthly_income:,.2f}", str(len(income_sources))
+    return income_cards, "", f"£{total_monthly_income:,.2f}", str(len(income_sources))
 
 # Helper function to create historical income form fields
 def create_historical_income_fields(source_id, source_data):
@@ -497,26 +524,26 @@ def create_historical_income_fields(source_id, source_data):
 layout = html.Div([
     # Header
     html.Div([
-        html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
-        ], className="dashboard-title"),
-    ], className="dashboard-header"),
+        html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
 
-    # Navigation
-    html.Nav([
-        html.Button([
-            html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
-            html.Span("≡")
-        ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
+    
 
-        html.Ul([
-            html.Li(html.A([html.Span("🏠", className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("📈", className="nav-icon"), "Income"], href="/income", className="nav-link active"), className="nav-item"),
-            html.Li(html.A([html.Span("💰", className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
-            html.Li([html.A([html.Span("🎯", className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
-        ], className="nav-menu", id="nav-menu")
-    ], className="nav-bar"),
+        # Navigation
+        html.Nav([
+            html.Button([
+                html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
+                html.Span("≡")
+            ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
+
+            html.Ul([
+                html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link active"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
+                html.Li([html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
+            ], className="nav-menu", id="nav-menu")
+        ], className="nav-bar"),
+    ], className="header-container"),
 
     # Breadcrumb
     html.Ul([
@@ -533,10 +560,11 @@ layout = html.Div([
             # Left Column: Summary and Pie Chart
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader([
-                        html.H4("Income Summary", className="text-primary m-0"),
-                        html.Small("Your financial overview at a glance", className="text-muted")
-                    ], className="d-flex flex-column"),
+                    dbc.CardHeader(
+                        html.H4("Income Summary", className="card-title m-0"),
+                        className="d-flex flex-column",
+                        style=HEADER_STYLE  # Apply HEADER_STYLE to the entire CardHeader
+                    ),
                     dbc.CardBody([
                         dbc.Row([
                             dbc.Col([
@@ -575,10 +603,11 @@ layout = html.Div([
             # Right Column: Add Income Source
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader([
-                        html.H4("Add Income Source", className="text-primary m-0"),
-                        html.Small("Track all your income streams in one place", className="text-muted")
-                    ], className="d-flex flex-column"),
+                    dbc.CardHeader(
+                        html.H4("Add Income Source", className="card-title m-0"),
+                        className="d-flex flex-column",
+                        style=HEADER_STYLE  # Apply HEADER_STYLE to the entire CardHeader
+                    ),
                     dbc.CardBody([
                         dbc.Row([
                             dbc.Col([
@@ -594,7 +623,7 @@ layout = html.Div([
 
                         dbc.Row([
                             dbc.Col([
-                                html.Label("Amount ($)", className="form-label fw-bold"),
+                                html.Label("Amount (£)", className="form-label fw-bold"),
                                 dcc.Input(
                                     id="income-amount-input",
                                     type="number",
@@ -723,25 +752,31 @@ layout = html.Div([
                 dbc.Row([
                     dbc.Col([
                         dbc.Card([
-                            dbc.CardHeader([
-                                html.H4("Your Income Sources", className="text-primary m-0 d-flex align-items-center"),
-                                html.Small("Manage your income streams", className="text-muted")
-                            ], className="d-flex flex-column"),
+                            dbc.CardHeader(
+                                html.H4("Income Sources", className="card-title m-0"),
+                                className="d-flex flex-column",
+                                style=HEADER_STYLE  # Apply HEADER_STYLE to the entire CardHeader
+                            ),
                             dbc.CardBody([
                                 html.Div(id="income-sources-container", className="income-sources-list"),
                                 html.Div(id="no-income-sources-message", className="text-center py-4")
-                            ])
-                        ], className="shadow-sm")
+                            ], style={"backgroundColor": "#ffffff"})
+                        ], className="shadow-sm", style={"border": "1px solid rgba(0,0,0,0.125)", "borderRadius": "4px"})
                     ], width=12)
                 ]),
 
-                # Historical Income Modal
+                # Historical Income Modal - update to match professional styling
                 dbc.Modal(
                     [
-                        dbc.ModalHeader(dbc.ModalTitle("Edit Historical Income")),
+                        dbc.ModalHeader(dbc.ModalTitle("Edit Historical Income"), 
+                                        style={"backgroundColor": "#f8f9fa", "borderBottom": "1px solid rgba(0,0,0,0.1)"}),
                         dbc.ModalBody(id="historical-income-modal-body"),
                         dbc.ModalFooter(
-                            dbc.Button("Close", id="close-history-modal", className="ms-auto", n_clicks=0)
+                            dbc.Button("Close", 
+                                    id="close-history-modal", 
+                                    className="ms-auto", 
+                                    n_clicks=0,
+                                    style={"backgroundColor": "#3498DB", "borderColor": "#3498DB"})
                         ),
                     ],
                     id="historical-income-modal",
@@ -768,20 +803,177 @@ layout = html.Div([
 
     # Footer
     html.Footer([
-        html.Div("© 2025 BlueCard Finance. All rights reserved.", className="footer-text"),
+    # Modern top section with logo and quick links
+    html.Div([
+        # Left side with logo and tagline
+        html.Div([
+            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
+                "height": "140px",
+                "marginBottom": "10px",
+                "filter": "brightness(1.1) contrast(1.1)"
+            }),
+            # html.P("Empowering your financial future", style={
+            #     "color": "#ffffff",
+            #     "fontSize": "14px",
+            #     "fontWeight": "300",
+            #     "letterSpacing": "0.5px",
+            #     "margin": "0"
+            # })
+        ], className="footer-branding", style={
+            "flex": "2",
+            "marginRight": "40px"
+        }),
+        
+        # Middle section with quick links
+        html.Div([
+            html.H4("Quick Links", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Ul([
+                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+            ], style={
+                "listStyleType": "none",
+                "padding": "0",
+                "margin": "0"
+            })
+        ], className="footer-links", style={"flex": "1"}),
+        
+        # Right section with contact info
+        html.Div([
+            html.H4("Contact", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Div([
+                html.P([
+                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
+                    "support@bluecardfinance.com"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
+                    "(+44) 555-0XXX"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
+                    "123 Finance St, London, LN"
+                ], style={"marginBottom": "10px", "fontSize": "14px"})
+            ])
+        ], className="footer-contact", style={"flex": "1"})
+    ], className="footer-top", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "40px 60px",
+        "backgroundColor": "rgba(0,0,0,0.1)",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)",
+        "flexWrap": "wrap",
+        "gap": "30px"
+    }),
+    
+    # Middle social media section
+    html.Div([
+        html.H4("Connect With Us", style={
+            "margin": "0 20px 0 0",
+            "color": "#ffffff",
+            "fontSize": "16px",
+            "fontWeight": "400"
+        }),
+        html.Div([
+            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            })
+        ], style={"display": "flex"})
+    ], className="footer-social", style={
+        "display": "flex",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "padding": "20px 60px",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+    }),
+    
+    # Bottom copyright section
+    html.Div([
+        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
+            "color": "rgba(255,255,255,0.7)",
+            "margin": "0",
+            "fontSize": "14px"
+        }),
         html.Div([
             html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span(" | "),
-            html.A("Terms of Service", href="#", className="footer-link")
-        ], className="footer-links")
-    ], className="dashboard-footer", style={
-        "backgroundColor": "#f8f9fa",
-        "padding": "20px",
-        "textAlign": "center",
-        "fontSize": "14px",
-        "color": "#6c757d",
-        "marginTop": "20px"
-    }),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Terms of Service", href="#", className="footer-link"),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Cookie Policy", href="#", className="footer-link")
+        ])
+    ], className="footer-bottom", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "20px 60px",
+        "flexWrap": "wrap",
+        "gap": "15px"
+    })
+], className="dashboard-footer", style={
+    "backgroundColor": COLORS['primary'],
+    "color": "#ffffff",
+    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
+})
 
 ])
 
@@ -1135,12 +1327,12 @@ def update_whatif_analysis(source_id, sources):
         html.Div([
             html.Div([
                 html.H5("Current Monthly Income:", className="mb-0"),
-                html.H5(f"${total_income:,.2f}", className="text-primary mb-0")
+                html.H5(f"£{total_income:,.2f}", className="text-primary mb-0")
             ], className="d-flex justify-content-between"),
             
             html.Div([
                 html.H5("Without This Source:", className="mb-0"),
-                html.H5(f"${new_total:,.2f}", className="text-danger mb-0")
+                html.H5(f"£{new_total:,.2f}", className="text-danger mb-0")
             ], className="d-flex justify-content-between"),
             
             html.Hr(),
@@ -1148,7 +1340,7 @@ def update_whatif_analysis(source_id, sources):
             html.Div([
                 html.H5("Impact:", className="mb-0"),
                 html.H5([
-                    f"-${monthly_amount:,.2f}",
+                    f"-£{monthly_amount:,.2f}",
                     html.Small(f" ({percent_decrease:.1f}%)", className="ms-1")
                 ], className="text-danger mb-0")
             ], className="d-flex justify-content-between"),

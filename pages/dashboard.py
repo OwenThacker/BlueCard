@@ -57,69 +57,68 @@ def get_session_data():
 layout = html.Div([
     # Dashboard Header
     html.Div([
-        html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
-        ], className="dashboard-title"),
-    ], className="dashboard-header"),
+        
+        html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
 
-    # Navigation Bar
-    html.Nav([
-        html.Button([
-            html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
-            html.Span("≡")
-        ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
+        # Navigation Bar
+        html.Nav([
+            html.Button([
+                html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
+                html.Span("≡")
+            ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
 
-        # Navigation Menu
-        html.Ul([
+            # Navigation Menu
+            html.Ul([
 
-            html.Li([
-                html.A([
-                    html.Span("🏠", className="nav-icon"),
-                    "Home"
-                ], href="/", className="nav-link")
-            ], className="nav-item"),
+                html.Li([
+                    html.A([
+                        html.Span(className="nav-icon"),
+                        "Home"
+                    ], href="/", className="nav-link")
+                ], className="nav-item"),
 
-            html.Li([
-                html.A([
-                    html.Span("📊", className="nav-icon"),
-                    "Dashboard"
-                ], href="/dashboard", className="nav-link active")
-            ], className="nav-item"),
-            
-            html.Li([
-                html.A([
-                    html.Span("📈", className="nav-icon"),
-                    "Income"
-                ], href="/income", className="nav-link")
-            ], className="nav-item"),
+                html.Li([
+                    html.A([
+                        html.Span(className="nav-icon"),
+                        "Dashboard"
+                    ], href="/dashboard", className="nav-link active")
+                ], className="nav-item"),
+                
+                html.Li([
+                    html.A([
+                        html.Span(className="nav-icon"),
+                        "Income"
+                    ], href="/income", className="nav-link")
+                ], className="nav-item"),
 
-            html.Li([
-                html.A([
-                    html.Span("💰", className="nav-icon"),
-                    "Expenses"
-                ], href="/expenses", className="nav-link")
-            ], className="nav-item"),
+                html.Li([
+                    html.A([
+                        html.Span(className="nav-icon"),
+                        "Expenses"
+                    ], href="/expenses", className="nav-link")
+                ], className="nav-item"),
 
-            html.Li([html.A([html.Span("🎯", className="nav-icon"), 
-                            "Savings Analysis"], href="/savings",
-                    className="nav-link")
-            ], className="nav-item"),
-            
-            # html.Li([
-            #     html.A([
-            #         html.Span("🎯", className="nav-icon"),
-            #         "Goals"
-            #     ], href="/goals", className="nav-link")
-            # ], className="nav-item"),
-            
-            # html.Li([
-            #     html.A([
-            #         html.Span("⚙️", className="nav-icon"),
-            #         "Settings"
-            #     ], href="/settings", className="nav-link")
-            # ], className="nav-item")
-        ], className="nav-menu", id="nav-menu")
-    ], className="nav-bar"),
+                html.Li([html.A([html.Span(className="nav-icon"), 
+                                "Savings Analysis"], href="/savings",
+                        className="nav-link")
+                ], className="nav-item"),
+                
+                # html.Li([
+                #     html.A([
+                #         html.Span("🎯", className="nav-icon"),
+                #         "Goals"
+                #     ], href="/goals", className="nav-link")
+                # ], className="nav-item"),
+                
+                # html.Li([
+                #     html.A([
+                #         html.Span("⚙️", className="nav-icon"),
+                #         "Settings"
+                #     ], href="/settings", className="nav-link")
+                # ], className="nav-item")
+            ], className="nav-menu", id="nav-menu")
+        ], className="nav-bar"),
+    ], className="header-container"),
 
     # Optional Breadcrumb
     html.Ul([
@@ -184,38 +183,30 @@ layout = html.Div([
                     html.Div([
                         html.H3("Spending Trends", className="card-title")
                     ], className="card-header"),
-                    
+
                     html.Div(id="spending-trends-content", className="card-content")
                 ], className="dashboard-card", style={"height": "100%"}),
-            ], className="column-right-large")
+            ], className="column-right-large"),
+
         ], className="row-container"),
         
         html.Div(style={"height": "24px"}),
         
         # Finance insights
         html.Div([
-        html.Div([
             html.Div([
-                html.H3("Finance Insights", className="card-title")
-            ], className="card-header"),
-            
-            # Restructured insights container with better spacing and layout
-            html.Div([
-                # Each insight gets its own card-like container with proper padding and margins
                 html.Div([
-                    html.Div(id="savings-rate-insight", className="insight-card")
-                ], className="insight-container"),
+                    html.H3("Finance Insights", className="card-title")
+                ], className="card-header"),
                 
+                # Restructured insights container with consistent styling
                 html.Div([
-                    html.Div(id="budget-balance-insight", className="insight-card")
-                ], className="insight-container"),
-                
-                html.Div([
+                    html.Div(id="savings-rate-insight", className="insight-card"),
+                    html.Div(id="budget-balance-insight", className="insight-card"),
                     html.Div(id="spending-trend-insight", className="insight-card")
-                ], className="insight-container")
-            ], className="insights-grid")
-        ], className="dashboard-card")
-    ], className="row-container")
+                ], className="insights-grid")
+            ], className="dashboard-card")
+        ], className="row-container")
     ], className="main-content-container p-3", style={"width": "100%", "maxWidth": "100%"}),
     
     # Store components for data
@@ -231,20 +222,177 @@ layout = html.Div([
 
     # Footer
     html.Footer([
-        html.Div("© 2025 BlueCard Finance. All rights reserved.", className="footer-text"),
+    # Modern top section with logo and quick links
+    html.Div([
+        # Left side with logo and tagline
+        html.Div([
+            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
+                "height": "140px",
+                "marginBottom": "10px",
+                "filter": "brightness(1.1) contrast(1.1)"
+            }),
+            # html.P("Empowering your financial future", style={
+            #     "color": "#ffffff",
+            #     "fontSize": "14px",
+            #     "fontWeight": "300",
+            #     "letterSpacing": "0.5px",
+            #     "margin": "0"
+            # })
+        ], className="footer-branding", style={
+            "flex": "2",
+            "marginRight": "40px"
+        }),
+        
+        # Middle section with quick links
+        html.Div([
+            html.H4("Quick Links", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Ul([
+                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+            ], style={
+                "listStyleType": "none",
+                "padding": "0",
+                "margin": "0"
+            })
+        ], className="footer-links", style={"flex": "1"}),
+        
+        # Right section with contact info
+        html.Div([
+            html.H4("Contact", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Div([
+                html.P([
+                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
+                    "support@bluecardfinance.com"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
+                    "(+44) 555-0XXX"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
+                    "123 Finance St, London, LN"
+                ], style={"marginBottom": "10px", "fontSize": "14px"})
+            ])
+        ], className="footer-contact", style={"flex": "1"})
+    ], className="footer-top", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "40px 60px",
+        "backgroundColor": "rgba(0,0,0,0.1)",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)",
+        "flexWrap": "wrap",
+        "gap": "30px"
+    }),
+    
+    # Middle social media section
+    html.Div([
+        html.H4("Connect With Us", style={
+            "margin": "0 20px 0 0",
+            "color": "#ffffff",
+            "fontSize": "16px",
+            "fontWeight": "400"
+        }),
+        html.Div([
+            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            })
+        ], style={"display": "flex"})
+    ], className="footer-social", style={
+        "display": "flex",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "padding": "20px 60px",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+    }),
+    
+    # Bottom copyright section
+    html.Div([
+        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
+            "color": "rgba(255,255,255,0.7)",
+            "margin": "0",
+            "fontSize": "14px"
+        }),
         html.Div([
             html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span(" | "),
-            html.A("Terms of Service", href="#", className="footer-link")
-        ], className="footer-links")
-    ], className="dashboard-footer", style={
-        "backgroundColor": "#f8f9fa",
-        "padding": "20px",
-        "textAlign": "center",
-        "fontSize": "14px",
-        "color": "#6c757d",
-        "marginTop": "20px"
-    }),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Terms of Service", href="#", className="footer-link"),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Cookie Policy", href="#", className="footer-link")
+        ])
+    ], className="footer-bottom", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "20px 60px",
+        "flexWrap": "wrap",
+        "gap": "15px"
+    })
+], className="dashboard-footer", style={
+    "backgroundColor": COLORS['primary'],
+    "color": "#ffffff",
+    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
+})
 
 ], style={"width": "100%", "margin": "0", "padding": "0"})
 
@@ -293,7 +441,7 @@ def update_dashboard_income(total_income):
         total_income = 0
     
     # Format and return the income value
-    return f"${total_income:,.2f}"
+    return f"£{total_income:,.2f}"
 
 # Add callback to populate summary tiles
 @callback(
@@ -310,50 +458,78 @@ def update_summary_tiles(total_income, total_expenses, savings_target):
         total_income = 0
     if total_expenses is None:
         total_expenses = 0
+    if savings_target is None:
+        savings_target = 0
 
     remaining = total_income - total_expenses if total_income > 0 else 0
     savings_progress = (savings_target / remaining * 100) if remaining > 0 and savings_target > 0 else 0
+
+    # Consistent styling for all summary tiles
+    tile_style = {
+        "padding": "20px",
+        "borderRadius": "8px",
+        "boxShadow": "0 2px 10px rgba(0, 0, 0, 0.1)",
+        "backgroundColor": COLORS['white'],
+        "transition": "all 0.3s ease"
+    }
+    
+    value_style = {
+        "fontSize": "24px",
+        "fontWeight": "600",
+        "marginBottom": "8px",
+        "fontFamily": "'Inter', sans-serif"
+    }
+    
+    subtitle_style = {
+        "fontSize": "14px",
+        "color": "#6c757d",
+        "marginBottom": "0"
+    }
 
     return [
         # Monthly Income Tile
         html.Div([
             html.Div([
                 html.H4("Monthly Income", className="summary-title"),
-                html.Div("💰", className="summary-icon icon-blue")
             ], className="summary-header"),
-            html.P(id="dashboard-income-display", className="summary-value"),
-            html.P(f"Daily budget: ${(total_income - total_expenses)/30:,.2f}", className="summary-subtitle")
-        ], className="summary-tile"),
+            html.P(id="dashboard-income-display", className="summary-value", 
+                  style={**value_style, "color": COLORS['accent']}),
+            html.P(f"Daily budget: £{(total_income - total_expenses)/30:,.2f}", className="summary-subtitle",
+                 style=subtitle_style)
+        ], className="summary-tile", style=tile_style),
 
         # Total Expenses Tile
         html.Div([
             html.Div([
                 html.H4("Total Expenses", className="summary-title"),
-                html.Div("📊", className="summary-icon icon-red")
             ], className="summary-header"),
-            html.P(f"${total_expenses:,.2f}", className="summary-value"),
-            html.P(f"{(total_expenses / total_income) * 100:.1f}% of income used", className="summary-subtitle")
-        ], className="summary-tile"),
+            html.P(f"£{total_expenses:,.2f}", className="summary-value", 
+                  style={**value_style, "color": COLORS['danger']}),
+            html.P(f"{(total_expenses / total_income) * 100:.1f}% of income used" if total_income > 0 else "0% of income used", 
+                  className="summary-subtitle", style=subtitle_style)
+        ], className="summary-tile", style=tile_style),
 
         # Remaining Tile
         html.Div([
             html.Div([
                 html.H4("Remaining", className="summary-title"),
-                html.Div("✅", className="summary-icon icon-green")
             ], className="summary-header"),
-            html.P(f"${remaining:,.2f}", className="summary-value"),
-            html.P(f"{(remaining / total_income) * 100:.1f}% of income available", className="summary-subtitle")
-        ], className="summary-tile"),
+            html.P(f"£{remaining:,.2f}", className="summary-value", 
+                  style={**value_style, "color": COLORS['success']}),
+            html.P(f"{(remaining / total_income) * 100:.1f}% of income available" if total_income > 0 else "0% of income available", 
+                  className="summary-subtitle", style=subtitle_style)
+        ], className="summary-tile", style=tile_style),
 
         # Savings Target Tile
         html.Div([
             html.Div([
                 html.H4("Savings Target", className="summary-title"),
-                html.Div("🎯", className="summary-icon icon-orange")
             ], className="summary-header"),
-            html.P(f"${savings_target:,.2f}", className="summary-value"),
-            html.P(f"Your savings target is {savings_progress:.1f}% of total income after expenses", className="summary-subtitle"),
-        ], className="summary-tile")
+            html.P(f"£{savings_target:,.2f}", className="summary-value", 
+                  style={**value_style, "color": COLORS['warning']}),
+            html.P(f"Your savings target is {savings_progress:.1f}% of remaining income" if remaining > 0 else "Set a savings target", 
+                  className="summary-subtitle", style=subtitle_style),
+        ], className="summary-tile", style=tile_style)
     ]
 
 @callback(
@@ -372,8 +548,15 @@ def update_expense_breakdown(total_expenses, expenses_store, session_data):
     
     if not expenses:
         return html.Div([
-            html.P("No expenses added yet. Add expenses in the Expenses tab to see your breakdown.", className="info-message")
-        ], className="info-box")
+            html.P("No expenses added yet. Add expenses in the Expenses tab to see your breakdown.", 
+                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
+        ], className="info-box", style={
+            "backgroundColor": "#f8f9fa",
+            "padding": "20px",
+            "borderRadius": "8px",
+            "textAlign": "center",
+            "borderLeft": f"4px solid {COLORS['gray']}"
+        })
     
     # Group expenses by category
     expense_by_category = {}
@@ -390,23 +573,33 @@ def update_expense_breakdown(total_expenses, expenses_store, session_data):
         'Amount': list(expense_by_category.values()),
     })
     
-    # Custom color palette
-    custom_colors = ['#0466c8', '#0353a4', '#023e7d', '#001845', '#001233', 
-                     '#33415c', '#5c677d', '#7d8597', '#979dac', '#33415c']
+    # Professional blue color palette
+    blue_palette = [
+        '#0e4d92', '#145da0', '#1b6eae', '#2281bd', '#2994cc', 
+        '#30a7db', '#47b5e5', '#5fc4ee', '#77d2f8', '#98e0ff'
+    ]
     
-    # Create donut chart
+    # Create donut chart with blue shades
     fig = px.pie(
         df_expenses, 
         values='Amount', 
         names='Category', 
         hole=0.6,
-        color_discrete_sequence=custom_colors
+        color_discrete_sequence=blue_palette
     )
-    fig.update_traces(textposition='outside', textinfo='percent+label')
+    fig.update_traces(
+        textposition='outside', 
+        textinfo='percent+label',
+        textfont=dict(family="Inter, sans-serif", size=12, color="#404040")
+    )
     fig.update_layout(
         margin=dict(t=10, b=10, l=10, r=10),
         height=450,
-        legend=dict(orientation="h", y=-0.2),
+        legend=dict(
+            orientation="h", 
+            y=-0.2, 
+            font=dict(family="Inter, sans-serif", size=11)
+        ),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif", size=12, color="#404040")
@@ -425,8 +618,15 @@ def update_expense_breakdown(total_expenses, expenses_store, session_data):
 def update_savings_progress_with_adjusted_budget(transaction_data, total_income, savings_target):
     if not transaction_data or total_income is None or savings_target is None:
         return html.Div([
-            html.P("Add transactions and set a savings goal to track your progress.", className="info-message")
-        ], className="info-box")
+            html.P("Add transactions and set a savings goal to track your progress.", 
+                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
+        ], className="info-box", style={
+            "backgroundColor": "#f8f9fa",
+            "padding": "20px",
+            "borderRadius": "8px",
+            "textAlign": "center",
+            "borderLeft": f"4px solid {COLORS['gray']}"
+        })
 
     # Convert transaction data to a DataFrame
     df_transactions = pd.DataFrame(transaction_data)
@@ -466,23 +666,23 @@ def update_savings_progress_with_adjusted_budget(transaction_data, total_income,
         domain={'x': [0, 1], 'y': [0, 1]},
         gauge={
             'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#404040"},
-            'bar': {'color': "#0466c8"},
+            'bar': {'color': COLORS['accent']},
             'bgcolor': "white",
             'borderwidth': 2,
             'bordercolor': "#e5e5e5",
             'steps': [
-                {'range': [0, 30], 'color': 'rgba(4, 102, 200, 0.2)'},
-                {'range': [30, 70], 'color': 'rgba(4, 102, 200, 0.4)'},
-                {'range': [70, 100], 'color': 'rgba(4, 102, 200, 0.6)'}
+                {'range': [0, 30], 'color': 'rgba(52, 152, 219, 0.2)'},
+                {'range': [30, 70], 'color': 'rgba(52, 152, 219, 0.4)'},
+                {'range': [70, 100], 'color': 'rgba(52, 152, 219, 0.6)'}
             ],
         },
         title={
             'text': "Savings Progress",
-            'font': {'size': 17, 'color': '#262626', 'family': 'Inter, sans-serif'}
+            'font': {'size': 17, 'color': COLORS['primary'], 'family': 'Inter, sans-serif'}
         },
         number={
             'suffix': "%",
-            'font': {'size': 23, 'color': '#0466c8', 'family': 'Inter, sans-serif'}
+            'font': {'size': 23, 'color': COLORS['accent'], 'family': 'Inter, sans-serif'}
         }
     ))
     progress_wheel.update_layout(
@@ -492,28 +692,49 @@ def update_savings_progress_with_adjusted_budget(transaction_data, total_income,
         font=dict(family="Inter, sans-serif")
     )
 
-    # Create simplified insights
+    # Consistent style for insight items
+    insight_item_style = {
+        "padding": "12px 15px",
+        "borderRadius": "8px",
+        "backgroundColor": "#f8f9fa",
+        "marginBottom": "10px",
+        "fontSize": "14px",
+        "fontFamily": "'Inter', sans-serif",
+        "display": "flex",
+        "alignItems": "center"
+    }
+    
+    icon_style = {
+        "marginRight": "10px",
+        "fontSize": "16px"
+    }
+
+    # Create professional insights
     insights = [
         html.Div([
-            html.Span("✔️", className="me-2 text-success"),
+            html.I(className="fas fa-check-circle", style={**icon_style, "color": COLORS['success']}),
             html.Span(f"You stayed under your daily budget on {days_under_budget} day(s).")
-        ], className="insight-item text-success"),
+        ], style=insight_item_style),
         html.Div([
-            html.Span("⚠️", className="me-2 text-danger"),
+            html.I(className="fas fa-exclamation-triangle", style={**icon_style, "color": COLORS['danger']}),
             html.Span(f"You exceeded your daily budget on {days_over_budget} day(s).")
-        ], className="insight-item text-danger"),
+        ], style=insight_item_style),
         html.Div([
-            html.Span("💡", className="me-2 text-primary"),
-            html.Span(f"To achieve your savings goal by {end_of_month.strftime('%b %d')}, your daily budget is ${adjusted_daily_budget:,.2f}.")
-        ], className="insight-item text-primary")
+            html.I(className="fas fa-lightbulb", style={**icon_style, "color": COLORS['accent']}),
+            html.Span(f"To achieve your savings goal by {end_of_month.strftime('%b %d')}, your daily budget is £{adjusted_daily_budget:,.2f}.")
+        ], style=insight_item_style)
     ]
 
     # Combine progress wheel and insights with refined layout
     return html.Div([
         html.Div([
             dcc.Graph(figure=progress_wheel, config={'displayModeBar': False}),
-        ], className="progress-wheel-container mb-4"),
-        html.Div(insights, className="insights-container p-3 border rounded shadow-sm")
+        ], className="progress-wheel-container", style={"marginBottom": "20px"}),
+        html.Div(insights, className="insights-container", style={
+            "padding": "15px",
+            "borderRadius": "8px",
+            "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.05)"
+        })
     ], className="savings-progress-card")
 
 @callback(
@@ -524,52 +745,63 @@ def update_savings_progress_with_adjusted_budget(transaction_data, total_income,
 def update_recent_activity(transaction_data):
     if not transaction_data:
         return html.Div([
-            html.P("No recent transactions. Record your spending in the Expenses tab.", className="info-message")
-        ], className="info-box")
+            html.P("No recent transactions. Record your spending in the Expenses tab.", 
+                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
+        ], className="info-box", style={
+            "backgroundColor": "#f8f9fa",
+            "padding": "20px",
+            "borderRadius": "8px",
+            "textAlign": "center",
+            "borderLeft": f"4px solid {COLORS['gray']}"
+        })
     
     # Convert transaction data to a DataFrame and sort by date
     df_recent = pd.DataFrame(transaction_data)
     df_recent['due_date'] = pd.to_datetime(df_recent['due_date'])
     df_recent = df_recent.sort_values('due_date', ascending=False).head(5)  # Show the 5 most recent transactions
 
-    # Define category icons
-    category_icons = {
-        "Housing": "🏠",
-        "Transportation": "🚗",
-        "Food": "🍔",
-        "Utilities": "💡",
-        "Health": "💊",
-        "Insurance": "🛡️",
-        "Debt": "💳",
-        "Entertainment": "🎮",
-        "Personal": "🧴",
-        "Education": "📚",
-        "Savings": "💰",
-        "Other": "❓"
+    # Create transaction items with consistent styling
+    transaction_item_style = {
+        "padding": "15px",
+        "marginBottom": "10px",
+        "border": "1px solid #e5e5e5",
+        "borderRadius": "8px",
+        "boxShadow": "0 2px 4px rgba(0, 0, 0, 0.05)",
+        "display": "flex",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "fontFamily": "'Inter', sans-serif"
+    }
+    
+    transaction_title_style = {
+        "fontSize": "14px", 
+        "fontWeight": "600", 
+        "color": COLORS['primary'],
+        "marginBottom": "4px"
+    }
+    
+    transaction_meta_style = {
+        "fontSize": "12px", 
+        "color": "#6c757d"
+    }
+    
+    transaction_amount_style = {
+        "fontSize": "15px", 
+        "fontWeight": "600", 
+        "color": COLORS['accent']
     }
 
-    # Create transaction items
     transaction_items = []
     for _, row in df_recent.iterrows():
-        category_icon = category_icons.get(row['category'], "❓")  # Default to "❓" if category not found
         transaction_items.append(html.Div([
             html.Div([
-                html.Div(category_icon, className="transaction-icon", style={"fontSize": "28px", "marginRight": "15px"}),  # Larger icon
-                html.Div([
-                    html.Div(row['description'], className="transaction-title", style={"fontSize": "18px", "fontWeight": "bold"}),
-                    html.Div(row['due_date'].strftime('%b %d, %Y'), className="transaction-meta", style={"fontSize": "14px", "color": "#6c757d"})
-                ], className="transaction-details")
-            ], style={"display": "flex", "alignItems": "center"}),
-            html.Div(f"${row['amount']:.2f}", className="transaction-amount", style={"fontSize": "18px", "fontWeight": "bold", "color": "#0466c8"})
-        ], className="transaction-item", style={
-            "padding": "20px",
-            "marginBottom": "15px",
-            "border": "1px solid #e5e5e5",
-            "borderRadius": "10px",
-            "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)"
-        }))
+                html.Div(row['description'], style=transaction_title_style),
+                html.Div(row['due_date'].strftime('%b %d, %Y'), style=transaction_meta_style)
+            ]),
+            html.Div(f"£{row['amount']:.2f}", style=transaction_amount_style)
+        ], style=transaction_item_style))
     
-    return html.Div(transaction_items)
+    return html.Div(transaction_items, style={"padding": "5px"})
 
 @callback(
     Output('spending-trends-content', 'children'),
@@ -579,53 +811,51 @@ def update_recent_activity(transaction_data):
 def update_spending_trends(transaction_data):
     if not transaction_data:
         return html.Div([
-            html.P("No transaction data available. Record your spending in the Expenses tab to see trends.", className="info-message")
-        ], className="info-box")
+            html.P("No transaction data available. Record your spending in the Expenses tab to see trends.", 
+                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
+        ], className="info-box", style={
+            "backgroundColor": "#f8f9fa",
+            "padding": "20px",
+            "borderRadius": "8px",
+            "textAlign": "center",
+            "borderLeft": f"4px solid {COLORS['gray']}"
+        })
     
     # Convert transaction data to a DataFrame
     df_transactions = pd.DataFrame(transaction_data)
-    df_transactions['due_date'] = pd.to_datetime(df_transactions['due_date'])  # Use due_date instead of date_added
+    df_transactions['due_date'] = pd.to_datetime(df_transactions['due_date'])
     
-    # Debug: Print the input data
-    print("Transaction Data with Due Dates:", df_transactions)
-
     # Group by due date and sum amounts
     daily_totals = df_transactions.groupby(df_transactions['due_date'].dt.date)['amount'].sum().reset_index()
     daily_totals['due_date'] = pd.to_datetime(daily_totals['due_date'])
     daily_totals = daily_totals.sort_values('due_date')
-
-    # Debug: Print the grouped data
-    print("Daily Totals After Grouping by Due Date:", daily_totals)
 
     # Ensure daily frequency
     date_range = pd.date_range(start=daily_totals['due_date'].min(), end=daily_totals['due_date'].max())
     daily_totals = daily_totals.set_index('due_date').reindex(date_range, fill_value=0).reset_index()
     daily_totals.columns = ['due_date', 'amount']
 
-    # Debug: Print the reindexed data
-    print("Daily Totals After Reindexing:", daily_totals)
-
     # Dynamically adjust y-axis range
     y_max = daily_totals['amount'].max() * 1.2 if not daily_totals.empty else 100
 
-    # Create line chart
+    # Create line chart with more professional styling
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=daily_totals['due_date'],
         y=daily_totals['amount'],
         mode='lines+markers',
         name='Daily Spending',
-        line=dict(color='#0466c8', width=3),
-        marker=dict(size=8, color='#0466c8')
+        line=dict(color=COLORS['accent'], width=3),
+        marker=dict(size=8, color=COLORS['accent'])
     ))
     
     fig.update_layout(
-        margin=dict(t=10, b=10, l=10, r=10),
-        height=300,
+        margin=dict(t=20, b=20, l=20, r=20),
+        height=450,
         legend=dict(orientation="h", y=1.1),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=12, color="#404040"),
+        font=dict(family="Inter, sans-serif", size=12, color=COLORS['primary']),
         xaxis=dict(
             showgrid=True,
             gridcolor='#e5e5e5',
@@ -639,220 +869,14 @@ def update_spending_trends(transaction_data):
             gridcolor='#e5e5e5',
             showline=True,
             linecolor='#e5e5e5',
-            title="Amount ($)",
-            range=[0, y_max],  # Dynamically adjust y-axis range
-            tickprefix='$'
+            title="Amount (£)",
+            range=[0, y_max],
+            tickprefix='£'
         ),
         hovermode="x unified"
     )
     
-    return dcc.Graph(figure=fig, config={'displayModeBar': True})
-
-@callback(
-    Output('savings-rate-insight', 'children'),
-    Input('total-income-store', 'data'),
-    Input('total-expenses-store', 'data'),
-)
-def update_savings_rate_insight(total_income, total_expenses):
-    if total_income is None or total_income <= 0:
-        return html.Div([
-            html.Div("📊", className="insight-icon"),
-            html.Div([
-                html.H4("Savings Rate", className="insight-title"),
-                html.P("Set your income to see savings rate insights.", className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    
-    # Calculate savings rate with total_expenses
-    if total_expenses is None:
-        total_expenses = 0
-        
-    savings_rate = (total_income - total_expenses) / total_income * 100
-    
-    if savings_rate >= 20:
-        return html.Div([
-            html.Div("✓", className="insight-icon success"),
-            html.Div([
-                html.H4("Excellent Savings Rate", className="insight-title success"),
-                html.P([
-                    f"Your savings rate is ",
-                    html.Strong(f"{savings_rate:.1f}%"),
-                    ", which is excellent for long-term financial health."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    elif savings_rate >= 10:
-        return html.Div([
-            html.Div("✓", className="insight-icon good"),
-            html.Div([
-                html.H4("Good Savings Rate", className="insight-title good"),
-                html.P([
-                    f"Your savings rate is ",
-                    html.Strong(f"{savings_rate:.1f}%"),
-                    ", which is a good foundation."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    else:
-        return html.Div([
-            html.Div("!", className="insight-icon warning"),
-            html.Div([
-                html.H4("Low Savings Rate", className="insight-title warning"),
-                html.P([
-                    f"Your savings rate is only ",
-                    html.Strong(f"{savings_rate:.1f}%"),
-                    ". Try to reduce non-essential expenses."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-
-@callback(
-    Output('budget-balance-insight', 'children', allow_duplicate=True),
-    Input('expenses-store', 'data'),
-    Input('session-data-store', 'data'),
-    prevent_initial_call=True
-)
-def update_budget_balance_insight(expenses_store, data):
-    # First try to use expenses from the expenses-store
-    if expenses_store:
-        expenses = expenses_store
-    # Fall back to session data if expenses-store is empty
-    else:
-        expenses = data.get('expenses', [])
-    
-    if not expenses:
-        return html.Div([
-            html.Div("💼", className="insight-icon"),
-            html.Div([
-                html.H4("Budget Balance", className="insight-title"),
-                html.P("Add expenses in the Expenses tab to get budget balance insights.", className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    
-    # Find the largest expense category
-    expense_by_category = {}
-    total_expenses = 0
-    for expense in expenses:
-        category = expense["category"]
-        amount = expense["amount"]
-        total_expenses += amount
-        if category in expense_by_category:
-            expense_by_category[category] += amount
-        else:
-            expense_by_category[category] = amount
-    
-    largest_category = max(expense_by_category.items(), key=lambda x: x[1])
-    largest_percent = largest_category[1] / total_expenses * 100
-    
-    if largest_percent > 50:
-        return html.Div([
-            html.Div("!", className="insight-icon warning"),
-            html.Div([
-                html.H4(f"High {largest_category[0]} Expenses", className="insight-title warning"),
-                html.P([
-                    f"{largest_category[0]} makes up ",
-                    html.Strong(f"{largest_percent:.1f}%"),
-                    " of your expenses. Consider rebalancing your budget."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    else:
-        return html.Div([
-            html.Div("✓", className="insight-icon success"),
-            html.Div([
-                html.H4("Balanced Budget", className="insight-title success"),
-                html.P([
-                    f"Your largest expense category (",
-                    html.Strong(f"{largest_category[0]}"),
-                    f") is {largest_percent:.1f}% of total expenses."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-
-@callback(
-    Output('spending-trend-insight', 'children'),
-    Input('Transaction-store', 'data'),
-    prevent_initial_call=True
-)
-def update_spending_trend_insight(transaction_data):
-    if not transaction_data:
-        return html.Div([
-            html.Div("📈", className="insight-icon"),
-            html.Div([
-                html.H4("Spending Trends", className="insight-title"),
-                html.P("Record daily transactions to get spending trend insights.", className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-
-    # Convert transaction data to a DataFrame
-    df_transactions = pd.DataFrame(transaction_data)
-    df_transactions['due_date'] = pd.to_datetime(df_transactions['due_date'])
-
-    # Group by date and calculate daily totals
-    daily_totals = df_transactions.groupby(df_transactions['due_date'].dt.date)['amount'].sum().reset_index()
-    daily_totals.columns = ['date', 'amount']
-
-    # Get last 7 days and previous 7 days
-    today = datetime.datetime.now().date()
-    last_week = daily_totals[daily_totals['date'] >= (today - datetime.timedelta(days=7))]
-    prev_week = daily_totals[(daily_totals['date'] < (today - datetime.timedelta(days=7))) &
-                             (daily_totals['date'] >= (today - datetime.timedelta(days=14)))]
-
-    # Calculate totals for last week and previous week
-    last_week_total = last_week['amount'].sum() if not last_week.empty else 0
-    prev_week_total = prev_week['amount'].sum() if not prev_week.empty else 0
-
-    # Calculate percentage change
-    if prev_week_total > 0:
-        percent_change = (last_week_total - prev_week_total) / prev_week_total * 100
-    else:
-        percent_change = None
-
-    # Generate insights based on percentage change
-    if percent_change is None:
-        return html.Div([
-            html.Div("📊", className="insight-icon"),
-            html.Div([
-                html.H4("Spending Trends", className="insight-title"),
-                html.P("Not enough data to analyze spending trends.", className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    elif percent_change > 20:
-        return html.Div([
-            html.Div("!", className="insight-icon warning"),
-            html.Div([
-                html.H4("Spending Increase", className="insight-title warning"),
-                html.P([
-                    "Your spending increased by ",
-                    html.Strong(f"{percent_change:.1f}%"),
-                    " compared to the previous week."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    elif percent_change < -10:
-        return html.Div([
-            html.Div("✓", className="insight-icon success"),
-            html.Div([
-                html.H4("Reduced Spending", className="insight-title success"),
-                html.P([
-                    "Great job! You reduced spending by ",
-                    html.Strong(f"{abs(percent_change):.1f}%"),
-                    " from last week."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
-    else:
-        return html.Div([
-            html.Div("✓", className="insight-icon good"),
-            html.Div([
-                html.H4("Consistent Spending", className="insight-title good"),
-                html.P([
-                    "Your spending is within ",
-                    html.Strong(f"{abs(percent_change):.1f}%"),
-                    " of last week."
-                ], className="insight-message")
-            ], className="insight-content")
-        ], className="insight-layout")
+    return dcc.Graph(figure=fig, config={'displayModeBar': False}, style={"padding": "10px"})
 
 @callback(
     Output('budget-balance-insight', 'children'),
@@ -869,8 +893,35 @@ def update_budget_balance_insight(expenses_store, data):
     
     if not expenses:
         return html.Div([
-            html.P("Add expenses in the Expenses tab to get budget balance insights.", className="info-message")
-        ], className="info-box")
+            html.Div([
+                html.I(className="fas fa-balance-scale", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['gray'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Budget Balance", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P("Add expenses in the Expenses tab to get budget balance insights.", style={
+                        "fontSize": "14px", 
+                        "margin": "0",
+                        "color": COLORS['gray']
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['gray']}"
+            })
+        ])
     
     # Find the largest expense category
     expense_by_category = {}
@@ -889,22 +940,73 @@ def update_budget_balance_insight(expenses_store, data):
     
     if largest_percent > 50:
         return html.Div([
-            html.P([
-                f"! High {largest_category[0]} Expenses"
-            ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#f48c06"}),
-            html.P([
-                f"{largest_category[0]} makes up {largest_percent:.1f}% of your expenses. Consider rebalancing your budget."
-            ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="warning-box")
+            html.Div([
+                html.I(className="fas fa-exclamation-circle", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['warning'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4(f"High {largest_category[0]} Expenses", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        f"{largest_category[0]} makes up ",
+                        html.Strong(f"{largest_percent:.1f}%", style={"color": COLORS['warning']}),
+                        " of your expenses. Consider rebalancing your budget."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['warning']}"
+            })
+        ])
     else:
         return html.Div([
-            html.P([
-                "✓ Balanced Budget"
-            ], style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#38b000"}),
-            html.P([
-                f"Your largest expense category ({largest_category[0]}) is {largest_percent:.1f}% of total expenses."
-            ], style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="info-box", style={"borderLeftColor": "#38b000"})
+            html.Div([
+                html.I(className="fas fa-balance-scale", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['success'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Balanced Budget", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        f"Your largest expense category ({largest_category[0]}) is ",
+                        html.Strong(f"{largest_percent:.1f}%", style={"color": COLORS['success']}),
+                        " of total expenses."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['success']}"
+            })
+        ])
+
 
 @callback(
     Output('spending-trend-insight', 'children', allow_duplicate=True),
@@ -914,8 +1016,35 @@ def update_budget_balance_insight(expenses_store, data):
 def update_spending_trend_insight(transaction_data):
     if not transaction_data:
         return html.Div([
-            html.P("Record daily transactions to get spending trend insights.", className="info-message")
-        ], className="info-box")
+            html.Div([
+                html.I(className="fas fa-chart-line", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['gray'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Spending Trends", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P("Record daily transactions to get spending trend insights.", style={
+                        "fontSize": "14px", 
+                        "margin": "0",
+                        "color": COLORS['gray']
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['gray']}"
+            })
+        ])
 
     # Convert transaction data to a DataFrame
     df_transactions = pd.DataFrame(transaction_data)
@@ -944,26 +1073,137 @@ def update_spending_trend_insight(transaction_data):
     # Generate insights based on percentage change
     if percent_change is None:
         return html.Div([
-            html.P("Not enough data to analyze spending trends.", className="info-message")
-        ], className="info-box")
+            html.Div([
+                html.I(className="fas fa-info-circle", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['gray'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Spending Analysis", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P("Not enough data to analyze spending trends.", style={
+                        "fontSize": "14px", 
+                        "margin": "0",
+                        "color": COLORS['gray']
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['gray']}"
+            })
+        ])
     elif percent_change > 20:
         return html.Div([
-            html.P("! Spending Increase", style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#d00000"}),
-            html.P(f"Your spending increased by {percent_change:.1f}% compared to the previous week.",
-                   style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="warning-box")
+            html.Div([
+                html.I(className="fas fa-arrow-circle-up", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['danger'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Spending Increase", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        "Your spending increased by ",
+                        html.Strong(f"{percent_change:.1f}%", style={"color": COLORS['danger']}),
+                        " compared to the previous week."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['danger']}"
+            })
+        ])
     elif percent_change < -10:
         return html.Div([
-            html.P("✓ Reduced Spending", style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#38b000"}),
-            html.P(f"Great job! You reduced spending by {abs(percent_change):.1f}% from last week.",
-                   style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="info-box", style={"borderLeftColor": "#38b000"})
+            html.Div([
+                html.I(className="fas fa-arrow-circle-down", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['success'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Reduced Spending", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        "Great job! You reduced spending by ",
+                        html.Strong(f"{abs(percent_change):.1f}%", style={"color": COLORS['success']}),
+                        " from last week."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['success']}"
+            })
+        ])
     else:
         return html.Div([
-            html.P("✓ Consistent Spending", style={"margin": 0, "fontSize": "14px", "fontWeight": 600, "color": "#0466c8"}),
-            html.P(f"Your spending is within {abs(percent_change):.1f}% of last week.",
-                   style={"margin": "5px 0 0 0", "fontSize": "13px"})
-        ], className="info-box")
+            html.Div([
+                html.I(className="fas fa-equals", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['accent'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Consistent Spending", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        "Your spending is within ",
+                        html.Strong(f"{abs(percent_change):.1f}%", style={"color": COLORS['accent']}),
+                        " of last week."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['accent']}"
+            })
+        ])
     
 @callback(
     Output('some-dashboard-component', 'children'),
@@ -973,7 +1213,7 @@ def use_expenses_in_dashboard(total_expenses):
     if total_expenses is None:
         return "No expense data available"
 
-    return f"Total expenses: ${total_expenses:,.2f}"
+    return f"Total expenses: £{total_expenses:,.2f}"
 
 @callback(
     Output('savings-goal-display', 'children'),
@@ -982,6 +1222,152 @@ def use_expenses_in_dashboard(total_expenses):
 def display_savings_goal(savings_target):
     if savings_target is None:
         return html.P("No savings target set.", className="text-muted")
-    return html.H5(f"Savings Goal: ${savings_target:.2f}")
+    return html.H5(f"Savings Goal: £{savings_target:.2f}")
 
+@callback(
+    Output('savings-rate-insight', 'children'),
+    Input('total-income-store', 'data'),
+    Input('total-expenses-store', 'data'),
+)
+def update_savings_rate_insight(total_income, total_expenses):
+    if total_income is None or total_income <= 0:
+        return html.Div([
+            html.Div([
+                html.I(className="fas fa-chart-line", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['gray'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Savings Rate", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P("Set your income to see savings rate insights.", style={
+                        "fontSize": "14px", 
+                        "margin": "0",
+                        "color": COLORS['gray']
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['gray']}"
+            })
+        ])
+    
+    # Calculate savings rate with total_expenses
+    if total_expenses is None:
+        total_expenses = 0
+        
+    savings_rate = (total_income - total_expenses) / total_income * 100
+    
+    if savings_rate >= 20:
+        return html.Div([
+            html.Div([
+                html.I(className="fas fa-check-circle", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['success'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Excellent Savings Rate", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        f"Your savings rate is ",
+                        html.Strong(f"{savings_rate:.1f}%", style={"color": COLORS['success']}),
+                        ", which is excellent for long-term financial health."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['success']}"
+            })
+        ])
+    elif savings_rate >= 10:
+        return html.Div([
+            html.Div([
+                html.I(className="fas fa-thumbs-up", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['accent'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Good Savings Rate", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        f"Your savings rate is ",
+                        html.Strong(f"{savings_rate:.1f}%", style={"color": COLORS['accent']}),
+                        ", which is a good foundation."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['accent']}"
+            })
+        ])
+    else:
+        return html.Div([
+            html.Div([
+                html.I(className="fas fa-exclamation-triangle", style={
+                    "fontSize": "24px", 
+                    "color": COLORS['warning'],
+                    "marginRight": "15px"
+                }),
+                html.Div([
+                    html.H4("Low Savings Rate", style={
+                        "fontSize": "16px", 
+                        "fontWeight": "600", 
+                        "color": COLORS['primary'],
+                        "marginBottom": "5px"
+                    }),
+                    html.P([
+                        f"Your savings rate is only ",
+                        html.Strong(f"{savings_rate:.1f}%", style={"color": COLORS['warning']}),
+                        ". Try to reduce non-essential expenses."
+                    ], style={
+                        "fontSize": "14px", 
+                        "margin": "0"
+                    })
+                ])
+            ], style={
+                "display": "flex", 
+                "alignItems": "center",
+                "padding": "18px",
+                "backgroundColor": COLORS['light'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.04)",
+                "borderLeft": f"4px solid {COLORS['warning']}"
+            })
+        ])
 

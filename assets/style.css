@@ -255,11 +255,10 @@ body {
   
   /* Row container */
   .row-container {
-    width: 100%;
     display: flex;
-    gap: 24px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
+    gap: 20px; /* Space between columns */
+    flex-wrap: nowrap; /* Prevent wrapping */
+    width: 100%;
   }
   
   /* Columns */
@@ -274,9 +273,12 @@ body {
   }
   
   .column-right-large {
-    flex: 2;
-    min-width: 300px;
-  }
+    flex: 6; /* Make this column take more space */
+    min-width: 75%; /* Ensure a larger minimum width */
+    padding: 10px; /* Adjust padding around the column */
+    display: flex;
+    flex-direction: column;
+  } 
   
   /* Dashboard cards */
   .dashboard-card {
@@ -285,7 +287,9 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-  }
+    padding: 10px; /* Reduce padding */
+    box-sizing: border-box; /* Include padding in the total size */
+    }
   
   .card-header {
     display: flex;
@@ -575,21 +579,60 @@ html, body {
 }
 
 /* Footer */
+/* Footer */
 .dashboard-footer {
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 .footer-text {
   margin-bottom: 10px;
+  color: #ffffff;
 }
 
 .footer-link {
-  color: #0466c8;
+  color: rgba(255,255,255,0.7);
   text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-block;
 }
 
 .footer-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+.social-icon {
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  color: #ffffff;
+  background-color: rgba(255,255,255,0.2) !important;
+  transform: translateY(-3px);
+}
+
+.footer-branding, .footer-links, .footer-contact {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .footer-top {
+    flex-direction: column;
+    padding: 30px;
+  }
+  
+  .footer-social, .footer-bottom {
+    padding: 20px 30px;
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 }
 
 /* Finance Insights Grid Layout */
@@ -611,7 +654,6 @@ html, body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 20px;
   height: 100%;
-  border-left: 4px solid #0466c8;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -811,7 +853,7 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(195, 195, 195, 0.4); /* Light blue mask */
+  background-color: rgba(160, 161, 161, 0.4); /* Light blue mask */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -823,8 +865,9 @@ html, body {
   font-size: 6rem;
   font-weight: bold;
   margin-bottom: 20px;
-  color: #2C3E50; /* Main hero text color */
+  color: #081136; /* Main hero text color */
   z-index: 2;
+  -webkit-text-stroke: #ffffff 0.0px; /* Blue stroke */
 }
 
 .hero-subtitle {
@@ -873,4 +916,133 @@ html, body {
 .feature-description {
   font-size: 1rem;
   color: #666;
+}
+
+/* Header Container */
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  padding: 0 30px;
+  height: 100px; /* Increased height for better visibility */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* Navigation Bar */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-grow: 1;
+  background: linear-gradient(90deg, #001233 0%, #023e8a 100%); /* Gradient background */
+  border-radius: 40px; /* Rounded corners */
+  padding: 0 20px;
+  margin-left: 20px;
+  height: 60px;
+  box-shadow: 0 4px 12px rgba(0, 18, 51, 0.2);
+}
+
+/* Logo Styling */
+.header-logo {
+  display: flex;
+  align-items: center;
+  margin-right: 30px;
+}
+
+.dashboard-logo {
+  height: 70px; /* Increased logo size */
+  width: auto;
+  transition: transform 0.3s ease;
+}
+
+.dashboard-logo:hover {
+  transform: scale(1.05);
+}
+
+/* Navigation Menu */
+.nav-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.nav-item {
+  padding: 0;
+  margin: 0 5px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  padding: 0 24px;
+  height: 40px;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-link.active {
+  background: linear-gradient(90deg, #0466c8 0%, #0353a4 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(4, 102, 200, 0.3);
+}
+
+/* Media query for responsive design */
+@media (max-width: 768px) {
+  .header-container {
+    height: 80px;
+    padding: 0 15px;
+  }
+  
+  .nav-bar {
+    border-radius: 30px;
+    height: 50px;
+  }
+  
+  .dashboard-logo {
+    height: 60px;
+  }
+  
+  .nav-link {
+    padding: 0 15px;
+    font-size: 14px;
+  }
+}
+
+/* Home page */
+
+/* Interactive hover effect for the "Get Started Today" button */
+.cta-button {
+  transition: all 0.3s ease; /* Smooth transition for hover effects */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Initial shadow */
+}
+
+.cta-button:hover {
+  background-color: #0466c8; /* Change background color on hover */
+  color: #ffffff; /* Change text color on hover */
+  transform: translateY(-5px); /* Slightly lift the button */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* Enhance shadow on hover */
+  cursor: pointer; /* Change cursor to pointer */
 }

@@ -66,30 +66,31 @@ HEADER_STYLE = {
 }
 
 # Layout for the Expenses Page
+# Layout for the Expenses Page
 layout = html.Div([
     # Header - Keep as is per request
+    # Logo and Title
     html.Div([
-        html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
-        ], className="dashboard-title"),
-    ], className="dashboard-header"),
+        html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
+        
 
-    # Navigation - Keep as is per request
-    html.Nav([
-        html.Button([
-            html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
-            html.Span("≡")
-        ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
+        # Navigation - Keep as is per request
+        html.Nav([
+            html.Button([
+                html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
+                html.Span("≡")
+            ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
 
-        html.Ul([
-            html.Li(html.A([html.Span("🏠", className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("📊", className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("📈", className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
-            html.Li(html.A([html.Span("💰", className="nav-icon"), "Expenses"], href="/expenses", className="nav-link active"), className="nav-item"),
-            html.Li([html.A([html.Span("🎯", className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
-            # html.Li(html.A([html.Span("⚙️", className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
-        ], className="nav-menu", id="nav-menu")
-    ], className="nav-bar"),
+            html.Ul([
+                html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link active"), className="nav-item"),
+                html.Li([html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
+                # html.Li(html.A([html.Span("⚙️", className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
+            ], className="nav-menu", id="nav-menu")
+        ], className="nav-bar"),
+    ], className="header-container"),
 
     # Optional Breadcrumb with improved styling
     html.Ul([
@@ -120,9 +121,9 @@ layout = html.Div([
                                              className='mb-2', style={'borderRadius': '6px'})
                                 ], width=6),
                                 dbc.Col([
-                                    dbc.Label("Amount ($)", className="text-muted"),
+                                    dbc.Label("Amount (£)", className="text-muted"),
                                     dbc.InputGroup([
-                                        dbc.InputGroupText("$", style={'backgroundColor': COLORS['primary'], 'color': COLORS['white'], 'borderRadius': '6px 0 0 6px'}),
+                                        dbc.InputGroupText("£", style={'backgroundColor': COLORS['primary'], 'color': COLORS['white'], 'borderRadius': '6px 0 0 6px'}),
                                         dbc.Input(id='amount-input', placeholder='0.00', type='number', min=0, step=0.01,
                                                  style={'borderRadius': '0 6px 6px 0'})
                                     ], className='mb-2')
@@ -201,23 +202,78 @@ layout = html.Div([
                                         'padding': '8px 12px',
                                         'fontSize': '14px',
                                         'color': COLORS['white'],
-                                        'marginLeft': 'auto'  # Push the badge to the right
+                                        'marginLeft': 'auto'
                                     })
-                        ], style={"display": "flex", "alignItems": "center", "width": "100%", "justifyContent": "space-between"  })
+                        ], style={"display": "flex", "alignItems": "center", "width": "100%", "justifyContent": "space-between"})
                     ], style=HEADER_STYLE),
                     dbc.CardBody([
-                        # Tabs for filtering expenses
-                        dbc.Tabs([
-                            dbc.Tab(label="All Expenses", tab_id="tab-all",
-                                    children=html.Div(id='expense-list-all', className="expense-list-container")),
-                            dbc.Tab(label="Monthly Recurring", tab_id="tab-recurring",
-                                    children=html.Div(id='expense-list-recurring', className="expense-list-container")),
-                            dbc.Tab(label="One-time Expenses", tab_id="tab-non-recurring",
-                                    children=html.Div(id='expense-list-non-recurring', className="expense-list-container")),
-                        ], id="expense-tabs", active_tab="tab-all"),
+                        # Custom tabs with better styling
+                        html.Div([
+                            dbc.Row([
+                                dbc.Col(
+                                    html.Div(
+                                        dbc.Button(
+                                            "All Expenses", 
+                                            id="tab-all-btn",
+                                            className="tab-button active",
+                                            style={
+                                                "backgroundColor": COLORS['primary'],
+                                                "color": COLORS['white'],
+                                                "border": "none",
+                                                "borderRadius": "6px 0 0 6px",
+                                                "padding": "10px 15px"
+                                            }
+                                        ),
+                                        className="d-grid"
+                                    ),
+                                    width=4,
+                                    className="px-0"
+                                ),
+                                dbc.Col(
+                                    html.Div(
+                                        dbc.Button(
+                                            "Monthly Recurring", 
+                                            id="tab-recurring-btn",
+                                            className="tab-button",
+                                            style={
+                                                "backgroundColor": COLORS['light'],
+                                                "color": COLORS['dark'],
+                                                "border": "none",
+                                                "borderRadius": "0",
+                                                "padding": "10px 15px"
+                                            }
+                                        ),
+                                        className="d-grid"
+                                    ),
+                                    width=4,
+                                    className="px-0"
+                                ),
+                                dbc.Col(
+                                    html.Div(
+                                        dbc.Button(
+                                            "One-time Expenses", 
+                                            id="tab-non-recurring-btn",
+                                            className="tab-button",
+                                            style={
+                                                "backgroundColor": COLORS['light'],
+                                                "color": COLORS['dark'],
+                                                "border": "none",
+                                                "borderRadius": "0 6px 6px 0",
+                                                "padding": "10px 15px"
+                                            }
+                                        ),
+                                        className="d-grid"
+                                    ),
+                                    width=4,
+                                    className="px-0"
+                                ),
+                            ], className="mb-3 tab-container"),
+                        ]),
+                        # Container for the filtered expense list
+                        html.Div(id='expense-list-container', className="mt-3"),
                     ])
                 ], className='mb-4', style=CARD_STYLE),
-            ], md=8), 
+            ], md=8),  # This is the missing closing bracket with the column width
 
             # Right Column: Summary & Savings
             dbc.Col([
@@ -243,7 +299,7 @@ layout = html.Div([
                     dbc.CardBody([
                         dbc.Label("Monthly Savings Goal", className="text-muted"),
                         dbc.InputGroup([
-                            dbc.InputGroupText("$", style={'backgroundColor': COLORS['primary'], 'color': COLORS['white'], 'borderRadius': '6px 0 0 6px'}),
+                            dbc.InputGroupText("£", style={'backgroundColor': COLORS['primary'], 'color': COLORS['white'], 'borderRadius': '6px 0 0 6px'}),
                             dbc.Input(id='savings-goal-input', type='number', min=0, step=0.01, placeholder="0.00",
                                      className='mb-2', style={'borderRadius': '0 6px 6px 0'}),
                         ]),
@@ -264,6 +320,7 @@ layout = html.Div([
     dcc.Store(id='savings-target-store', storage_type='local'),
     dcc.Store(id='total-income-store', storage_type='local'),  # Add this to access income data
     dcc.Store(id='Transaction-store', storage_type='local'), # Add this to access transaction data
+    dcc.Store(id='active-tab-store', storage_type='memory', data=None),
     
     # Client-side stores are initialized with default values but don't persist
     dcc.Store(id='expense-data-filtered', storage_type='memory'),
@@ -273,71 +330,179 @@ layout = html.Div([
 
     # Footer
     html.Footer([
-        html.Div("© 2025 BlueCard Finance. All rights reserved.", className="footer-text"),
+    # Modern top section with logo and quick links
+    html.Div([
+        # Left side with logo and tagline
+        html.Div([
+            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
+                "height": "140px",
+                "marginBottom": "10px",
+                "filter": "brightness(1.1) contrast(1.1)"
+            }),
+            # html.P("Empowering your financial future", style={
+            #     "color": "#ffffff",
+            #     "fontSize": "14px",
+            #     "fontWeight": "300",
+            #     "letterSpacing": "0.5px",
+            #     "margin": "0"
+            # })
+        ], className="footer-branding", style={
+            "flex": "2",
+            "marginRight": "40px"
+        }),
+        
+        # Middle section with quick links
+        html.Div([
+            html.H4("Quick Links", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Ul([
+                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+            ], style={
+                "listStyleType": "none",
+                "padding": "0",
+                "margin": "0"
+            })
+        ], className="footer-links", style={"flex": "1"}),
+        
+        # Right section with contact info
+        html.Div([
+            html.H4("Contact", style={
+                "fontSize": "16px",
+                "fontWeight": "600",
+                "color": "#ffffff",
+                "marginBottom": "15px",
+                "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                "paddingBottom": "8px"
+            }),
+            html.Div([
+                html.P([
+                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
+                    "support@bluecardfinance.com"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
+                    "(+44) 555-0XXX"
+                ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                html.P([
+                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
+                    "123 Finance St, London, LN"
+                ], style={"marginBottom": "10px", "fontSize": "14px"})
+            ])
+        ], className="footer-contact", style={"flex": "1"})
+    ], className="footer-top", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "40px 60px",
+        "backgroundColor": "rgba(0,0,0,0.1)",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)",
+        "flexWrap": "wrap",
+        "gap": "30px"
+    }),
+    
+    # Middle social media section
+    html.Div([
+        html.H4("Connect With Us", style={
+            "margin": "0 20px 0 0",
+            "color": "#ffffff",
+            "fontSize": "16px",
+            "fontWeight": "400"
+        }),
+        html.Div([
+            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            }),
+            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "color": "#ffffff",
+                "width": "40px",
+                "height": "40px",
+                "borderRadius": "50%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginRight": "12px",
+                "fontSize": "16px"
+            })
+        ], style={"display": "flex"})
+    ], className="footer-social", style={
+        "display": "flex",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "padding": "20px 60px",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+    }),
+    
+    # Bottom copyright section
+    html.Div([
+        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
+            "color": "rgba(255,255,255,0.7)",
+            "margin": "0",
+            "fontSize": "14px"
+        }),
         html.Div([
             html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span(" | "),
-            html.A("Terms of Service", href="#", className="footer-link")
-        ], className="footer-links")
-    ], className="dashboard-footer", style={
-        "backgroundColor": "#f8f9fa",
-        "padding": "20px",
-        "textAlign": "center",
-        "fontSize": "14px",
-        "color": "#6c757d",
-        "marginTop": "20px"
-    }),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Terms of Service", href="#", className="footer-link"),
+            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+            html.A("Cookie Policy", href="#", className="footer-link")
+        ])
+    ], className="footer-bottom", style={
+        "display": "flex",
+        "justifyContent": "space-between",
+        "padding": "20px 60px",
+        "flexWrap": "wrap",
+        "gap": "15px"
+    })
+], className="dashboard-footer", style={
+    "backgroundColor": COLORS['primary'],
+    "color": "#ffffff",
+    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
+})
 
 ])
-
-# Sample data for initial testing
-SAMPLE_EXPENSES = [
-    {
-        'id': 'rent-123',
-        'description': 'Rent',
-        'amount': 1500,
-        'category': 'Housing',
-        'due_date': datetime.date.today().isoformat(),
-        'recurring': True,
-        'date_added': datetime.date.today().isoformat()
-    },
-    {
-        'id': 'groceries-456',
-        'description': 'Groceries',
-        'amount': 400,
-        'category': 'Food',
-        'due_date': datetime.date.today().isoformat(),
-        'recurring': True,
-        'date_added': datetime.date.today().isoformat()
-    },
-    {
-        'id': 'electricity-789',
-        'description': 'Electricity Bill',
-        'amount': 120,
-        'category': 'Utilities',
-        'due_date': datetime.date.today().isoformat(),
-        'recurring': True,
-        'date_added': datetime.date.today().isoformat()
-    },
-    {
-        'id': 'phone-101',
-        'description': 'Phone Bill',
-        'amount': 80,
-        'category': 'Utilities',
-        'due_date': datetime.date.today().isoformat(),
-        'recurring': True,
-        'date_added': datetime.date.today().isoformat()
-    },
-    {
-        'id': 'books-102',
-        'description': 'Books',
-        'amount': 50,
-        'category': 'Education',
-        'due_date': datetime.date.today().isoformat(),
-        'recurring': False,
-        'date_added': datetime.date.today().isoformat()
-    }
-]
 
 # Initialize stores with default data (only runs once)
 @callback(
@@ -354,12 +519,12 @@ def initialize_stores(n_intervals, existing_expenses):
         raise PreventUpdate
         
     # Default monthly income
-    initial_income = 5000
+    initial_income = 0
     
     # Default savings target
-    initial_savings = 1000
+    initial_savings = 0
     
-    return SAMPLE_EXPENSES, initial_income, initial_savings
+    return initial_income, initial_savings
 
 # Add new expense
 @callback(
@@ -404,31 +569,35 @@ def add_expense(n_clicks, desc, amount, category, due_date, recurring, expenses_
 @callback(
     Output('expense-data-filtered', 'data'),
     Input('expenses-store', 'data'),
-    Input('expense-tabs', 'active_tab')  # Use the active tab as the input
+    Input('active-tab-store', 'data')
 )
 def filter_expenses(expenses, active_tab):
     if not expenses:
         return {'all': [], 'recurring': [], 'non_recurring': [], 'total': 0}
-
+    
     # Get recurring and non-recurring expenses
     recurring_expenses = [exp for exp in expenses if exp.get('recurring') is True]
     non_recurring_expenses = [exp for exp in expenses if exp.get('recurring') is not True]
-
-    # Filter based on the active tab
-    if active_tab == 'tab-recurring':
+    
+    # If no tab is selected, return empty filtered expenses
+    if active_tab is None:
+        filtered_expenses = []
+    # Otherwise filter based on the active tab
+    elif active_tab == 'tab-recurring':
         filtered_expenses = recurring_expenses
     elif active_tab == 'tab-non-recurring':
         filtered_expenses = non_recurring_expenses
     else:  # Default to 'tab-all'
         filtered_expenses = expenses
-
+    
     # Calculate totals
     total_expenses = sum(exp.get('amount', 0) for exp in expenses)
-
+    
     return {
         'all': expenses,
         'recurring': recurring_expenses,
         'non_recurring': non_recurring_expenses,
+        'filtered': filtered_expenses,  # New field for the filtered expenses
         'total': total_expenses,
         'total_recurring': sum(exp.get('amount', 0) for exp in recurring_expenses),
         'total_non_recurring': sum(exp.get('amount', 0) for exp in non_recurring_expenses)
@@ -461,35 +630,89 @@ def create_expense_items(data):
             # Get category color
             category_color = CATEGORY_COLORS.get(category, COLORS['muted'])
             
-            # Create expense card
+            # Create expense card with more professional styling
             item = dbc.Card([
                 dbc.CardBody([
                     html.Div([
+                        # Left section with category and description
                         html.Div([
                             html.Div([
                                 html.Span(category, 
                                     className="badge me-2", 
-                                    style={"backgroundColor": category_color, "color": "white", "borderRadius": "20px", "padding": "4px 10px"}),
-                                html.Strong(description, className="expense-title"),
-                            ]),
-                            html.Small(f"Due: {due_date_display}", className='text-muted d-block mt-1')
+                                    style={
+                                        "backgroundColor": category_color, 
+                                        "color": "white", 
+                                        "borderRadius": "4px", 
+                                        "padding": "4px 8px",
+                                        "fontSize": "11px",
+                                        "fontWeight": "600",
+                                        "letterSpacing": "0.3px"
+                                    }),
+                                html.Strong(description, 
+                                    className="expense-title",
+                                    style={
+                                        "fontSize": "14px",
+                                        "color": COLORS['dark'],
+                                        "letterSpacing": "0.2px"
+                                    }),
+                            ], style={"display": "flex", "alignItems": "center"}),
+                            html.Small(f"Due: {due_date_display}", 
+                                className='text-muted d-block mt-1',
+                                style={"fontSize": "12px", "opacity": "0.8"})
                         ], style={'flex': 1}),
+                        
+                        # Middle section with amount
                         html.Div([
-                            html.Span(f"${amount:.2f}", 
+                            html.Span(f"£{amount:.2f}", 
                                 className='h5 mb-0 font-weight-bold', 
-                                style={"color": COLORS['danger'] if amount > 100 else COLORS['success']}),
-                            html.Small("Monthly" if recurring else "One-time", 
-                                className='d-block text-muted mt-1')
-                        ], className='text-right'),
-                        # Delete button
-                        html.Button("🗑️", 
+                                style={
+                                    "color": COLORS['primary'],
+                                    "fontSize": "16px",
+                                    "fontWeight": "600"
+                                }),
+                            html.Small(
+                                "Monthly" if recurring else "One-time", 
+                                className='d-block text-muted mt-1',
+                                style={"fontSize": "11px", "opacity": "0.8"}
+                            )
+                        ], style={"textAlign": "right", "marginRight": "15px"}),
+                        
+                        # Delete button with improved styling
+                        html.Button(
+                            "✕", # Simple X instead of text
                             id={'type': 'delete-expense', 'index': expense_id},
-                            className="btn btn-link text-muted p-0 ms-3",
-                            style={"fontSize": "20px", "background": "none", "border": "none", "cursor": "pointer"}
-                        )
-                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'})
-                ])
-            ], className="mb-2 expense-card", style={"boxShadow": "0 2px 4px rgba(0,0,0,0.05)"})
+                            className="btn btn-sm",
+                            title="Delete this expense",
+                            style={
+                                'borderRadius': '50%',
+                                'fontSize': '12px',
+                                'fontWeight': '700',
+                                'color': COLORS['muted'],
+                                'backgroundColor': 'transparent',
+                                'border': 'none',
+                                'width': '28px',
+                                'height': '28px',
+                                'display': 'flex',
+                                'alignItems': 'center',
+                                'justifyContent': 'center',
+                                'padding': '0',
+                                'transition': 'all 0.2s',
+                                'cursor': 'pointer'
+                            }
+                        ),
+                    ], style={
+                        'display': 'flex', 
+                        'justifyContent': 'space-between', 
+                        'alignItems': 'center'
+                    })
+                ], style={"padding": "12px 15px"})
+            ], className="mb-2 expense-card", style={
+                "boxShadow": "0 1px 3px rgba(0,0,0,0.08)",
+                "border": f"1px solid {COLORS['light']}",
+                "borderRadius": "6px",
+                "transition": "transform 0.2s, box-shadow 0.2s",
+                "overflow": "hidden"
+            })
             
             expense_items.append(item)
             
@@ -500,30 +723,38 @@ def create_expense_items(data):
 
 # Update expense lists
 @callback(
-    Output('expense-list-all', 'children'),
-    Output('expense-list-recurring', 'children'),
-    Output('expense-list-non-recurring', 'children'),
+    Output('expense-list-container', 'children'),
     Output('total-expense-badge', 'children'),
     Input('expense-data-filtered', 'data'),
+    Input('active-tab-store', 'data')
 )
-def update_expense_lists(filtered_data):
+def update_expense_lists(filtered_data, active_tab):
     if not filtered_data:
         return (
             html.P("No expenses found.", className="text-muted text-center py-3"),
-            html.P("No recurring expenses.", className="text-muted text-center py-3"),
-            html.P("No one-time expenses.", className="text-muted text-center py-3"),
-            "Total: $0.00"
+            "Total: £0.00"
         )
     
-    # Create expense items
-    all_items = create_expense_items(filtered_data['all'])
-    recurring_items = create_expense_items(filtered_data['recurring'])
-    non_recurring_items = create_expense_items(filtered_data['non_recurring'])
+    # If no tab is selected
+    if active_tab is None:
+        return (
+            html.Div([
+                html.Div(
+                    html.P("Select a tab to view expenses", 
+                           className="text-muted text-center py-5 border rounded"),
+                    style={"marginTop": "30px"}
+                )
+            ]), 
+            f"Total: £{filtered_data['total']:.2f}"
+        )
+    
+    # Create expense items for the filtered expenses
+    expense_items = create_expense_items(filtered_data['filtered'])
     
     # Total badge
-    total_badge = f"Total: ${filtered_data['total']:.2f}"
+    total_badge = f"Total: £{filtered_data['total']:.2f}"
     
-    return all_items, recurring_items, non_recurring_items, total_badge
+    return expense_items, total_badge
 
 # Update category chart
 @callback(
@@ -583,7 +814,7 @@ def update_category_chart(expenses_data):
         
         total = df['Amount'].sum()
         fig.add_annotation(
-            text=f"${total:.0f}",
+            text=f"£{total:.0f}",
             font=dict(size=18, color=COLORS['dark'], family="Arial, sans-serif"),
             showarrow=False,
             x=0.5,
@@ -644,7 +875,7 @@ def update_recurring_analysis(data):
     fig.add_annotation(
         x=0.5,
         y=0.5,
-        text=f"${total:.0f}",
+        text=f"£{total:.0f}",
         font=dict(size=18, color=COLORS['dark'], family="Arial, sans-serif"),
         showarrow=False
     )
@@ -722,11 +953,11 @@ def update_monthly_overview(expenses_data, income, savings_target):
             x=[cat],
             y=[amount],
             name=cat,
-            text=[f"${amount:.2f}"],
+            text=[f"£{amount:.2f}"],
             textposition='auto',
             marker_color=colors[i],
             hoverinfo="text",
-            hovertext=f"{cat}: ${amount:.2f}"
+            hovertext=f"{cat}: £{amount:.2f}"
         ))
     
     # Update layout for a more professional look
@@ -755,7 +986,7 @@ def update_monthly_overview(expenses_data, income, savings_target):
     fig.add_annotation(
         x=0.5,
         y=1.1,
-        text=f"Total Income: ${income:.2f}",
+        text=f"Total Income: £{income:.2f}",
         showarrow=False,
         font=dict(size=12, color=COLORS['dark']),
         xref="paper",
@@ -794,19 +1025,19 @@ def update_savings_target(n, value, total_income, expenses_data):
     # Determine if savings goal is realistic with professional styling
     if remaining <= 0:
         status = COLORS['danger']
-        status_icon = "⚠️"
+        status_icon = html.I(className="fas fa-exclamation-triangle")
         message = "You need to reduce expenses before setting a savings goal."
     elif value > remaining:
         status = COLORS['warning']
-        status_icon = "⚠️"
+        status_icon = html.I(className="fas fa-exclamation-circle")
         message = "Your savings goal exceeds your remaining income."
     elif savings_percent > 50:
         status = COLORS['warning']
-        status_icon = "📊"
+        status_icon = html.I(className="fas fa-chart-line")
         message = f"Your savings target is {savings_percent:.1f}% of remaining income."
     else:
         status = COLORS['success']
-        status_icon = "✓"
+        status_icon = html.I(className="fas fa-check-circle")
         message = f"Your savings target is {savings_percent:.1f}% of remaining income."
         
     summary = html.Div([
@@ -819,11 +1050,11 @@ def update_savings_target(n, value, total_income, expenses_data):
             dbc.Row([
                 dbc.Col([
                     html.Div("Target:", className="text-muted small"),
-                    html.Div(f"${value:.2f}", className="h5 mb-0")
+                    html.Div(f"£{value:.2f}", className="h5 mb-0")
                 ], width=6),
                 dbc.Col([
                     html.Div("Available:", className="text-muted small"),
-                    html.Div(f"${remaining:.2f}", 
+                    html.Div(f"£{remaining:.2f}", 
                              className="h5 mb-0", 
                              style={"color": COLORS['success'] if remaining >= value else COLORS['danger']})
                 ], width=6)
@@ -910,3 +1141,91 @@ def sync_transaction_store(expenses_data):
     updated_transactions = update_transaction_store(expenses_data)
 
     return updated_transactions
+
+@callback(
+    Output('active-tab-store', 'data'),
+    Output('tab-all-btn', 'style'),
+    Output('tab-recurring-btn', 'style'),
+    Output('tab-non-recurring-btn', 'style'),
+    Input('tab-all-btn', 'n_clicks'),
+    Input('tab-recurring-btn', 'n_clicks'),
+    Input('tab-non-recurring-btn', 'n_clicks'),
+    State('active-tab-store', 'data'),
+    prevent_initial_call=True
+)
+def update_active_tab(all_clicks, recurring_clicks, non_recurring_clicks, current_tab):
+    # Default styles - all light gray when none are active
+    all_style = {
+        "backgroundColor": COLORS['light'],
+        "color": COLORS['dark'],
+        "border": "none",
+        "borderRadius": "6px 0 0 6px",
+        "padding": "10px 15px"
+    }
+    
+    recurring_style = {
+        "backgroundColor": COLORS['light'],
+        "color": COLORS['dark'],
+        "border": "none",
+        "borderRadius": "0",
+        "padding": "10px 15px"
+    }
+    
+    non_recurring_style = {
+        "backgroundColor": COLORS['light'],
+        "color": COLORS['dark'],
+        "border": "none",
+        "borderRadius": "0 6px 6px 0",
+        "padding": "10px 15px"
+    }
+
+    new_tab = None
+    
+    # Get the button that was clicked
+    triggered = ctx.triggered_id
+    
+    # Handle first load with no clicks (no tab selected)
+    if not triggered:
+        # All tabs are light gray when none are active
+        return None, all_style, recurring_style, non_recurring_style
+    
+    # Set active style for the clicked tab or toggle off if clicked again
+    if triggered == 'tab-all-btn':
+        # If tab is already active, deactivate it
+        if current_tab == 'tab-all':
+            new_tab = None  # Set to None to indicate no active tab
+        else:
+            # Otherwise, activate it
+            all_style["backgroundColor"] = COLORS['primary']
+            all_style["color"] = COLORS['white']
+            new_tab = 'tab-all'
+    elif triggered == 'tab-recurring-btn':
+        if current_tab == 'tab-recurring':
+            new_tab = None  # Set to None to indicate no active tab
+        else:
+            recurring_style["backgroundColor"] = COLORS['primary']
+            recurring_style["color"] = COLORS['white']
+            new_tab = 'tab-recurring'
+    elif triggered == 'tab-non-recurring-btn':
+        if current_tab == 'tab-non-recurring':
+            new_tab = None  # Set to None to indicate no active tab
+        else:
+            non_recurring_style["backgroundColor"] = COLORS['primary']
+            non_recurring_style["color"] = COLORS['white']
+            new_tab = 'tab-non-recurring'
+    else:
+        new_tab = current_tab
+        
+    # Set active tab style only if there is an active tab
+    if new_tab == 'tab-all':
+        all_style["backgroundColor"] = COLORS['primary']
+        all_style["color"] = COLORS['white']
+    elif new_tab == 'tab-recurring':
+        recurring_style["backgroundColor"] = COLORS['primary']
+        recurring_style["color"] = COLORS['white']
+    elif new_tab == 'tab-non-recurring':
+        non_recurring_style["backgroundColor"] = COLORS['primary']
+        non_recurring_style["color"] = COLORS['white']
+    # If new_tab is None, all styles remain light gray (default)
+    
+    return new_tab, all_style, recurring_style, non_recurring_style

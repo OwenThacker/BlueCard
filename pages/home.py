@@ -20,6 +20,7 @@ COLORS = {
 
 # Layout for the Home page
 layout = html.Div([
+    
     # Dashboard Header and Navigation Bar
     html.Div([
         # Logo and Title
@@ -40,6 +41,7 @@ layout = html.Div([
                 html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
             ], className="nav-menu", id="nav-menu")
         ], className="nav-bar"),
     ], className="header-container", style={
@@ -53,18 +55,28 @@ layout = html.Div([
             html.Div([
                 html.H1("BlueCard Finance", className="hero-title", style={
                     'color': COLORS['white'],
-                    'fontSize': '3.5rem',
+                    'fontSize': '3.8rem',
                     'fontWeight': '700',
                     'marginBottom': '1rem',
-                    'textShadow': '0 2px 4px rgba(0, 0, 0, 0.2)'
+                    'textShadow': '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    'letterSpacing': '1px',
+                    'animation': 'slideDown 0.8s ease-out'
                 }),
                 html.P([
                     "Your trusted partner in ",
-                    html.Span("financial management", style={'color': COLORS['accent-light'], 'fontWeight': '600'})
+                    html.Span("financial management", style={
+                        'color': COLORS['accent-light'], 
+                        'fontWeight': '600',
+                        'position': 'relative',
+                        'display': 'inline-block',
+                        'animation': 'pulse 2s infinite'
+                    })
                 ], className="hero-subtitle", style={
                     'color': COLORS['white'],
                     'fontSize': '1.5rem',
-                    'marginBottom': '2rem'
+                    'marginBottom': '2rem',
+                    'textShadow': '0 1px 3px rgba(0, 0, 0, 0.2)',
+                    'animation': 'fadeIn 1.2s ease-in-out 0.5s both'
                 }),
                 dbc.Button(
                     "Get Started",
@@ -74,17 +86,20 @@ layout = html.Div([
                         'backgroundColor': COLORS['accent'],
                         'border': 'none',
                         'color': COLORS['white'],
-                        'padding': '12px 30px',
+                        'padding': '15px 35px',
                         'fontSize': '1.2rem',
                         'borderRadius': '8px',
                         'fontWeight': '600',
-                        'boxShadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
-                        'transition': 'all 0.3s ease'
+                        'boxShadow': '0 4px 15px rgba(0, 0, 0, 0.15)',
+                        'transition': 'all 0.3s ease',
+                        'position': 'relative',
+                        'overflow': 'hidden',
+                        'animation': 'slideUp 1s ease-out 1s both'
                     }
                 )
             ], className="hero-content")
         ], className="hero-overlay", style={
-            'backgroundColor': 'rgba(26, 54, 93, 0.75)',  # Semi-transparent dark blue
+            'backgroundImage': 'linear-gradient(135deg, rgba(26, 54, 93, 0.85) 0%, rgba(42, 74, 127, 0.65) 100%)',
             'width': '100%',
             'height': '100%',
             'display': 'flex',
@@ -101,10 +116,59 @@ layout = html.Div([
         'display': 'flex',
         'alignItems': 'center',
         'justifyContent': 'center',
-        'textAlign': 'center'
+        'textAlign': 'center',
+        'boxShadow': 'inset 0 -10px 20px rgba(0, 0, 0, 0.2)',
+        'animation': 'fadeIn 1.5s ease-in-out'
     }),
 
-    # Features Section with Enhanced Design
+    # Add these to your hero section with enhanced animations
+    html.Div(className="floating-circle-1", style={
+        'position': 'absolute',
+        'width': '300px',
+        'height': '300px',
+        'borderRadius': '50%',
+        'backgroundColor': 'rgba(255, 255, 255, 0.03)',
+        'top': '20%',
+        'left': '15%',
+        'animation': 'float 8s ease-in-out infinite',
+        'zIndex': '1'
+    }),
+    html.Div(className="floating-circle-2", style={
+        'position': 'absolute',
+        'width': '220px',
+        'height': '220px',
+        'borderRadius': '50%',
+        'backgroundColor': 'rgba(144, 205, 244, 0.07)',
+        'bottom': '15%',
+        'right': '10%',
+        'animation': 'float 12s ease-in-out infinite 1s',
+        'zIndex': '1'
+    }),
+    # Add more floating elements for visual interest
+    html.Div(className="floating-circle-3", style={
+        'position': 'absolute',
+        'width': '150px',
+        'height': '150px',
+        'borderRadius': '50%',
+        'backgroundColor': 'rgba(255, 255, 255, 0.05)',
+        'top': '30%',
+        'right': '25%',
+        'animation': 'float 10s ease-in-out infinite 0.5s',
+        'zIndex': '1'
+    }),
+    html.Div(className="floating-diamond", style={
+        'position': 'absolute',
+        'width': '100px',
+        'height': '100px',
+        'backgroundColor': 'rgba(144, 205, 244, 0.05)',
+        'bottom': '30%',
+        'left': '25%',
+        'transform': 'rotate(45deg)',
+        'animation': 'float 9s ease-in-out infinite 1.5s',
+        'zIndex': '1'
+    }),
+
+    # Features Section with Enhanced Design and Animations
     html.Div([
         html.H2("Why Choose BlueCard Finance?", className="section-title", style={
             'color': COLORS['primary'],
@@ -113,7 +177,8 @@ layout = html.Div([
             'fontWeight': '600',
             'marginBottom': '3rem',
             'position': 'relative',
-            'paddingBottom': '15px'
+            'paddingBottom': '15px',
+            'animation': 'fadeIn 1s ease-in-out'
         }),
         
         # Decorative line under the section title
@@ -124,7 +189,8 @@ layout = html.Div([
             'backgroundColor': COLORS['accent'],
             'left': '50%',
             'transform': 'translateX(-50%)',
-            'marginTop': '-2.7rem'
+            'marginTop': '-2.7rem',
+            'animation': 'slideInRight 1.2s ease-out'
         }),
         
         dbc.Row([
@@ -138,10 +204,11 @@ layout = html.Div([
                             style={
                                 "width": "60px", 
                                 "height": "60px",
-                                "marginBottom": "10px"
+                                "marginBottom": "10px",
+                                "animation": "pulse 2s infinite"
                             }
                         )
-                    ], style={
+                    ], className="feature-icon-container", style={
                         'backgroundColor': COLORS['primary'],
                         'borderRadius': '50%',
                         'width': '100px',
@@ -172,11 +239,11 @@ layout = html.Div([
                     'backgroundColor': COLORS['white'],
                     'borderRadius': '10px',
                     'boxShadow': '0 5px 15px rgba(0, 0, 0, 0.05)',
-                    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
                     'height': '100%',
                     'display': 'flex',
                     'flexDirection': 'column',
-                    'alignItems': 'center'
+                    'alignItems': 'center',
+                    'animation': 'fadeIn 0.8s ease-in-out, slideUp 0.8s ease-out'
                 })
             ], md=4, style={'marginBottom': '30px'}),
             
@@ -190,10 +257,11 @@ layout = html.Div([
                             style={
                                 "width": "60px", 
                                 "height": "60px",
-                                "marginBottom": "5px"
+                                "marginBottom": "5px",
+                                "animation": "pulse 2s infinite 0.3s"
                             }
                         )
-                    ], style={
+                    ], className="feature-icon-container", style={
                         'backgroundColor': COLORS['primary'],
                         'borderRadius': '50%',
                         'width': '100px',
@@ -224,11 +292,11 @@ layout = html.Div([
                     'backgroundColor': COLORS['white'],
                     'borderRadius': '10px',
                     'boxShadow': '0 5px 15px rgba(0, 0, 0, 0.05)',
-                    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
                     'height': '100%',
                     'display': 'flex',
                     'flexDirection': 'column',
-                    'alignItems': 'center'
+                    'alignItems': 'center',
+                    'animation': 'fadeIn 0.8s ease-in-out 0.2s, slideUp 0.8s ease-out 0.2s'
                 })
             ], md=4, style={'marginBottom': '30px'}),
             
@@ -242,10 +310,11 @@ layout = html.Div([
                             style={
                                 "width": "60px", 
                                 "height": "60px",
-                                "marginBottom": "10px"
+                                "marginBottom": "10px",
+                                "animation": "pulse 2s infinite 0.6s"
                             }
                         )
-                    ], style={
+                    ], className="feature-icon-container", style={
                         'backgroundColor': COLORS['primary'],
                         'borderRadius': '50%',
                         'width': '100px',
@@ -276,11 +345,11 @@ layout = html.Div([
                     'backgroundColor': COLORS['white'],
                     'borderRadius': '10px',
                     'boxShadow': '0 5px 15px rgba(0, 0, 0, 0.05)',
-                    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
                     'height': '100%',
                     'display': 'flex',
                     'flexDirection': 'column',
-                    'alignItems': 'center'
+                    'alignItems': 'center',
+                    'animation': 'fadeIn 0.8s ease-in-out 0.4s, slideUp 0.8s ease-out 0.4s'
                 })
             ], md=4, style={'marginBottom': '30px'})
         ], className="features-row")
@@ -289,7 +358,7 @@ layout = html.Div([
         'backgroundColor': COLORS['background']
     }),
 
-    # Testimonials Section with a different shade of blue
+    # Testimonials Section with a different shade of blue and animated elements
     html.Div([
         html.H2("What Our Clients Say", className="section-title", style={
             'color': COLORS['white'],
@@ -298,7 +367,8 @@ layout = html.Div([
             'fontWeight': '600',
             'marginBottom': '3rem',
             'paddingBottom': '15px',
-            'position': 'relative'
+            'position': 'relative',
+            'animation': 'fadeIn 1s ease-in-out'
         }),
         
         # Decorative line under the section title
@@ -309,8 +379,45 @@ layout = html.Div([
             'backgroundColor': COLORS['accent-light'],
             'left': '50%',
             'transform': 'translateX(-50%)',
-            'marginTop': '-2.7rem'
+            'marginTop': '-2.7rem',
+            'animation': 'slideInLeft 1.2s ease-out'
         }),
+        
+        # Animated stars background elements
+        html.Div([
+            html.Div(className="star-1", style={
+                'position': 'absolute',
+                'fontSize': '24px',
+                'color': 'rgba(255, 255, 255, 0.3)',
+                'top': '10%',
+                'left': '10%',
+                'animation': 'float 6s ease-in-out infinite'
+            }, children="★"),
+            html.Div(className="star-2", style={
+                'position': 'absolute',
+                'fontSize': '18px',
+                'color': 'rgba(255, 255, 255, 0.3)',
+                'top': '20%',
+                'right': '15%',
+                'animation': 'float 9s ease-in-out infinite 0.5s'
+            }, children="★"),
+            html.Div(className="star-3", style={
+                'position': 'absolute',
+                'fontSize': '30px',
+                'color': 'rgba(255, 255, 255, 0.3)',
+                'bottom': '15%',
+                'left': '20%',
+                'animation': 'float 7s ease-in-out infinite 1s'
+            }, children="★"),
+            html.Div(className="star-4", style={
+                'position': 'absolute',
+                'fontSize': '22px',
+                'color': 'rgba(255, 255, 255, 0.3)',
+                'bottom': '25%',
+                'right': '10%',
+                'animation': 'float 8s ease-in-out infinite 1.5s'
+            }, children="★"),
+        ]),
         
         # Testimonial Cards Row
         dbc.Row([
@@ -323,6 +430,7 @@ layout = html.Div([
                             'borderRadius': '50%',
                             'objectFit': 'cover',
                             'border': f'3px solid {COLORS["accent-light"]}',
+                            'animation': 'pulse 3s infinite'
                         })
                     ], style={
                         'marginBottom': '15px',
@@ -334,7 +442,8 @@ layout = html.Div([
                             'fontSize': '24px',
                             'color': COLORS['accent-light'],
                             'marginRight': '8px',
-                            'opacity': '0.6'
+                            'opacity': '0.6',
+                            'animation': 'pulse 2s infinite'
                         }),
                     ], style={'marginBottom': '10px'}),
                     html.P("BlueCard Finance transformed how I manage my finances. The dashboard is intuitive, and I've saved more in 6 months than I did all of last year!", 
@@ -364,7 +473,8 @@ layout = html.Div([
                     'height': '100%',
                     'textAlign': 'center',
                     'backdropFilter': 'blur(10px)',
-                    'boxShadow': '0 8px 20px rgba(0, 0, 0, 0.2)'
+                    'boxShadow': '0 8px 20px rgba(0, 0, 0, 0.2)',
+                    'animation': 'fadeIn 0.8s ease-in-out, slideInLeft 0.8s ease-out'
                 })
             ], md=4, className="mb-4"),
             
@@ -377,6 +487,7 @@ layout = html.Div([
                             'borderRadius': '50%',
                             'objectFit': 'cover',
                             'border': f'3px solid {COLORS["accent-light"]}',
+                            'animation': 'pulse 3s infinite 0.5s'
                         })
                     ], style={
                         'marginBottom': '15px',
@@ -388,7 +499,8 @@ layout = html.Div([
                             'fontSize': '24px',
                             'color': COLORS['accent-light'],
                             'marginRight': '8px',
-                            'opacity': '0.6'
+                            'opacity': '0.6',
+                            'animation': 'pulse 2s infinite 0.5s'
                         }),
                     ], style={'marginBottom': '10px'}),
                     html.P("The insights feature highlighted spending patterns I never noticed before. I've cut unnecessary expenses by 30% and reached my savings goal earlier than expected.", 
@@ -418,7 +530,8 @@ layout = html.Div([
                     'height': '100%',
                     'textAlign': 'center',
                     'backdropFilter': 'blur(10px)',
-                    'boxShadow': '0 8px 20px rgba(0, 0, 0, 0.2)'
+                    'boxShadow': '0 8px 20px rgba(0, 0, 0, 0.2)',
+                    'animation': 'fadeIn 0.8s ease-in-out 0.2s, slideUp 0.8s ease-out 0.2s'
                 })
             ], md=4, className="mb-4"),
             
@@ -431,6 +544,7 @@ layout = html.Div([
                             'borderRadius': '50%',
                             'objectFit': 'cover',
                             'border': f'3px solid {COLORS["accent-light"]}',
+                            'animation': 'pulse 3s infinite 1s'
                         })
                     ], style={
                         'marginBottom': '15px',
@@ -442,7 +556,8 @@ layout = html.Div([
                             'fontSize': '24px',
                             'color': COLORS['accent-light'],
                             'marginRight': '8px',
-                            'opacity': '0.6'
+                            'opacity': '0.6',
+                            'animation': 'pulse 2s infinite 1s'
                         }),
                     ], style={'marginBottom': '10px'}),
                     html.P("Setting financial goals has never been easier. The visual progress trackers keep me motivated, and the personalized tips have been invaluable for my long-term planning.", 
@@ -1022,6 +1137,7 @@ html.Div([
                 html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
                 html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
                 html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
             ], style={
                 "listStyleType": "none",
                 "padding": "0",

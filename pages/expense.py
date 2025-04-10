@@ -87,7 +87,7 @@ layout = html.Div([
                 html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link active"), className="nav-item"),
                 html.Li([html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
-                # html.Li(html.A([html.Span("⚙️", className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
+                html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
             ], className="nav-menu", id="nav-menu")
         ], className="nav-bar"),
     ], className="header-container"),
@@ -295,7 +295,7 @@ layout = html.Div([
 
                 # Savings Target Card with enhanced styling
                 dbc.Card([
-                    dbc.CardHeader(html.H5("Set Savings Target", className="card-title m-0"), style=HEADER_STYLE),
+                    dbc.CardHeader(html.H5("Account For Monthly Savings Target", className="card-title m-0"), style=HEADER_STYLE),
                     dbc.CardBody([
                         dbc.Label("Monthly Savings Goal", className="text-muted"),
                         dbc.InputGroup([
@@ -303,7 +303,7 @@ layout = html.Div([
                             dbc.Input(id='savings-goal-input', type='number', min=0, step=0.01, placeholder="0.00",
                                      className='mb-2', style={'borderRadius': '0 6px 6px 0'}),
                         ]),
-                        dbc.Button("Update Savings Goal", id='update-savings-goal', 
+                        dbc.Button("Update Monthly Savings Goal", id='update-savings-goal', 
                                   style={'backgroundColor': COLORS['accent'], 'border': 'none', 'borderRadius': '6px'},
                                   className="w-100 mt-2"),
                         html.Div(id='savings-summary', className='mt-3 p-3 rounded', 
@@ -367,6 +367,7 @@ layout = html.Div([
                 html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
                 html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
                 html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
             ], style={
                 "listStyleType": "none",
                 "padding": "0",
@@ -996,14 +997,13 @@ def update_monthly_overview(expenses_data, income, savings_target):
     return dcc.Graph(figure=fig, config={'displayModeBar': False})
 
 
-# # Callback for updating savings target and showing savings summary
 # Callback for updating savings target and showing savings summary
 @callback(
     Output('savings-target-store', 'data'),
     Output('savings-summary', 'children'),
     Input('update-savings-goal', 'n_clicks'),
     State('savings-goal-input', 'value'),
-    State('salary-store', 'data'),
+    State('total-income-store', 'data'),
     State('expenses-store', 'data'),
     prevent_initial_call=True
 )

@@ -103,19 +103,8 @@ layout = html.Div([
                         className="nav-link")
                 ], className="nav-item"),
                 
-                # html.Li([
-                #     html.A([
-                #         html.Span("🎯", className="nav-icon"),
-                #         "Goals"
-                #     ], href="/goals", className="nav-link")
-                # ], className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
                 
-                # html.Li([
-                #     html.A([
-                #         html.Span("⚙️", className="nav-icon"),
-                #         "Settings"
-                #     ], href="/settings", className="nav-link")
-                # ], className="nav-item")
             ], className="nav-menu", id="nav-menu")
         ], className="nav-bar"),
     ], className="header-container"),
@@ -259,6 +248,7 @@ layout = html.Div([
                 html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
                 html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
                 html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
             ], style={
                 "listStyleType": "none",
                 "padding": "0",
@@ -523,11 +513,11 @@ def update_summary_tiles(total_income, total_expenses, savings_target):
         # Savings Target Tile
         html.Div([
             html.Div([
-                html.H4("Savings Target", className="summary-title"),
+                html.H4("Monthly Savings Target", className="summary-title"),
             ], className="summary-header"),
             html.P(f"£{savings_target:,.2f}", className="summary-value", 
                   style={**value_style, "color": COLORS['warning']}),
-            html.P(f"Your savings target is {savings_progress:.1f}% of remaining income" if remaining > 0 else "Set a savings target", 
+            html.P(f"Your savings target is {savings_progress:.1f}% of income after recurring expenses" if remaining > 0 else "Set a savings target", 
                   className="summary-subtitle", style=subtitle_style),
         ], className="summary-tile", style=tile_style)
     ]
@@ -711,6 +701,10 @@ def update_savings_progress_with_adjusted_budget(transaction_data, total_income,
 
     # Create professional insights
     insights = [
+        html.Div([
+            html.I(className="fas fa-check-circle", style={**icon_style, "color": COLORS['success']}),
+            html.Span(f"Your savings goal is {savings_progress:.1f}% of your income after all expenses for the month.")
+        ], style=insight_item_style),
         html.Div([
             html.I(className="fas fa-check-circle", style={**icon_style, "color": COLORS['success']}),
             html.Span(f"You stayed under your daily budget on {days_under_budget} day(s).")

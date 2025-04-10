@@ -1,6 +1,7 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output  # Add this line
 from flask import Flask
 import secrets
 import os
@@ -24,6 +25,22 @@ app.layout = html.Div([
     dcc.Store(id='session-data-store', storage_type='local'),  # Add this here
     dash.page_container
 ])
+
+# Add this to your app.clientside_callback in your main app file
+app.clientside_callback(
+    """
+    function(scroll) {
+        document.querySelector('.hero-section').style.backgroundPositionY = -scroll/5 + 'px';
+        return '';
+    }
+    """,
+    Output("hidden-div", "children"),
+    Input("store-scroll", "data"),
+)
+
+# Add these components to your layout
+html.Div(id="hidden-div", style={"display": "none"}),
+dcc.Store(id="store-scroll"),
 
 # Run the app
 if __name__ == '__main__':

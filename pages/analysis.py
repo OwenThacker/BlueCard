@@ -59,6 +59,7 @@ layout = html.Div([
                 html.Li([html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link")], className="nav-item"),
                 html.Li([html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link")], className="nav-item"),
                 html.Li([html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link active")], className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
             ], className="nav-menu", id="nav-menu")
         ], className="nav-bar"),
     ], className="header-container"),
@@ -237,6 +238,7 @@ layout = html.Div([
                     html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
                     html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
                     html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
                 ], style={
                     "listStyleType": "none",
                     "padding": "0",

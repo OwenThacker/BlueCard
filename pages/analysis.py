@@ -5,6 +5,7 @@ from prophet import Prophet
 import pandas as pd
 import plotly.graph_objs as go
 from datetime import date
+import numpy as np
 
 dash.register_page(__name__, path="/savings", title="Savings Forecast", name="Savings Forecast")
 
@@ -450,15 +451,18 @@ def update_forecast(data, goal_data):
 
     # Fit the Prophet model
     model = Prophet(
-        changepoint_prior_scale=0.2,  # Lower value to reduce sensitivity to trend changes
-        yearly_seasonality=False,
-        weekly_seasonality=True,
-        daily_seasonality=True,
-        seasonality_mode='additive',
-        interval_width=0.95
+    changepoint_prior_scale=0.01,         # Balance between 0.01-0.5 based on data volatility
+    seasonality_prior_scale=0.02,         # Control seasonality strength
+    # holidays_prior_scale=1.0,            # Control holiday effects
+    yearly_seasonality=True,
+    weekly_seasonality=True,
+    daily_seasonality=False,
+    changepoint_range=0.8,                # Consider more historical data (0.8-0.95)
+    seasonality_mode='additive',    # Often better for data with increasing variance
+    interval_width=0.95             # Confidence interval width
     )
     model.fit(df_prophet)
-
+    
     # Make future predictions
     future = model.make_future_dataframe(periods=30 * 12)
     forecast = model.predict(future)
@@ -466,13 +470,20 @@ def update_forecast(data, goal_data):
     # Store forecast data for goal tracking
     forecast_data = forecast.to_dict('records')
 
+    # Smooth the forecast line using a rolling mean (e.g., 7-day window)
+    forecast['yhat_smoothed'] = forecast['yhat'].rolling(window=7, center=True, min_periods=1).mean()
+    # Smooth the upper and lower confidence intervals using a rolling mean (e.g., 7-day window)
+    forecast['yhat_upper_smoothed'] = forecast['yhat_upper'].rolling(window=7, center=True, min_periods=1).mean()
+    forecast['yhat_lower_smoothed'] = forecast['yhat_lower'].rolling(window=7, center=True, min_periods=1).mean()
+
+
     # Create the Plotly figure
     fig = go.Figure()
 
-    # Add confidence intervals (shaded region)
+    # Add confidence intervals (shaded region) with smoothed values
     fig.add_trace(go.Scatter(
         x=forecast['ds'],
-        y=forecast['yhat_upper'],
+        y=forecast['yhat_upper_smoothed'],
         mode='lines',
         line=dict(width=0),
         name='Upper Confidence',
@@ -480,7 +491,7 @@ def update_forecast(data, goal_data):
     ))
     fig.add_trace(go.Scatter(
         x=forecast['ds'],
-        y=forecast['yhat_lower'],
+        y=forecast['yhat_lower_smoothed'],
         mode='lines',
         fill='tonexty',
         fillcolor='rgba(52, 152, 219, 0.2)',  # Light blue fill
@@ -489,14 +500,16 @@ def update_forecast(data, goal_data):
         showlegend=True
     ))
 
-    # Add forecast points (line)
+
+    # Add forecast points (smoothed line)
     fig.add_trace(go.Scatter(
         x=forecast['ds'],
-        y=forecast['yhat'],
+        y=forecast['yhat_smoothed'],
         mode='lines',
         name='Forecast',
         line=dict(color=COLORS['accent'], width=3),
     ))
+
 
     # Add actual data points (scatter + line combo)
     fig.add_trace(go.Scatter(
@@ -515,7 +528,25 @@ def update_forecast(data, goal_data):
             goal_amount = goal['amount']
             goal_name = goal.get('name', "Unnamed Goal")  # Use "Unnamed Goal" if 'name' is missing
 
-            # Draw a small horizontal dash
+            # Get the current savings at the goal date (the most recent savings before the goal date)
+            current_savings_at_goal = df_prophet[df_prophet['ds'] <= goal_date]['y'].iloc[-1] if not df_prophet[df_prophet['ds'] <= goal_date].empty else 0
+
+            # Calculate the remaining amount to reach the goal
+            remaining_amount = goal_amount - current_savings_at_goal
+
+            # Calculate the number of months from now to the goal date
+            months_remaining = (goal_date - pd.to_datetime(df_prophet['ds'].iloc[-1])).days / 30
+
+            # If the months_remaining is positive, calculate the monthly contribution needed
+            if months_remaining > 0:
+                monthly_contribution = remaining_amount / months_remaining
+            else:
+                monthly_contribution = 0  # If no months remaining, no need for contribution
+
+            # Create a label with the goal name and monthly contribution
+            goal_label = f"{goal_name} (Contribute £{monthly_contribution:.2f} per month)"
+
+            # Draw a small horizontal dash for the goal
             fig.add_trace(go.Scatter(
                 x=[goal_date - pd.Timedelta(days=5), goal_date + pd.Timedelta(days=5)],  # Creates a small dash
                 y=[goal_amount, goal_amount],
@@ -524,13 +555,13 @@ def update_forecast(data, goal_data):
                 showlegend=False
             ))
 
-            # Add a dot in the center with label
+            # Add a dot in the center with label (including the contribution per month)
             fig.add_trace(go.Scatter(
                 x=[goal_date],
                 y=[goal_amount],
                 mode='markers+text',
                 marker=dict(color='darkorange', size=10, symbol='circle'),
-                text=[goal_name],
+                text=[goal_label],
                 textposition="top center",
                 textfont=dict(color='darkorange', size=12),
                 showlegend=False  # Hide goal from legend

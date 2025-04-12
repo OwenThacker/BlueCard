@@ -1,6 +1,7 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+from dash import Input, Output, State, callback
 
 # Register this file as the home page
 dash.register_page(__name__, path="/", name="Home")
@@ -599,6 +600,126 @@ layout = html.Div([
         'position': 'relative',
         'overflow': 'hidden'
     }),
+    # Then add this section before the statistics section
+    html.Div([
+        html.Div([
+            html.H2("Help Us Shape the Future of Personal Finance", className="section-title", style={
+                'color': COLORS['white'],
+                'textAlign': 'center',
+                'fontSize': '2.3rem',
+                'fontWeight': '600',
+                'marginBottom': '1.5rem',
+                'position': 'relative',
+                'paddingBottom': '15px'
+            }),
+            
+            # Decorative line under the section title
+            html.Div(style={
+                'position': 'absolute',
+                'width': '80px',
+                'height': '4px',
+                'backgroundColor': COLORS['accent-light'],
+                'left': '50%',
+                'transform': 'translateX(-50%)',
+                'marginTop': '-1.2rem'
+            }),
+            
+            html.P("Interested in our future features and updates? Join our mailing list to share feedback and be the first to know about new tools that can improve your financial journey.", 
+                className="mailing-list-description",
+                style={
+                    'color': COLORS['white'],
+                    'fontSize': '1.2rem',
+                    'maxWidth': '700px',
+                    'margin': '0 auto 2rem auto',
+                    'textAlign': 'center',
+                    'lineHeight': '1.6'
+                }),
+            
+            # Email signup form with animation
+            html.Div([
+                dbc.Input(
+                    id="mailing-list-email",
+                    type="email",
+                    placeholder="Enter your email address",
+                    style={
+                        'border': 'none',
+                        'borderRadius': '8px 0 0 8px',
+                        'padding': '12px 20px',
+                        'fontSize': '1.1rem',
+                        'width': '100%',
+                        'backgroundColor': 'rgba(255, 255, 255, 0.9)',
+                        'boxShadow': 'inset 0 2px 5px rgba(0, 0, 0, 0.1)'
+                    }
+                ),
+                dbc.Button(
+                    "Subscribe",
+                    id="subscribe-button",
+                    className="signup-button",
+                    style={
+                        'backgroundColor': COLORS['accent-light'],
+                        'border': 'none',
+                        'borderRadius': '0 8px 8px 0',
+                        'color': COLORS['primary'],
+                        'fontWeight': '600',
+                        'padding': '12px 25px',
+                        'fontSize': '1.1rem',
+                        'whiteSpace': 'nowrap',
+                        'boxShadow': '0 4px 10px rgba(0, 0, 0, 0.1)'
+                    }
+                )
+            ], className="email-signup-form", style={
+                'display': 'flex',
+                'maxWidth': '550px',
+                'margin': '0 auto',
+                'animation': 'fadeIn 1s ease-in-out'
+            }),
+            
+            # Success message (hidden by default)
+            html.Div([
+                html.P([
+                    html.I(className="fas fa-check-circle", style={'marginRight': '10px', 'color': COLORS['accent-light']}),
+                    "Thank you for subscribing! We'll keep you updated on new features."
+                ], style={'fontSize': '1.1rem'})
+            ], id="signup-success", style={'display': 'none', 'marginTop': '15px', 'color': 'white', 'textAlign': 'center'})
+            
+        ], className="mailing-list-content", style={
+            'maxWidth': '900px',
+            'margin': '0 auto',
+            'padding': '20px',
+            'position': 'relative',
+            'zIndex': '2'
+        })
+    ], className="mailing-list-section", style={
+        'padding': '60px 40px',
+        'backgroundColor': COLORS['secondary'],
+        'backgroundImage': f'linear-gradient(135deg, {COLORS["secondary"]} 0%, {COLORS["primary"]} 100%)',
+        'position': 'relative',
+        'overflow': 'hidden'
+    }),
+
+    # Add some animated elements in the background for visual interest
+    html.Div(className="floating-circle-ml-1", style={
+        'position': 'absolute',
+        'width': '200px',
+        'height': '200px',
+        'borderRadius': '50%',
+        'backgroundColor': 'rgba(255, 255, 255, 0.03)',
+        'top': '20%',
+        'right': '10%',
+        'animation': 'float 10s ease-in-out infinite',
+        'zIndex': '1'
+    }),
+    html.Div(className="floating-circle-ml-2", style={
+        'position': 'absolute',
+        'width': '120px',
+        'height': '120px',
+        'borderRadius': '50%',
+        'backgroundColor': 'rgba(144, 205, 244, 0.05)',
+        'bottom': '15%',
+        'left': '10%',
+        'animation': 'float 8s ease-in-out infinite 1s',
+        'zIndex': '1'
+    }),
 
     # Statistics Section with Stacked Blue Metric Icons
     html.Div([
@@ -1072,7 +1193,7 @@ html.Div([
                 'zIndex': '3',
                 'transform': 'translateX(-20px)'  # Offset to the left
             }),
-            html.Img(src="/assets/savings_analysis_pc.png", alt="Dashboard on Mobile", style={
+            html.Img(src="/assets/savings_analysis_pc.png", style={
                 'width': '60%',  # Match size with the first image
                 'borderRadius': '8px',
                 'boxShadow': '0 15px 30px rgba(0, 0, 0, 0.25)',
@@ -1274,3 +1395,76 @@ html.Div([
 })
 
 ], style={"width": "100%", "margin": "0", "padding": "0"})
+
+@callback(
+    [Output("signup-success", "style"),
+     Output("mailing-list-email", "value")],
+    Input("subscribe-button", "n_clicks"),
+    State("mailing-list-email", "value"),
+    prevent_initial_call=True
+)
+def submit_email(n_clicks, email):
+    if n_clicks and email:
+        try:
+            # Validate email format
+            import re
+            email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+            if not re.match(email_pattern, email):
+                # Invalid email format - could show error message instead
+                return {'display': 'none'}, email
+            
+            # Option 1: If you're using a database like PostgreSQL (Render supports this)
+            # import psycopg2
+            # DATABASE_URL = os.environ.get('DATABASE_URL')
+            # conn = psycopg2.connect(DATABASE_URL)
+            # cursor = conn.cursor()
+            # cursor.execute("INSERT INTO mailing_list (email, signup_date) VALUES (%s, NOW())", (email,))
+            # conn.commit()
+            # cursor.close()
+            # conn.close()
+            
+            # Option 2: Store in a CSV file (for simpler deployments)
+            import os
+            import csv
+            from datetime import datetime
+            
+            # Make sure this directory exists and is writable in your Render deployment
+            data_dir = os.path.join(os.getcwd(), 'data')
+            os.makedirs(data_dir, exist_ok=True)
+            
+            file_path = os.path.join(data_dir, 'mailing_list.csv')
+            file_exists = os.path.isfile(file_path)
+            
+            with open(file_path, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                if not file_exists:
+                    writer.writerow(['Email', 'Signup Date'])
+                writer.writerow([email, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+            
+            # Option 3: Send to a third-party API like Mailchimp
+            # import requests
+            # api_key = os.environ.get('MAILCHIMP_API_KEY')
+            # list_id = os.environ.get('MAILCHIMP_LIST_ID')
+            # data = {
+            #     "email_address": email,
+            #     "status": "subscribed"
+            # }
+            # url = f"https://<dc>.api.mailchimp.com/3.0/lists/{list_id}/members"
+            # response = requests.post(
+            #     url, 
+            #     auth=("username", api_key),
+            #     json=data
+            # )
+            
+            # Show success message and clear the input
+            return {'display': 'block', 'marginTop': '15px', 'color': 'white', 'textAlign': 'center'}, ""
+        
+        except Exception as e:
+            print(f"Error saving email: {str(e)}")
+            # For security, don't show the actual error to users
+            # You could log this error or send yourself a notification
+            
+            # Return a neutral message or no message
+            return {'display': 'none'}, email
+    
+    return {'display': 'none'}, ""

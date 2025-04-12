@@ -156,14 +156,14 @@ layout = html.Div([
         'animation': 'float 10s ease-in-out infinite 0.5s',
         'zIndex': '1'
     }),
-    html.Div(className="floating-diamond", style={
+    html.Div(className="floating-circle-2", style={
         'position': 'absolute',
         'width': '100px',
         'height': '100px',
+        'borderRadius': '50%',
         'backgroundColor': 'rgba(144, 205, 244, 0.05)',
         'bottom': '30%',
         'left': '25%',
-        'transform': 'rotate(45deg)',
         'animation': 'float 9s ease-in-out infinite 1.5s',
         'zIndex': '1'
     }),

@@ -1,6 +1,8 @@
 import dash
-from dash import html, dcc, callback, Input, Output, register_page
+from dash import html, dcc, callback, Input, Output, State, register_page
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import datetime
@@ -10,6 +12,7 @@ import plotly.graph_objects as go
 from datetime import date
 import json
 import os
+import random
 # from app import app
 
 # Register this file as the dashboard page
@@ -117,16 +120,167 @@ layout = html.Div([
         html.Li("Dashboard", className="breadcrumb-item breadcrumb-current")
     ], className="breadcrumb"),
     
-    # Main Content
+     # Main Content
     html.Div([
-        # Summary tiles
+        # Welcome Banner for New Users - will be shown/hidden based on data
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Img(src="/assets/Logo_slogan.PNG", style={"height": "70px", "marginBottom": "15px"}),
+                    html.H2("Welcome to Your Financial Dashboard", className="welcome-title", 
+                            style={"color": COLORS['primary'], "marginBottom": "15px", "fontSize": "24px"}),
+                    html.P("Let's set up your financial profile to get personalized insights and track your progress.", 
+                           style={"color": "#5D6D7E", "fontSize": "16px", "marginBottom": "25px"}),
+                    html.Div([
+                        dbc.Button([
+                            html.I(className="fas fa-arrow-right", style={"marginRight": "8px"}),
+                            "Get Started"
+                        ], href="/income", color="primary", className="get-started-btn", 
+                           style={"backgroundColor": COLORS['accent'], "border": "none", "padding": "12px 25px"})
+                    ], style={"textAlign": "center"})
+                ], className="welcome-content", style={
+                    "padding": "30px",
+                    "textAlign": "center",
+                    "maxWidth": "800px",
+                    "margin": "0 auto"
+                })
+            ], className="welcome-banner", id="welcome-banner", style={
+                "backgroundColor": "#F8F9FA",
+                "borderRadius": "10px",
+                "boxShadow": "0 4px 12px rgba(0, 0, 0, 0.05)",
+                "marginBottom": "30px",
+                "border": f"1px solid {COLORS['light']}",
+                "display": "none"  # Initially hidden, will show based on callback
+            })
+        ], id="new-user-welcome-container"),
+        
+        # Setup Steps Cards - for new users
+        html.Div([
+            html.H3("Complete Your Setup", className="section-title", 
+                    style={'color': COLORS['primary'], 'borderBottom': f'2px solid {COLORS["accent"]}', 'paddingBottom': '10px'}),
+            html.Div([
+                # Income Setup Card
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div("1", className="step-number", style={
+                                "backgroundColor": COLORS['accent'],
+                                "color": "white",
+                                "width": "30px",
+                                "height": "30px",
+                                "borderRadius": "50%",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "marginRight": "15px",
+                                "fontWeight": "bold"
+                            }),
+                            html.H4("Add Your Income", style={"color": COLORS['primary'], "margin": "0"})
+                        ], style={"display": "flex", "alignItems": "center", "marginBottom": "15px"}),
+                        html.P("Set up your monthly income sources to calculate your budget and savings potential.", 
+                               style={"color": "#5D6D7E", "marginBottom": "20px"}),
+                        dbc.Button([
+                            html.I(className="fas fa-plus", style={"marginRight": "8px"}),
+                            "Add Income"
+                        ], href="/income", color="primary", className="setup-btn", 
+                           style={"backgroundColor": COLORS['accent'], "border": "none"})
+                    ], className="setup-card-content", style={"padding": "20px"})
+                ], className="setup-card", style={
+                    "backgroundColor": "white",
+                    "borderRadius": "8px",
+                    "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.1)",
+                    "flex": "1",
+                    "minWidth": "250px",
+                    "marginRight": "20px",
+                    "border": f"1px solid {COLORS['light']}"
+                }),
+                
+                # Expenses Setup Card
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div("2", className="step-number", style={
+                                "backgroundColor": COLORS['warning'],
+                                "color": "white",
+                                "width": "30px",
+                                "height": "30px",
+                                "borderRadius": "50%",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "marginRight": "15px",
+                                "fontWeight": "bold"
+                            }),
+                            html.H4("Track Your Expenses", style={"color": COLORS['primary'], "margin": "0"})
+                        ], style={"display": "flex", "alignItems": "center", "marginBottom": "15px"}),
+                        html.P("Add your recurring monthly expenses and daily transactions to see where your money goes.", 
+                               style={"color": "#5D6D7E", "marginBottom": "20px"}),
+                        dbc.Button([
+                            html.I(className="fas fa-list-ul", style={"marginRight": "8px"}),
+                            "Add Expenses"
+                        ], href="/expenses", color="warning", className="setup-btn", 
+                           style={"backgroundColor": COLORS['warning'], "border": "none"}),
+                    ], className="setup-card-content", style={"padding": "20px"})
+                ], className="setup-card", style={
+                    "backgroundColor": "white",
+                    "borderRadius": "8px",
+                    "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.1)",
+                    "flex": "1",
+                    "minWidth": "250px",
+                    "marginRight": "20px",
+                    "border": f"1px solid {COLORS['light']}"
+                }),
+                
+                # Savings Goals Setup Card
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div("3", className="step-number", style={
+                                "backgroundColor": COLORS['success'],
+                                "color": "white",
+                                "width": "30px",
+                                "height": "30px",
+                                "borderRadius": "50%",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "marginRight": "15px",
+                                "fontWeight": "bold"
+                            }),
+                            html.H4("Set Savings Goals", style={"color": COLORS['primary'], "margin": "0"})
+                        ], style={"display": "flex", "alignItems": "center", "marginBottom": "15px"}),
+                        html.P("Create savings targets to build your financial future and track your progress over time.", 
+                               style={"color": "#5D6D7E", "marginBottom": "20px"}),
+                        dbc.Button([
+                            html.I(className="fas fa-piggy-bank", style={"marginRight": "8px"}),
+                            "Set Goals"
+                        ], href="/savings", color="success", className="setup-btn", 
+                           style={"backgroundColor": COLORS['success'], "border": "none"})
+                    ], className="setup-card-content", style={"padding": "20px"})
+                ], className="setup-card", style={
+                    "backgroundColor": "white",
+                    "borderRadius": "8px",
+                    "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.1)",
+                    "flex": "1",
+                    "minWidth": "250px",
+                    "border": f"1px solid {COLORS['light']}"
+                })
+            ], className="setup-cards-container", id="setup-steps-container", style={
+                "display": "flex",
+                "flexWrap": "wrap",
+                "marginBottom": "30px",
+                "gap": "20px"
+            })
+        ], id="setup-steps-section", style={"display": "none"}),  # Will be controlled by callback
+        
+        # Summary tiles section - remains the same
         html.H3("Financial Summary", className="section-title", 
                 style={'color': COLORS['primary'], 'borderBottom': f'2px solid {COLORS["accent"]}', 'paddingBottom': '10px'}),
         html.Div(id="summary-tiles", className="metric-container"),
         
         html.Div(style={"height": "24px"}),
         
-        # Expense breakdown and savings progress
+        # Expense breakdown and savings progress - with improved empty states
         html.Div([
             html.Div([
                 # Expense Breakdown Card
@@ -153,7 +307,7 @@ layout = html.Div([
         
         html.Div(style={"height": "24px"}),
         
-        # Recent activity and spending trends
+        # Recent activity and spending trends - with improved empty states
         html.Div([
             html.Div([
                 # Recent Activity Card
@@ -181,7 +335,7 @@ layout = html.Div([
         
         html.Div(style={"height": "24px"}),
         
-        # Finance insights
+        # Finance insights - with improved empty states
         html.Div([
             html.Div([
                 html.Div([
@@ -205,6 +359,7 @@ layout = html.Div([
     dcc.Store(id='total-expenses-store', storage_type='local'),
     dcc.Store(id='savings-target-store', storage_type='local'),
     dcc.Store(id='Transaction-store', storage_type='local'),
+    dcc.Store(id='is-new-user-store', storage_type='local'),  # New store for tracking if user is new
     
     # Include CSS
     html.Link(rel="stylesheet", href="/assets/style.css"),
@@ -386,6 +541,47 @@ layout = html.Div([
 
 ], style={"width": "100%", "margin": "0", "padding": "0"})
 
+
+# Add callback to check if user is new and show appropriate sections
+@callback(
+    [Output('welcome-banner', 'style'),
+     Output('setup-steps-section', 'style'),
+     Output('is-new-user-store', 'data')],
+    [Input('total-income-store', 'data'),
+     Input('total-expenses-store', 'data'),
+     Input('savings-target-store', 'data'),
+     Input('is-new-user-store', 'data')]
+)
+def toggle_new_user_ui(total_income, total_expenses, savings_target, is_new_user):
+    # Check if any essential data exists
+    has_income = total_income is not None and total_income > 0
+    has_expenses = total_expenses is not None and total_expenses > 0
+    has_savings_goal = savings_target is not None and savings_target > 0
+    
+    # First visit (is_new_user is None) or explicitly new
+    is_new = is_new_user is None or is_new_user == True
+    
+    # If user has set up any of the key components, they're not new anymore
+    if has_income or has_expenses or has_savings_goal:
+        is_new = False
+    
+    # Style for welcome banner
+    welcome_style = {
+        "backgroundColor": "#F8F9FA",
+        "borderRadius": "10px",
+        "boxShadow": "0 4px 12px rgba(0, 0, 0, 0.05)",
+        "marginBottom": "30px",
+        "border": f"1px solid {COLORS['light']}",
+        "display": "block" if is_new else "none"
+    }
+    
+    # Style for setup steps section
+    steps_style = {
+        "display": "block" if is_new else "none"
+    }
+    
+    return welcome_style, steps_style, is_new
+
 @callback(
     Output("total-income-store", "data", allow_duplicate=True),
     Input("session-data-store", "data"),
@@ -517,16 +713,16 @@ def update_summary_tiles(total_income, total_expenses, savings_target):
             ], className="summary-header"),
             html.P(f"£{savings_target:,.2f}", className="summary-value", 
                   style={**value_style, "color": COLORS['warning']}),
-            html.P(f"Your savings target is {savings_progress:.1f}% of income after recurring expenses" if remaining > 0 else "Set a savings target", 
+            html.P(f"Your savings target is {savings_progress:.1f}% of income after recurring expenses" if remaining > 0 else "Set a monthly savings target", 
                   className="summary-subtitle", style=subtitle_style),
         ], className="summary-tile", style=tile_style)
     ]
 
 @callback(
     Output('expense-breakdown-content', 'children'),
-    Input('total-expenses-store', 'data'),
-    Input('expenses-store', 'data'),
-    Input('session-data-store', 'data')
+    [Input('total-expenses-store', 'data'),
+     Input('expenses-store', 'data'),
+     Input('session-data-store', 'data')]
 )
 def update_expense_breakdown(total_expenses, expenses_store, session_data):
     # First try to use expenses from the expenses-store
@@ -538,16 +734,43 @@ def update_expense_breakdown(total_expenses, expenses_store, session_data):
     
     if not expenses:
         return html.Div([
-            html.P("No expenses added yet. Add expenses in the Expenses tab to see your breakdown.", 
-                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
-        ], className="info-box", style={
-            "backgroundColor": "#f8f9fa",
-            "padding": "20px",
-            "borderRadius": "8px",
-            "textAlign": "center",
-            "borderLeft": f"4px solid {COLORS['gray']}"
-        })
+            html.Div([
+                html.Img(src="/assets/placeholder-chart.png", style={
+                    "width": "120px", 
+                    "opacity": "0.6", 
+                    "marginBottom": "15px"
+                }) if os.path.exists("assets/placeholder-chart.png") else 
+                html.I(className="fas fa-chart-pie", style={
+                    "fontSize": "50px", 
+                    "color": COLORS['gray'], 
+                    "opacity": "0.5",
+                    "marginBottom": "15px"
+                }),
+                html.H4("No Expenses Added Yet", style={
+                    "color": COLORS['primary'],
+                    "fontWeight": "600",
+                    "marginBottom": "10px",
+                    "fontSize": "18px"
+                }),
+                html.P("Add your monthly expenses to see a breakdown of where your money is going.", 
+                      style={"color": "#5D6D7E", "marginBottom": "20px"}),
+                dbc.Button([
+                    html.I(className="fas fa-plus", style={"marginRight": "8px"}),
+                    "Add Expenses"
+                ], href="/expenses", color="primary", className="add-expenses-btn", 
+                   style={"backgroundColor": COLORS['accent'], "border": "none"})
+            ], className="empty-state-container", style={
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "padding": "40px 20px",
+                "height": "100%",
+                "textAlign": "center"
+            })
+        ])
     
+    # Original code for when expenses exist
     # Group expenses by category
     expense_by_category = {}
     for expense in expenses:
@@ -600,23 +823,55 @@ def update_expense_breakdown(total_expenses, expenses_store, session_data):
 
 @callback(
     Output('savings-progress-content', 'children'),
-    Input('Transaction-store', 'data'),
-    Input('total-income-store', 'data'),
-    Input('savings-target-store', 'data'),
+    [Input('Transaction-store', 'data'),
+     Input('total-income-store', 'data'),
+     Input('savings-target-store', 'data')],
     prevent_initial_call=True
 )
 def update_savings_progress_with_adjusted_budget(transaction_data, total_income, savings_target):
     if not transaction_data or total_income is None or savings_target is None:
         return html.Div([
-            html.P("Add transactions and set a savings goal to track your progress.", 
-                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
-        ], className="info-box", style={
-            "backgroundColor": "#f8f9fa",
-            "padding": "20px",
-            "borderRadius": "8px",
-            "textAlign": "center",
-            "borderLeft": f"4px solid {COLORS['gray']}"
-        })
+            html.Div([
+                html.Img(src="/assets/placeholder-savings.png", style={
+                    "width": "120px", 
+                    "opacity": "0.6", 
+                    "marginBottom": "15px"
+                }) if os.path.exists("assets/placeholder-savings.png") else 
+                html.I(className="fas fa-piggy-bank", style={
+                    "fontSize": "50px", 
+                    "color": COLORS['gray'], 
+                    "opacity": "0.5",
+                    "marginBottom": "15px"
+                }),
+                html.H4("Track Your Savings Progress", style={
+                    "color": COLORS['primary'],
+                    "fontWeight": "600",
+                    "marginBottom": "10px",
+                    "fontSize": "18px"
+                }),
+                html.P([
+                    "To track your savings progress: ",
+                    html.Ol([
+                        html.Li("Add your monthly income", style={"marginBottom": "5px", "textAlign": "left"}),
+                        html.Li("Set a monthly savings goal", style={"marginBottom": "5px", "textAlign": "left"}),
+                        html.Li("Record your transactions", style={"textAlign": "left"})
+                    ], style={"paddingLeft": "20px", "marginBottom": "20px", "marginTop": "10px"})
+                ], style={"color": "#5D6D7E"}),
+                dbc.Button([
+                    html.I(className="fas fa-piggy-bank", style={"marginRight": "8px"}),
+                    "Set Savings Goal"
+                ], href="/expenses", color="primary", className="set-goal-btn", 
+                   style={"backgroundColor": COLORS['warning'], "border": "none"})
+            ], className="empty-state-container", style={
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "padding": "40px 20px",
+                "height": "100%",
+                "textAlign": "center"
+            })
+        ])
 
     # Convert transaction data to a DataFrame
     df_transactions = pd.DataFrame(transaction_data)
@@ -739,15 +994,36 @@ def update_savings_progress_with_adjusted_budget(transaction_data, total_income,
 def update_recent_activity(transaction_data):
     if not transaction_data:
         return html.Div([
-            html.P("No recent transactions. Record your spending in the Expenses tab.", 
-                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
-        ], className="info-box", style={
-            "backgroundColor": "#f8f9fa",
-            "padding": "20px",
-            "borderRadius": "8px",
-            "textAlign": "center",
-            "borderLeft": f"4px solid {COLORS['gray']}"
-        })
+            html.Div([
+                html.I(className="fas fa-receipt", style={
+                    "fontSize": "50px", 
+                    "color": COLORS['gray'], 
+                    "opacity": "0.5",
+                    "marginBottom": "15px"
+                }),
+                html.H4("No Transaction History", style={
+                    "color": COLORS['primary'],
+                    "fontWeight": "600",
+                    "marginBottom": "10px",
+                    "fontSize": "18px"
+                }),
+                html.P("Start tracking your daily spending to see your recent transactions here.", 
+                      style={"color": "#5D6D7E", "marginBottom": "20px"}),
+                dbc.Button([
+                    html.I(className="fas fa-plus", style={"marginRight": "8px"}),
+                    "Add Transaction"
+                ], href="/expenses", color="primary", className="add-transaction-btn", 
+                   style={"backgroundColor": COLORS['accent'], "border": "none"})
+            ], className="empty-state-container", style={
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "padding": "30px 20px",
+                "height": "100%",
+                "textAlign": "center"
+            })
+        ])
     
     # Convert transaction data to a DataFrame and sort by date
     df_recent = pd.DataFrame(transaction_data)
@@ -805,15 +1081,42 @@ def update_recent_activity(transaction_data):
 def update_spending_trends(transaction_data):
     if not transaction_data:
         return html.Div([
-            html.P("No transaction data available. Record your spending in the Expenses tab to see trends.", 
-                  className="info-message", style={"fontFamily": "'Inter', sans-serif", "fontSize": "14px"})
-        ], className="info-box", style={
-            "backgroundColor": "#f8f9fa",
-            "padding": "20px",
-            "borderRadius": "8px",
-            "textAlign": "center",
-            "borderLeft": f"4px solid {COLORS['gray']}"
-        })
+            html.Div([
+                html.I(className="fas fa-chart-line", style={
+                    "fontSize": "50px", 
+                    "color": COLORS['gray'], 
+                    "opacity": "0.5",
+                    "marginBottom": "15px"
+                }),
+                html.H4("No Spending Data Yet", style={
+                    "color": COLORS['primary'],
+                    "fontWeight": "600",
+                    "marginBottom": "10px",
+                    "fontSize": "18px"
+                }),
+                html.P([
+                    "To see your spending trends over time, start by:",
+                    html.Ul([
+                        html.Li("Adding daily transactions", style={"marginBottom": "5px", "textAlign": "left"}),
+                        html.Li("Categorizing your expenses", style={"marginBottom": "5px", "textAlign": "left"}),
+                        html.Li("Tracking consistently for best insights", style={"textAlign": "left"})
+                    ], style={"paddingLeft": "20px", "marginTop": "10px", "marginBottom": "20px"})
+                ], style={"color": "#5D6D7E", "textAlign": "center"}),
+                dbc.Button([
+                    html.I(className="fas fa-plus", style={"marginRight": "8px"}),
+                    "Record Expenses"
+                ], href="/expenses", color="primary", className="record-expenses-btn", 
+                   style={"backgroundColor": COLORS['accent'], "border": "none"})
+            ], className="empty-state-container", style={
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "padding": "40px 20px",
+                "height": "100%",
+                "textAlign": "center"
+            })
+        ])
     
     # Convert transaction data to a DataFrame
     df_transactions = pd.DataFrame(transaction_data)
@@ -1364,4 +1667,3 @@ def update_savings_rate_insight(total_income, total_expenses):
                 "borderLeft": f"4px solid {COLORS['warning']}"
             })
         ])
-

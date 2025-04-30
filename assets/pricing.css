@@ -1,0 +1,280 @@
+/* Popular badge styling */
+.popular-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #4299e1;
+    color: white;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 0 10px 0 10px;
+}
+
+/* Save badge styling */
+.save-badge {
+    position: absolute;
+    top: -10px;
+    right: -5px;
+    background-color: #4299e1;
+    color: white;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 3px;
+    transform: rotate(5deg);
+}
+
+/* Hover effects */
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-cta-button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pricing-cards-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .pricing-card {
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .testimonial-card {
+        width: 100%;
+        max-width: 350px;
+    }
+}
+
+/* Pricing Page Specific Styles */
+
+/* Base styling for pricing cards */
+.pricing-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Enhanced styling for highlighted cards */
+.pricing-card.highlighted {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(66, 153, 225, 0.2);
+    border-color: #4299e1;
+    z-index: 2;
+}
+
+/* Typography enhancements */
+.pricing-title {
+    letter-spacing: -1px;
+    margin-bottom: 15px;
+}
+
+.pricing-subtitle {
+    font-weight: 300;
+    opacity: 0.8;
+}
+
+/* Price styling */
+.pricing-price {
+    margin: 25px 0;
+    line-height: 1;
+}
+
+.currency {
+    vertical-align: super;
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-right: 2px;
+}
+
+.price-amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: -2px;
+}
+
+.price-period {
+    font-size: 1rem;
+    color: #718096;
+    margin-left: 2px;
+}
+
+/* Feature list styling */
+.pricing-features {
+    margin: 25px 0;
+    text-align: left;
+}
+
+.pricing-features li {
+    display: flex;
+    align-items: start;
+    margin-bottom: 12px;
+    color: #2d3748;
+}
+
+.pricing-features i {
+    color: #4299e1;
+    margin-right: 10px;
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+/* CTA button styling */
+.pricing-cta-button {
+    width: 100%;
+    padding: 12px 0;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.pricing-cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.25);
+}
+
+/* Badge styling */
+.popular-badge {
+    position: absolute;
+    top: 12px;
+    right: -30px;
+    background-color: #4299e1;
+    color: white;
+    transform: rotate(45deg);
+    padding: 8px 40px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.save-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #ed8936;
+    color: white;
+    padding: 5px 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Yearly pricing option */
+.yearly-option {
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    position: relative;
+}
+
+/* FAQ section */
+.faq-accordion .accordion-button {
+    font-weight: 600;
+    padding: 20px 15px;
+    color: #2a4a7f;
+}
+
+.faq-accordion .accordion-body {
+    padding: 20px 15px;
+    color: #718096;
+    line-height: 1.6;
+}
+
+/* Testimonial cards */
+.testimonial-card {
+    transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* CTA section */
+.cta-section {
+    background: linear-gradient(135deg, #1a365d 0%, #2a4a7f 100%);
+}
+
+.cta-button {
+    transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Toggle Switch */
+.pricing-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 30px auto;
+}
+
+.toggle-option {
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .pricing-cards-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+    }
+    
+    .pricing-card {
+        width: 90%;
+        max-width: 400px;
+    }
+    
+    .pricing-card.highlighted {
+        transform: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .pricing-title {
+        font-size: 2rem;
+    }
+    
+    .pricing-subtitle {
+        font-size: 1rem;
+    }
+    
+    .faq-accordion {
+        width: 100%;
+    }
+    
+    .testimonial-card {
+        margin: 0 0 30px 0;
+        width: 100%;
+    }
+}

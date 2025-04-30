@@ -2586,6 +2586,7 @@ def generate_recurring_expenses(expenses_data, options):
     return fig
 
 # Layout for the chat/AI dashboard page
+# Layout for the chat/AI dashboard page
 layout = html.Div([
     # Stores for maintaining state
     dcc.Store(id="session-data-store", storage_type="local"),
@@ -2618,6 +2619,7 @@ layout = html.Div([
                 # html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link"), className="nav-item"),
+                
             ], className="nav-menu", id="nav-menu"),
             
             html.Div([
@@ -2639,93 +2641,557 @@ layout = html.Div([
     
     # Main content area
     html.Div([
-        # Sidebar for chat/AI interaction
+        # Sidebar for chat/AI interaction - Premium Version
         html.Div([
-            html.H2("AI Financial Assistant", className="sidebar-title"),
-            html.P("Ask me anything about your finances or request specific charts.", className="sidebar-description"),
-            html.Div(id="chat-history", className="chat-history"),
+            # Premium badge and title
             html.Div([
-                dcc.Input(id="chat-input", type="text", placeholder="Ask about your finances...", className="chat-input"),
-                html.Button([html.I(className="fas fa-paper-plane")], id="send-chat", className="send-chat-button")
-            ], className="chat-input-container")
-        ], className="chat-sidebar"),
+                html.Div([
+                    # html.I(className="fas fa-robot", style={
+                    #     "color": "#0052CC",
+                    #     "fontSize": "20px",
+                    #     "marginRight": "10px"
+                    # }),
+                    html.H2("BlueCard AI", className="sidebar-title", style={
+                        "color": "#0A2540",
+                        "fontWeight": "600",
+                        "fontSize": "1.5rem",
+                        "marginLeft": "40px"
+                    })
+                ], style={"display": "flex", "alignItems": "center"}),
+                # html.Div([
+                #     html.Span("ELITE", className="ai-badge", style={
+                #         "backgroundColor": "#0A2540",
+                #         "color": "white",
+                #         "padding": "4px 8px",
+                #         "borderRadius": "20px",
+                #         "fontSize": "0.7rem",
+                #         "fontWeight": "600",
+                #         "letterSpacing": "1px"
+                #     })
+                # ])
+            ], style={
+                "display": "flex", 
+                "justifyContent": "space-between", 
+                "alignItems": "center",
+                "marginBottom": "5px"
+            }),
+            
+            # Premium AI description
+            html.P([
+                "Your advanced financial intelligence assistant. Ask anything about your portfolio, investments, or financial planning.",
+            ], className="sidebar-description", style={
+                "color": "#4A5568",
+                "lineHeight": "1.5",
+                "fontSize": "0.95rem",
+                "marginBottom": "20px"
+            }),
+            
+            # Premium chat features description
+            html.Div([
+                html.Div([
+                    html.I(className="fas fa-chart-line", style={"color": "#0052CC"}),
+                    html.Span("In-Depth Analysis", style={"marginLeft": "10px", "fontWeight": "500"})
+                ], style={"marginBottom": "8px"}),
+                # html.Div([
+                #     html.I(className="fas fa-lock", style={"color": "#0052CC"}),
+                #     html.Span("Exclusive Insights", style={"marginLeft": "10px", "fontWeight": "500"})
+                # ], style={"marginBottom": "8px"}),
+                html.Div([
+                    html.I(className="fas fa-bolt", style={"color": "#0052CC"}),
+                    html.Span("Predictive Intelligence", style={"marginLeft": "10px", "fontWeight": "500"})
+                ])
+            ], className="premium-features", style={
+                "padding": "15px",
+                "backgroundColor": "rgba(0, 82, 204, 0.05)",
+                "borderRadius": "8px",
+                "fontSize": "0.9rem",
+                "color": "#2D3748",
+                "marginBottom": "20px",
+                "border": "1px solid rgba(0, 82, 204, 0.1)"
+            }),
+            
+            # Enhanced chat history
+            html.Div(id="chat-history", className="chat-history", style={
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "8px",
+                "padding": "15px",
+                "height": "calc(100vh - 380px)",
+                "overflowY": "auto",
+                "border": "1px solid rgba(203, 213, 224, 0.5)",
+                "boxShadow": "inset 0 2px 4px rgba(0,0,0,0.03)"
+            }),
+            
+            # Premium chat input container
+            html.Div([
+                dcc.Input(
+                    id="chat-input", 
+                    type="text", 
+                    placeholder="Ask your financial advisor...", 
+                    className="chat-input",
+                    style={
+                        "width": "100%",
+                        "padding": "12px 15px",
+                        "borderRadius": "8px",
+                        "border": "1px solid rgba(203, 213, 224, 0.7)",
+                        "fontSize": "0.95rem",
+                        "backgroundColor": "#FFFFFF",
+                        "boxShadow": "inset 0 2px 4px rgba(0,0,0,0.03)"
+                    }
+                ),
+                html.Button(
+                    [html.I(className="fas fa-paper-plane")], 
+                    id="send-chat", 
+                    className="send-chat-button",
+                    style={
+                        "backgroundColor": "#0052CC",
+                        "color": "white",
+                        "border": "none",
+                        "borderRadius": "8px",
+                        "padding": "12px 18px",
+                        "marginLeft": "10px",
+                        "cursor": "pointer",
+                        "transition": "all 0.2s ease",
+                        "boxShadow": "0 2px 5px rgba(0, 82, 204, 0.2)"
+                    }
+                )
+            ], className="chat-input-container", style={
+                "display": "flex", 
+                "alignItems": "center",
+                "marginTop": "15px",
+            }),
+            
+            # # Premium badge at the bottom
+            # html.Div([
+            #     html.Div([
+            #         html.I(className="fas fa-shield-alt", style={
+            #             "color": "#0052CC",
+            #             "fontSize": "16px",
+            #             "marginRight": "8px"
+            #         }),
+            #         html.Span("BlueCard Premium", style={
+            #             "fontWeight": "600", 
+            #             "color": "#0A2540",
+            #             "fontSize": "0.9rem"
+            #         })
+            #     ], style={"display": "flex", "alignItems": "center"})
+            # ], style={
+            #     "marginTop": "25px",
+            #     "textAlign": "center",
+            #     "padding": "10px",
+            #     "backgroundColor": "rgba(0, 82, 204, 0.05)",
+            #     "borderRadius": "8px",
+            #     "border": "1px solid rgba(0, 82, 204, 0.1)"
+            # })
+        ], className="chat-sidebar", style={
+            "borderRadius": "12px",
+            "backgroundColor": "#F8FAFC",
+            "padding": "25px",
+            "boxShadow": "0 10px 25px rgba(0, 0, 0, 0.05)",
+            "border": "1px solid rgba(203, 213, 224, 0.5)",
+            "marginLeft": "20px",
+            "marginTop": "1px"    # Optional: adjust this to reduce top gap
+        }),
 
         # Dashboard main area
         html.Div([
+            # Dashboard header that will only show if dashboard has components
             html.Div([
                 html.H1("Your Financial Dashboard", className="dashboard-title"),
                 html.Div(id="last-updated", className="last-updated")
-            ], className="dashboard-header"), # need to change this to display only if its not a new user
+            ], className="dashboard-header", id="dashboard-header-section", style={"display": "none"}),
             
-            # For new users (Welcome Page)
+            # For new users (Welcome Page) - PREMIUM VERSION
             html.Div([
-                # Main container with modern styling
+                # Main container with premium styling
                 html.Div([
-                    # Header section with logo and title
+                    # Top accent bar with premium gradient
+                    html.Div(className="premium-accent-bar", style={
+                        "height": "6px",
+                        "background": "linear-gradient(90deg, #0A2540 0%, #0052CC 35%, #00C7FA 100%)",
+                        "borderRadius": "4px 4px 0 0",
+                        "marginBottom": "2px"
+                    }),
+                    
+                    # Header section with logo, title and premium badge
                     html.Div([
-                        html.Img(src="/assets/Logo_slogan.png", className="welcome-logo"),
-                        html.H2("Welcome to Your Financial Dashboard", className="welcome-title")
-                    ], className="welcome-header"),
+                        html.Div([
+                            html.Img(src="/assets/Logo_slogan.png", className="welcome-logo"),
+                            html.Div([
+                                html.H2("Welcome to BlueCard Finance", className="welcome-title", style={
+                                    "fontWeight": "600",
+                                    "color": "#0A2540",
+                                    "marginBottom": "4px"
+                                }),
+                                html.P("Premium Financial Intelligence", style={
+                                    "fontSize": "1.1rem",
+                                    "color": "#4A5568",
+                                    "letterSpacing": "0.5px",
+                                    "margin": "0"
+                                }),
+                            ], className="welcome-title-container")
+                        ], className="welcome-header-left", style={"display": "flex", "alignItems": "center", "gap": "20px"}),
+                        
+                        # html.Div([
+                        #     html.Span("PREMIUM", className="premium-badge", style={
+                        #         "backgroundColor": "#0A2540",
+                        #         "color": "white",
+                        #         "padding": "6px 12px",
+                        #         "borderRadius": "20px",
+                        #         "fontSize": "0.8rem",
+                        #         "fontWeight": "600",
+                        #         "letterSpacing": "1px",
+                        #         "display": "inline-flex",
+                        #         "alignItems": "center",
+                        #         "boxShadow": "0 2px 10px rgba(10, 37, 64, 0.2)"
+                        #     }),
+                        # ], className="welcome-header-right")
+                    ], className="welcome-header", style={
+                        "display": "flex",
+                        "justifyContent": "space-between",
+                        "alignItems": "center",
+                        "paddingBottom": "15px",
+                        "borderBottom": "1px solid rgba(10, 37, 64, 0.1)"
+                    }),
                     
                     # Main content area
                     html.Div([
-                        # Left side - Illustration
+                        # Left side - Enhanced Video with frame
                         html.Div([
-                            html.Img(src="/assets/dashboard_illustration.png", className="welcome-illustration")
+                            html.Div([
+                                html.Video(
+                                    controls=True,
+                                    src="/assets/welcome_video.mp4",  # Update this path to your actual video file
+                                    className="welcome-video",
+                                    autoPlay=False,
+                                    style={
+                                        "width": "100%",
+                                        "borderRadius": "4px",
+                                        "boxShadow": "0 10px 25px rgba(0,0,0,0.1)"
+                                    }
+                                ),
+                                html.Div(className="video-frame-accent", style={
+                                    "position": "absolute",
+                                    "bottom": "-10px",
+                                    "right": "-10px",
+                                    "width": "80%",
+                                    "height": "80%",
+                                    "border": "2px solid #0052CC",
+                                    "borderRadius": "4px",
+                                    "zIndex": "-1"
+                                })
+                            ], className="video-container", style={
+                                "position": "relative",
+                                "margin": "20px 0"
+                            }),
+                            
+                            # Video testimonial note
+                            html.Div([
+                                html.Div([
+                                    html.I(className="fas fa-quote-left", style={
+                                        "color": "#0052CC",
+                                        "fontSize": "24px",
+                                        "marginRight": "10px"
+                                    })
+                                ], style={"marginBottom": "8px"}),
+                                html.P("BlueCard Finance transformed how I manage my wealth. The insights are incredible.", style={
+                                    "fontStyle": "italic",
+                                    "marginBottom": "10px",
+                                    "color": "#4A5568"
+                                }),
+                                html.Div([
+                                    html.Span("James Harrington", style={
+                                        "fontWeight": "600",
+                                        "color": "#0A2540"
+                                    }),
+                                    html.Span(" • ", style={"color": "#CBD5E0"}),
+                                    html.Span("CEO, Harrington Ventures", style={
+                                        "color": "#718096",
+                                        "fontSize": "0.9rem"
+                                    })
+                                ])
+                            ], className="video-testimonial", style={
+                                "padding": "20px",
+                                "backgroundColor": "#F7FAFC",
+                                "borderRadius": "4px",
+                                "borderLeft": "3px solid #0052CC",
+                                "marginTop": "25px"
+                            })
                         ], className="welcome-visual"),
                         
-                        # Right side - Getting started content
+                        # Right side - Getting started content with premium feel
                         html.Div([
-                            html.H3("Ready to Take Control of Your Finances?", className="getting-started-title"),
-                            html.P("Your personalized financial assistant is ready to help. Start with these simple commands:", 
-                                className="getting-started-text"),
+                            html.Div([
+                                html.H3("Elite Financial Management", className="getting-started-title", style={
+                                    "color": "#0A2540",
+                                    "fontSize": "1.5rem",
+                                    "fontWeight": "600",
+                                    "marginBottom": "8px"
+                                }),
+                                html.P("Harness the power of premium financial intelligence with your personal AI assistant.", 
+                                    className="getting-started-subtitle", style={
+                                        "color": "#4A5568",
+                                        "fontSize": "1rem",
+                                        "marginBottom": "24px"
+                                    }),
+                                
+                                # Premium features list
+                                html.Div([
+                                    html.Div([
+                                        html.I(className="fas fa-check-circle", style={
+                                            "color": "#0052CC",
+                                            "fontSize": "16px"
+                                        }),
+                                        html.Span("Advanced financial insights", style={
+                                            "marginLeft": "10px",
+                                            "color": "#2D3748"
+                                        })
+                                    ], className="premium-feature"),
+                                    html.Div([
+                                        html.I(className="fas fa-check-circle", style={
+                                            "color": "#0052CC",
+                                            "fontSize": "16px"
+                                        }),
+                                        html.Span("Personalized wealth strategies", style={
+                                            "marginLeft": "10px",
+                                            "color": "#2D3748"
+                                        })
+                                    ], className="premium-feature"),
+                                    html.Div([
+                                        html.I(className="fas fa-check-circle", style={
+                                            "color": "#0052CC",
+                                            "fontSize": "16px"
+                                        }),
+                                        html.Span("Real-time market analysis", style={
+                                            "marginLeft": "10px",
+                                            "color": "#2D3748"
+                                        })
+                                    ], className="premium-feature"),
+                                ], className="premium-features-list", style={
+                                    "display": "flex",
+                                    "flexDirection": "column",
+                                    "gap": "12px",
+                                    "marginBottom": "30px"
+                                })
+                            ], className="premium-introduction", style={
+                                "marginBottom": "30px"
+                            }),
                             
-                            # Command cards - visual, engaging way to show commands
+                            html.H3("Start Your Financial Journey", className="getting-started-title", style={
+                                "color": "#0A2540",
+                                "fontSize": "1.2rem",
+                                "fontWeight": "600",
+                                "marginBottom": "15px"
+                            }),
+                            
+                            # Command cards - visual, engaging way to show commands with premium styling
                             html.Div([
                                 # Income card
                                 html.Div([
                                     html.Div([
-                                        html.I(className="fas fa-plus-circle command-icon"),
-                                        html.Span("Add Income", className="command-label")
+                                        html.Div([
+                                            html.I(className="fas fa-plus-circle command-icon", style={
+                                                "color": "#0052CC",
+                                                "fontSize": "18px"
+                                            }),
+                                        ], style={
+                                            "width": "34px",
+                                            "height": "34px",
+                                            "borderRadius": "50%",
+                                            "backgroundColor": "rgba(0, 82, 204, 0.1)",
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                            "justifyContent": "center"
+                                        }),
+                                        html.Span("Add Income", className="command-label", style={
+                                            "fontWeight": "600",
+                                            "color": "#0A2540"
+                                        })
                                     ], className="command-header"),
-                                    html.P("\"I want to add to my income\"", className="command-example"),
-                                    html.Button("Try It", id="try-income-cmd", className="try-command-btn")
-                                ], className="command-card"),
+                                    html.P("\"I want to add to my income\"", className="command-example", style={
+                                        "color": "#718096",
+                                        "margin": "8px 0"
+                                    }),
+                                    html.Button("Try It", id="try-income-cmd", className="try-command-btn", style={
+                                        "backgroundColor": "#0052CC",
+                                        "color": "white",
+                                        "border": "none",
+                                        "borderRadius": "4px",
+                                        "padding": "8px 16px",
+                                        "cursor": "pointer",
+                                        "fontWeight": "500",
+                                        "transition": "all 0.2s ease"
+                                    })
+                                ], className="command-card", style={
+                                    "width": "100%",
+                                    "maxWidth": "500px",
+                                    "padding": "20px",
+                                    "backgroundColor": "white",
+                                    "borderRadius": "8px",
+                                    "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
+                                    "transition": "transform 0.2s ease, box-shadow 0.2s ease",
+                                    "border": "1px solid rgba(203, 213, 224, 0.5)",
+                                    "marginRight": "5px"
+                                }),
                                 
                                 # Expense card
                                 html.Div([
                                     html.Div([
-                                        html.I(className="fas fa-minus-circle command-icon"),
-                                        html.Span("Add Expense", className="command-label")
+                                        html.Div([
+                                            html.I(className="fas fa-minus-circle command-icon", style={
+                                                "color": "#0052CC",
+                                                "fontSize": "18px"
+                                            }),
+                                        ], style={
+                                            "width": "34px",
+                                            "height": "34px",
+                                            "borderRadius": "50%",
+                                            "backgroundColor": "rgba(0, 82, 204, 0.1)",
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                            "justifyContent": "center"
+                                        }),
+                                        html.Span("Add Expense", className="command-label", style={
+                                            "fontWeight": "600",
+                                            "color": "#0A2540"
+                                        })
                                     ], className="command-header"),
-                                    html.P("\"I want to add an expense\"", className="command-example"),
-                                    html.Button("Try It", id="try-expense-cmd", className="try-command-btn")
-                                ], className="command-card"),
+                                    html.P("\"I want to add an expense\"", className="command-example", style={
+                                        "color": "#718096",
+                                        "margin": "8px 0"
+                                    }),
+                                    html.Button("Try It", id="try-expense-cmd", className="try-command-btn", style={
+                                        "backgroundColor": "#0052CC",
+                                        "color": "white",
+                                        "border": "none",
+                                        "borderRadius": "4px",
+                                        "padding": "8px 16px",
+                                        "cursor": "pointer",
+                                        "fontWeight": "500",
+                                        "transition": "all 0.2s ease"
+                                    })
+                                ], className="command-card", style={
+                                    "padding": "20px",
+                                    "backgroundColor": "white",
+                                    "borderRadius": "8px",
+                                    "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
+                                    "transition": "transform 0.2s ease, box-shadow 0.2s ease",
+                                    "border": "1px solid rgba(203, 213, 224, 0.5)"
+                                }),
                                 
                                 # View breakdown card
                                 html.Div([
                                     html.Div([
-                                        html.I(className="fas fa-chart-pie command-icon"),
-                                        html.Span("View Reports", className="command-label")
+                                        html.Div([
+                                            html.I(className="fas fa-chart-pie command-icon", style={
+                                                "color": "#0052CC",
+                                                "fontSize": "18px"
+                                            }),
+                                        ], style={
+                                            "width": "34px",
+                                            "height": "34px",
+                                            "borderRadius": "50%",
+                                            "backgroundColor": "rgba(0, 82, 204, 0.1)",
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                            "justifyContent": "center"
+                                        }),
+                                        html.Span("View Reports", className="command-label", style={
+                                            "fontWeight": "600",
+                                            "color": "#0A2540"
+                                        })
                                     ], className="command-header"),
-                                    html.P("\"I want my income breakdown\"", className="command-example"),
-                                    html.Button("Try It", id="try-breakdown-cmd", className="try-command-btn")
-                                ], className="command-card"),
-                            ], className="command-cards-container"),
+                                    html.P("\"I want my income breakdown\"", className="command-example", style={
+                                        "color": "#718096",
+                                        "margin": "8px 0"
+                                    }),
+                                    html.Button("Try It", id="try-breakdown-cmd", className="try-command-btn", style={
+                                        "backgroundColor": "#0052CC",
+                                        "color": "white",
+                                        "border": "none",
+                                        "borderRadius": "4px",
+                                        "padding": "8px 16px",
+                                        "cursor": "pointer",
+                                        "fontWeight": "500",
+                                        "transition": "all 0.2s ease"
+                                    })
+                                ], className="command-card", style={
+                                    "padding": "20px",
+                                    "backgroundColor": "white",
+                                    "borderRadius": "8px",
+                                    "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
+                                    "transition": "transform 0.2s ease, box-shadow 0.2s ease",
+                                    "border": "1px solid rgba(203, 213, 224, 0.5)"
+                                }),
+                            ], className="command-cards-container", style={
+                                "display": "grid",
+                                "gridTemplateColumns": "repeat(auto-fit, minmax(250px, 1fr))",
+                                "gap": "16px",
+                                "marginBottom": "24px"
+                            }),
                             
-                            # Quick tip section
+                            # Quick tip section with premium styling
                             html.Div([
                                 html.Div([
-                                    html.I(className="fas fa-lightbulb tip-icon"),
-                                    html.Span("PRO TIP", className="tip-label")
-                                ]),
-                                html.P("Studies show the first 30 days are the toughest in achieving financial success. Stay committed – it gets easier from here.", 
-                                    className="tip-text")
-                            ], className="quick-tip"),
+                                    html.Div([
+                                        html.I(className="fas fa-lightbulb tip-icon", style={
+                                            "color": "#FDBA74",
+                                            "fontSize": "18px"
+                                        })
+                                    ], style={
+                                        "width": "32px",
+                                        "height": "32px",
+                                        "borderRadius": "50%",
+                                        "backgroundColor": "rgba(251, 211, 141, 0.2)",
+                                        "display": "flex",
+                                        "alignItems": "center",
+                                        "justifyContent": "center",
+                                        "marginRight": "12px"
+                                    }),
+                                    html.Span("EXPERT TIP", className="tip-label", style={
+                                        "fontWeight": "600",
+                                        "color": "#0A2540",
+                                        "letterSpacing": "0.5px",
+                                        "fontSize": "0.9rem"
+                                    })
+                                ], style={"display": "flex", "alignItems": "center"}),
+                                html.P("Ask advanced questions like \"What's my financial health?\" or \"How can I optimize my investment portfolio?\"", 
+                                    className="tip-text", style={
+                                        "margin": "10px 0 0 44px",
+                                        "color": "#4A5568"
+                                    })
+                            ], className="quick-tip", style={
+                                "padding": "16px",
+                                "backgroundColor": "#FFFAF0",
+                                "borderRadius": "8px",
+                                "marginTop": "10px",
+                                "border": "1px solid #FEEBC8"
+                            }),
                         ], className="welcome-content")
-                    ], className="welcome-main-content"),
-                ], className="welcome-container")
-            ], id="empty-dashboard-state", className="modern-welcome-page"),
+                    ], className="welcome-main-content", style={
+                        "display": "grid",
+                        "gridTemplateColumns": "45% 55%",
+                        "gap": "20px",
+                        "marginTop": "1px"
+                    }),
+                    
+                    # Bottom accent bar
+                    html.Div(className="premium-accent-bar", style={
+                        "height": "6px",
+                        "background": "linear-gradient(90deg, #00C7FA 0%, #0052CC 65%, #0A2540 100%)",
+                        "borderRadius": "0 0 4px 4px",
+                        "marginTop": "40px"
+                    }),
+                ], className="welcome-container", style={
+                    "backgroundColor": "#FFFFFF",
+                    "borderRadius": "8px",
+                    "boxShadow": "0 10px 30px rgba(0, 0, 0, 0.08)",
+                    "padding": "0 0 2px 0",  # Minimal padding to show accent bars
+                    "marginBottom": "40px",
+                    "border": "1px solid rgba(203, 213, 224, 0.5)"
+                })
+            ], id="empty-dashboard-state", className="premium-welcome-page", style={
+                "margin": "20px 0"
+            }),
 
             # Dashboard grid (updated to dash_draggable)
             html.Div([
@@ -2977,9 +3443,6 @@ layout = html.Div([
     "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
 }),
 
-    # Draggable Script (no longer needed with dash_draggable) — you can remove this:
-    # html.Script(id="dashboard-draggable-script", src="/assets/dashboard-draggable.js"),
-
     html.Div(id="listener-setup-trigger-div", style={"display": "none"}),
     html.Div(id="dashboard-event-trigger", style={"display": "none"}),
 
@@ -2987,10 +3450,32 @@ layout = html.Div([
     dcc.Interval(id='layout-update-interval', interval=1000, n_intervals=0),
     dcc.Store(id="insights-charts-store", storage_type="memory"),
     dcc.Store(id="current-chart-store", storage_type="memory"),
-    dcc.Store(id="insights-modal-store", data={"open": False})
+    dcc.Store(id="insights-modal-store", data={"open": False}),
+    
+    # Add a callback trigger to handle the dashboard state display toggling
+    dcc.Store(id="dashboard-has-components", storage_type="memory", data=False)
 ], className="chat-page-container")
 
-# Callbacks for chat functionality
+# Add this callback to toggle dashboard header visibility based on whether components exist
+@callback(
+    [Output("dashboard-header-section", "style"),
+     Output("dashboard-has-components", "data")],
+    [Input("dashboard-grid", "children")],
+    [State("dashboard-has-components", "data")]
+)
+def toggle_dashboard_header(dashboard_children, current_state):
+    """
+    Toggle the dashboard header visibility based on whether there are components
+    in the dashboard grid.
+    """
+    # Check if dashboard has components
+    has_components = len(dashboard_children) > 0 if dashboard_children else False
+    
+    # Set the display style for dashboard header
+    header_style = {"display": "block"} if has_components else {"display": "none"}
+    
+    # Return the style and update the state store
+    return header_style, has_components
 
 # Handle chat input
 @callback(

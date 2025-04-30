@@ -1,14 +1,21 @@
 # expenses.py - Dash Page for Expense Management with Professional Design
 
-from dash import html, dcc, Input, Output, State, callback, ctx, ALL
+from dash import html, dcc, Input, Output, State, callback, ctx, ALL, clientside_callback
 import dash_bootstrap_components as dbc
 import datetime
+from datetime import date
 import dash
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 from dash.exceptions import PreventUpdate
 import uuid
+
+from utils.db import connect_db
+import psycopg2
+import psycopg2.extras
+from psycopg2.extras import RealDictCursor, Json  # Add Json here
+import json
 
 # Register this file as a page
 dash.register_page(__name__, path='/expenses')
@@ -65,40 +72,207 @@ HEADER_STYLE = {
     'fontSize': '16px'  # Slightly larger font
 }
 
-# Layout for the Expenses Page
+
+# Database connection function
+def get_db_connection():
+    """Connect to the PostgreSQL database"""
+    try:
+        conn = connect_db()
+        return conn
+    except Exception as e:
+        # print(f"Error connecting to database: {e}")
+        return None
+
+def get_user_data(user_id):
+    """Get user data from database or return default for guest users"""
+
+    conn = get_db_connection()
+    if not conn:
+        return {}
+    print('printing user_id', user_id)
+
+    # Extract the actual user ID value from the dictionary
+    if isinstance(user_id, dict):
+        actual_user_id = user_id.get('user_id')
+        print(f'Extracted user_id value: {actual_user_id}')
+    else:
+        actual_user_id = user_id
+
+    user_data = {}
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Get user info
+            cur.execute("SELECT * FROM users WHERE user_id = %s", (actual_user_id,))
+            user = cur.fetchone()
+            if not user:
+                print(f"User {actual_user_id} not found in database")
+                return {}
+
+            user_data['user_info'] = dict(user)
+
+            # Get income data
+            cur.execute("SELECT * FROM income WHERE user_id = %s", (actual_user_id,))
+            user_data['income'] = [dict(row) for row in cur.fetchall()]
+
+            # Get expense data
+            cur.execute("SELECT * FROM expense WHERE user_id = %s", (actual_user_id,))
+            user_data['expenses'] = [dict(row) for row in cur.fetchall()]
+
+            # Get savings goals
+            cur.execute("SELECT * FROM saving_goals WHERE user_id = %s", (actual_user_id,))
+            user_data['savings_goals'] = [dict(row) for row in cur.fetchall()]
+
+            # Get transactions
+            cur.execute(
+                "SELECT * FROM transactions WHERE user_id = %s ORDER BY date DESC LIMIT 50",
+                (actual_user_id,)
+            )
+            user_data['transactions'] = [dict(row) for row in cur.fetchall()]
+
+            # Get savings target
+            cur.execute("SELECT amount FROM savings_target WHERE user_id = %s", (actual_user_id,))
+            savings_target = cur.fetchone()
+            if savings_target:
+                user_data['savings_target'] = savings_target['amount']
+            else:
+                user_data['savings_target'] = 0
+
+            # Get dashboard settings
+            cur.execute("SELECT dashboard_settings FROM users WHERE user_id = %s", (actual_user_id,))
+            dashboard_settings = cur.fetchone()
+            
+            # Initialize with empty component list
+            user_data['dashboard_settings'] = {'components': []}
+            
+            if dashboard_settings and dashboard_settings['dashboard_settings']:
+                # Parse JSON string to object
+                try:
+                    if isinstance(dashboard_settings['dashboard_settings'], str):
+                        parsed_settings = json.loads(dashboard_settings['dashboard_settings'])
+                    else:
+                        parsed_settings = dashboard_settings['dashboard_settings']
+                        
+                    # Ensure the settings have the expected structure
+                    if isinstance(parsed_settings, dict) and 'components' in parsed_settings:
+                        user_data['dashboard_settings'] = parsed_settings
+                        print(f"Successfully loaded dashboard settings for user {actual_user_id}")
+                        print(f"Found {len(parsed_settings.get('components', []))} components")
+                    else:
+                        print(f"Dashboard settings missing components for user {actual_user_id}")
+                        user_data['dashboard_settings'] = {'components': []}
+                except Exception as e:
+                    print(f"Error parsing dashboard settings: {e}")
+                    user_data['dashboard_settings'] = {'components': []}
+            else:
+                print(f"No dashboard settings found for user {actual_user_id}")
+
+    except Exception as e:
+         print(f"Error fetching user data: {e}")
+    finally:
+        conn.close()
+
+    return user_data
+
+# Load user data when page loads or user ID changes
+@callback(
+    Output("user-data-store", "data", allow_duplicate=True),
+    [Input("user-id", "data"),
+     Input("url", "pathname")],
+    prevent_initial_call=True
+)
+def load_user_data(user_id, pathname):
+    """Load user data from the database based on user ID"""
+    
+    if user_id is None:
+        # Default to Guest if no user ID is found
+        return get_user_data('Guest')
+    print('Loading Data in Expense.py')
+    print(user_id)
+    # Get user data from database
+    user_data = get_user_data(user_id)
+    
+    return user_data
+
+# Check authentication (optional)
+@callback(
+    Output("chat-dashboard-container", "style", allow_duplicate=True),
+    [Input("user-data-store", "data"),
+     Input("url", "pathname")],
+     prevent_initial_call=True
+)
+def check_authentication(user_data, pathname):
+    """Check if user is authenticated and should access this page"""
+    if pathname == '/expenses':
+        # Check if user is authenticated or if guest access is allowed
+        if not user_data:
+            # Hide the container if no user data
+            return {"display": "none"}
+        
+        # If you want to restrict certain pages to logged-in users only
+        # Uncomment this if you want to restrict guest access
+        if user_data.get('user_info', {}).get('id') == 'Guest':
+            return {"display": "none"}
+    
+    return {"display": "block"}
+
+
 # Layout for the Expenses Page
 layout = html.Div([
     # Header - Keep as is per request
     # Logo and Title
-    html.Div([
+    # html.Div([
+
+        # Session and Routing
+        dcc.Store(id='session-data-store', storage_type='local'),
+        dcc.Store(id='user-id', storage_type='local'),  # Make sure this is included
+        dcc.Location(id='url', refresh=False),
+        dcc.Store(id="app-loaded-store", data=False),
+
         html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
         
 
-        # Navigation - Keep as is per request
-        html.Nav([
-            html.Button([
-                html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
-                html.Span("≡")
-            ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
+    #     # Navigation - Keep as is per request
+    #     html.Nav([
+    #         html.Button([
+    #             html.Span("BlueCard Finance", className="mobile-nav-toggle-text"),
+    #             html.Span("≡")
+    #         ], className="mobile-nav-toggle", id="mobile-nav-toggle"),
 
-            html.Ul([
-                html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link active"), className="nav-item"),
-                html.Li([html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
-            ], className="nav-menu", id="nav-menu")
-        ], className="nav-bar"),
-    ], className="header-container"),
+    #         html.Ul([
+    #             html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
+    #             html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
+    #             html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
+    #             html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link active"), className="nav-item"),
+    #             html.Li([html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link")], className="nav-item"),
+    #             html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
+    #         ], className="nav-menu", id="nav-menu"),
+    #         # User account area (right side of navbar)
+    #             html.Div([
+    #                 # User profile dropdown
+    #                 html.Div([
+    #                     html.Button([
+    #                         html.I(className="fas fa-user-circle", style={'fontSize': '24px'}),
+    #                     ], id="user-dropdown-button", className="user-dropdown-button"),
+                        
+    #                     # Dropdown menu
+    #                     html.Div([
+    #                         html.Div(id="user-email-display", className="user-email"),
+    #                         html.Hr(style={'margin': '8px 0'}),
+    #                         html.A("Profile", href="/profile", className="dropdown-item"),
+    #                         html.A("Logout", id="logout-link", href="/logout", className="dropdown-item")
+    #                     ], id="user-dropdown-content", className="user-dropdown-content")
+    #                 ], className="user-dropdown"),
+    #             ], id="user-account-container", className="user-account-container"),
+    #     ], className="nav-bar"),
+    # ], className="header-container"),
 
-    # Optional Breadcrumb with improved styling
-    html.Ul([
-        html.Li([
-            html.A("Home", href="/", className="breadcrumb-link")
-        ], className="breadcrumb-item"),
-        html.Li("Expenses", className="breadcrumb-item breadcrumb-current")
-    ], className="breadcrumb", style={'backgroundColor': COLORS['light'], 'borderRadius': '8px'}),
+    # # Optional Breadcrumb with improved styling
+    # html.Ul([
+    #     html.Li([
+    #         html.A("Home", href="/", className="breadcrumb-link")
+    #     ], className="breadcrumb-item"),
+    #     html.Li("Expenses", className="breadcrumb-item breadcrumb-current")
+    # ], className="breadcrumb", style={'backgroundColor': COLORS['light'], 'borderRadius': '8px'}),
 
     # Main Content Container
     html.Div([
@@ -163,7 +337,7 @@ layout = html.Div([
                                             value=False,
                                             id="recurring-input",
                                             inline=True,
-                                            className="mb-0"
+                                            className="mb-0 my-custom-radio",
                                         ),
                                     ], style={'display': 'flex', 'alignItems': 'center'})
                                 ], width=6),
@@ -314,6 +488,11 @@ layout = html.Div([
         ])
     ], className="main-content-container p-3"),
 
+    # Stores from chat
+    dcc.Store(id="session-data-store", storage_type="local"),
+    dcc.Store(id='user-id-store', storage_type='local'),
+    dcc.Store(id='user-data-store', storage_type='session'),
+
     # Local storage for expenses and other variables
     dcc.Store(id='expenses-store', storage_type='local'),
     dcc.Store(id='salary-store', storage_type='local'),
@@ -322,8 +501,13 @@ layout = html.Div([
     dcc.Store(id='Transaction-store', storage_type='local'), # Add this to access transaction data
     dcc.Store(id='active-tab-store', storage_type='memory', data=None),
     
-    # Client-side stores are initialized with default values but don't persist
+
+    # Will use PostgreSQL instead of these stores
+    dcc.Store(id='active-tab-store', storage_type='memory', data=None),
     dcc.Store(id='expense-data-filtered', storage_type='memory'),
+    
+    # Placeholder for the current user ID (to be implemented with authentication)
+    dcc.Store(id='current-user-store', storage_type='memory', data='user1'),
     
     # Interval for initialization (runs once)
     dcc.Interval(id='interval-component', interval=1000, max_intervals=1),
@@ -505,656 +689,326 @@ layout = html.Div([
 
 ])
 
-# Initialize stores with default data (only runs once)
+# Initialize Income data
 @callback(
-    Output('expenses-store', 'data', allow_duplicate=True),
-    Output('salary-store', 'data', allow_duplicate=True),
-    Output('savings-target-store', 'data', allow_duplicate=True),
-    Input('interval-component', 'n_intervals'),
-    State('expenses-store', 'data'),
+    Output("total-income-store", "data", allow_duplicate=True),
+    [Input("user-data-store", "data"),
+     Input("interval-component", "n_intervals"),
+     Input("app-loaded-store", "data")],  # Add this input
     prevent_initial_call=True
 )
-def initialize_stores(n_intervals, existing_expenses):
-    # Only initialize if no data exists (prevent wiping out user data)
-    if existing_expenses is not None:
+def initialize_income_data(user_data, n_intervals, app_loaded):
+    """Initialize income data from user data"""
+    if not user_data:
+        return []
+    
+    # Determine what triggered the callback
+    triggered_id = ctx.triggered_id
+    
+    # If triggered by app load but no user data, prevent update
+    if triggered_id == "app-loaded-store" and not user_data:
         raise PreventUpdate
-        
-    # Default monthly income
-    initial_income = 0
     
-    # Default savings target
-    initial_savings = 0
+    # Load income data from user_data
+    total_income = user_data.get('income', [])
     
-    return initial_income, initial_savings
+    return total_income
 
-# Add new expense
+# Similarly modify your initialize_expense_data callback
 @callback(
-    Output('expenses-store', 'data', allow_duplicate=True),
-    Input('submit-expense', 'n_clicks'),
-    State('desc-input', 'value'),
-    State('amount-input', 'value'),
-    State('category-input', 'value'),
-    State('due-date-input', 'date'),
-    State('recurring-input', 'value'),
-    State('expenses-store', 'data'),
+    [Output("expenses-store", "data"),
+     Output("savings-target-store", "data")],
+    [Input("user-data-store", "data"),
+     Input("interval-component", "n_intervals"),
+     Input("app-loaded-store", "data")],  # Add this input
     prevent_initial_call=True
 )
-def add_expense(n_clicks, desc, amount, category, due_date, recurring, expenses_data):
-    if not n_clicks or not desc or amount is None or not category or not due_date:
-        raise PreventUpdate
-
-    # Ensure we have data to work with
-    if expenses_data is None:
-        expenses_data = []
-        
-    # Generate unique ID based on description and timestamp
-    expense_id = f"{desc.lower().replace(' ', '-')}-{uuid.uuid4().hex[:8]}"
+def initialize_expense_data(user_data, n_intervals, app_loaded):
+    """Initialize expense data from user data"""
+    if not user_data:
+        return [], 0
     
-    # Create new expense object
+    # Determine what triggered the callback
+    triggered_id = ctx.triggered_id
+    
+    # If triggered by app load but no user data, prevent update
+    if triggered_id == "app-loaded-store" and not user_data:
+        raise PreventUpdate
+    
+    # Extract expenses and return
+    expenses = user_data.get('expenses', [])
+    transactions = user_data.get('transactions', [])
+    
+    # Combine monthly expenses and one-time expenses (transactions)
+    combined_expenses = []
+    
+    # Add monthly expenses
+    for expense in expenses:
+        expense_item = {
+            'id': expense.get('expense_id', str(uuid.uuid4())),
+            'description': expense.get('description', ''),
+            'amount': expense.get('amount', 0),
+            'category': expense.get('category', 'Other'),
+            'due_date': expense.get('due_date', datetime.date.today().isoformat()),
+            'recurring': True  # Monthly expenses are recurring
+        }
+        combined_expenses.append(expense_item)
+    
+    # Add one-time expenses from transactions
+    for transaction in transactions:
+        # Only add expense transactions (not income)
+        if transaction.get('type', '') == 'expense':
+            transaction_item = {
+                'id': transaction.get('transaction_id', str(uuid.uuid4())),
+                'description': transaction.get('description', ''),
+                'amount': transaction.get('amount', 0),
+                'category': transaction.get('category', 'Other'),
+                'due_date': transaction.get('date', datetime.date.today().isoformat()),
+                'recurring': False  # Transactions are one-time
+            }
+            combined_expenses.append(transaction_item)
+    
+    # Get savings target
+    savings_target = user_data.get('savings_target', 0)
+    
+    return combined_expenses, savings_target
+
+# Add expense callback
+@callback(
+    [Output("expenses-store", "data", allow_duplicate=True),
+     Output("desc-input", "value"),
+     Output("amount-input", "value"),
+     Output("category-input", "value"),
+     Output("due-date-input", "date"),
+     Output("recurring-input", "value")],
+    [Input("submit-expense", "n_clicks")],
+    [State("desc-input", "value"),
+     State("amount-input", "value"),
+     State("category-input", "value"),
+     State("due-date-input", "date"),
+     State("recurring-input", "value"),
+     State("expenses-store", "data"),
+     State("user-id", "data")],
+    prevent_initial_call=True
+)
+def add_expense(n_clicks, desc, amount, category, due_date, recurring, expenses, user_id):
+    """Add a new expense to the database and update the store"""
+    if n_clicks is None or not desc or not amount or not category:
+        raise PreventUpdate
+    
+    # Extract the actual user ID value from the dictionary
+    if isinstance(user_id, dict):
+        actual_user_id = user_id.get('user_id')
+        print(f'Extracted user_id value: {actual_user_id}')
+    else:
+        actual_user_id = user_id
+
+    # Create a new expense record
+    expense_id = str(uuid.uuid4())
     new_expense = {
         'id': expense_id,
         'description': desc,
         'amount': float(amount),
         'category': category,
         'due_date': due_date,
-        'recurring': bool(recurring),
-        'date_added': datetime.date.today().isoformat()
-    }
-    
-    # Add to expenses list
-    updated_expenses = expenses_data + [new_expense]
-    
-    return updated_expenses
-
-# Filter expenses based on user selection
-@callback(
-    Output('expense-data-filtered', 'data'),
-    Input('expenses-store', 'data'),
-    Input('active-tab-store', 'data')
-)
-def filter_expenses(expenses, active_tab):
-    if not expenses:
-        return {'all': [], 'recurring': [], 'non_recurring': [], 'total': 0}
-    
-    # Get recurring and non-recurring expenses
-    recurring_expenses = [exp for exp in expenses if exp.get('recurring') is True]
-    non_recurring_expenses = [exp for exp in expenses if exp.get('recurring') is not True]
-    
-    # If no tab is selected, return empty filtered expenses
-    if active_tab is None:
-        filtered_expenses = []
-    # Otherwise filter based on the active tab
-    elif active_tab == 'tab-recurring':
-        filtered_expenses = recurring_expenses
-    elif active_tab == 'tab-non-recurring':
-        filtered_expenses = non_recurring_expenses
-    else:  # Default to 'tab-all'
-        filtered_expenses = expenses
-    
-    # Calculate totals
-    total_expenses = sum(exp.get('amount', 0) for exp in expenses)
-    
-    return {
-        'all': expenses,
-        'recurring': recurring_expenses,
-        'non_recurring': non_recurring_expenses,
-        'filtered': filtered_expenses,  # New field for the filtered expenses
-        'total': total_expenses,
-        'total_recurring': sum(exp.get('amount', 0) for exp in recurring_expenses),
-        'total_non_recurring': sum(exp.get('amount', 0) for exp in non_recurring_expenses)
+        'recurring': recurring
     }
 
-# Helper function to create expense cards
-def create_expense_items(data):
-    if not data or len(data) == 0:
-        return [html.P("No expenses in this category.", className="text-muted text-center py-3")]
-    
-    expense_items = []
-    
-    for exp in data:
+    # Print debug info before DB insert
+    print(f"Adding new expense:")
+    print(f"  Expense ID: {expense_id}")
+    print(f"  Description: {desc}")
+    print(f"  Amount: {amount}")
+    print(f"  Category: {category}")
+    print(f"  Due Date: {due_date}")
+    print(f"  Recurring: {recurring}")
+    print(f"  User ID: {user_id}")
+
+    # Save to database
+    conn = get_db_connection()
+    if conn:
         try:
-            # Get expense properties
-            expense_id = exp.get('id')
-            description = exp.get('description', "No description")
-            amount = exp.get('amount', 0.0)
-            category = exp.get('category', "Other")
-            due_date = exp.get('due_date', "N/A")
-            recurring = exp.get('recurring', False)
-            
-            # Format due date
-            try:
-                due_date_obj = datetime.date.fromisoformat(due_date)
-                due_date_display = due_date_obj.strftime("%b %d, %Y")
-            except:
-                due_date_display = due_date
-            
-            # Get category color
-            category_color = CATEGORY_COLORS.get(category, COLORS['muted'])
-            
-            # Create expense card with more professional styling
-            item = dbc.Card([
-                dbc.CardBody([
-                    html.Div([
-                        # Left section with category and description
-                        html.Div([
-                            html.Div([
-                                html.Span(category, 
-                                    className="badge me-2", 
-                                    style={
-                                        "backgroundColor": category_color, 
-                                        "color": "white", 
-                                        "borderRadius": "4px", 
-                                        "padding": "4px 8px",
-                                        "fontSize": "11px",
-                                        "fontWeight": "600",
-                                        "letterSpacing": "0.3px"
-                                    }),
-                                html.Strong(description, 
-                                    className="expense-title",
-                                    style={
-                                        "fontSize": "14px",
-                                        "color": COLORS['dark'],
-                                        "letterSpacing": "0.2px"
-                                    }),
-                            ], style={"display": "flex", "alignItems": "center"}),
-                            html.Small(f"Due: {due_date_display}", 
-                                className='text-muted d-block mt-1',
-                                style={"fontSize": "12px", "opacity": "0.8"})
-                        ], style={'flex': 1}),
-                        
-                        # Middle section with amount
-                        html.Div([
-                            html.Span(f"£{amount:.2f}", 
-                                className='h5 mb-0 font-weight-bold', 
-                                style={
-                                    "color": COLORS['primary'],
-                                    "fontSize": "16px",
-                                    "fontWeight": "600"
-                                }),
-                            html.Small(
-                                "Monthly" if recurring else "One-time", 
-                                className='d-block text-muted mt-1',
-                                style={"fontSize": "11px", "opacity": "0.8"}
-                            )
-                        ], style={"textAlign": "right", "marginRight": "15px"}),
-                        
-                        # Delete button with improved styling
-                        html.Button(
-                            "✕", # Simple X instead of text
-                            id={'type': 'delete-expense', 'index': expense_id},
-                            className="btn btn-sm",
-                            title="Delete this expense",
-                            style={
-                                'borderRadius': '50%',
-                                'fontSize': '12px',
-                                'fontWeight': '700',
-                                'color': COLORS['muted'],
-                                'backgroundColor': 'transparent',
-                                'border': 'none',
-                                'width': '28px',
-                                'height': '28px',
-                                'display': 'flex',
-                                'alignItems': 'center',
-                                'justifyContent': 'center',
-                                'padding': '0',
-                                'transition': 'all 0.2s',
-                                'cursor': 'pointer'
-                            }
-                        ),
-                    ], style={
-                        'display': 'flex', 
-                        'justifyContent': 'space-between', 
-                        'alignItems': 'center'
-                    })
-                ], style={"padding": "12px 15px"})
-            ], className="mb-2 expense-card", style={
-                "boxShadow": "0 1px 3px rgba(0,0,0,0.08)",
-                "border": f"1px solid {COLORS['light']}",
-                "borderRadius": "6px",
-                "transition": "transform 0.2s, box-shadow 0.2s",
-                "overflow": "hidden"
-            })
-            
-            expense_items.append(item)
-            
+            with conn.cursor() as cur:
+                if recurring:
+                    # Insert into the expense table for monthly recurring expenses
+                    print("  -> Inserting into 'expense' table")
+                    cur.execute(
+                        """
+                        INSERT INTO expense (expense_id, user_id, amount, category, description, due_date)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        """,
+                        (expense_id, actual_user_id, float(amount), category, desc, due_date)
+                    )
+                else:
+                    # Insert into the transactions table for one-time expenses
+                    print("  -> Inserting into 'transactions' table")
+                    cur.execute(
+                        """
+                        INSERT INTO transactions (transaction_id, user_id, amount, type, category, description, date)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (expense_id, actual_user_id, float(amount), 'expense', category, desc, due_date)
+                    )
+                conn.commit()
+                print("  -> Insert committed.")
         except Exception as e:
-            print(f"Error rendering expense: {str(e)}")
-    
-    return expense_items
+            print(f"Error adding expense: {e}")
+        finally:
+            conn.close()
 
-# Update expense lists
-@callback(
-    Output('expense-list-container', 'children'),
-    Output('total-expense-badge', 'children'),
-    Input('expense-data-filtered', 'data'),
-    Input('active-tab-store', 'data')
-)
-def update_expense_lists(filtered_data, active_tab):
-    if not filtered_data:
-        return (
-            html.P("No expenses found.", className="text-muted text-center py-3"),
-            "Total: £0.00"
-        )
-    
-    # If no tab is selected
-    if active_tab is None:
-        return (
-            html.Div([
-                html.Div(
-                    html.P("Select a tab to view expenses", 
-                           className="text-muted text-center py-5 border rounded"),
-                    style={"marginTop": "30px"}
-                )
-            ]), 
-            f"Total: £{filtered_data['total']:.2f}"
-        )
-    
-    # Create expense items for the filtered expenses
-    expense_items = create_expense_items(filtered_data['filtered'])
-    
-    # Total badge
-    total_badge = f"Total: £{filtered_data['total']:.2f}"
-    
-    return expense_items, total_badge
-
-# Update category chart
-@callback(
-    Output('expense-category-chart', 'children'),
-    Input('expenses-store', 'data')
-)
-def update_category_chart(expenses_data):
-    if not expenses_data or len(expenses_data) == 0:
-        return html.P("Add expenses to see category breakdown.", className="text-muted text-center py-3")
-    
-    try:
-        # Group expenses by category
-        categories = {}
-        for exp in expenses_data:
-            cat = exp.get('category', 'Other')
-            amount = exp.get('amount', 0)
-            categories[cat] = categories.get(cat, 0) + amount
-        
-        # Create DataFrame
-        df = pd.DataFrame([(k, v) for k, v in categories.items()], columns=['Category', 'Amount'])
-        df = df.sort_values('Amount', ascending=False)
-        
-        # Create pie chart
-        fig = px.pie(
-            df,
-            values='Amount',
-            names='Category',
-            hole=0.5,
-            color_discrete_sequence=BLUE_PALETTE  # Use blue palette
-        )
-        
-        # Update layout
-        fig.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=300,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.15,
-                xanchor="center",
-                x=0.5,
-                font=dict(size=12, color=COLORS['dark'])  # Professional font
-            ),
-            paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
-            plot_bgcolor='rgba(0,0,0,0)',  # Transparent plot area
-            uniformtext_minsize=12,
-            uniformtext_mode='hide'
-        )
-        
-        # Add center annotations
-        fig.update_traces(
-            textposition='inside',
-            textinfo='percent+label',
-            hoverinfo="label+percent+value",
-            textfont_size=12
-        )
-        
-        total = df['Amount'].sum()
-        fig.add_annotation(
-            text=f"£{total:.0f}",
-            font=dict(size=18, color=COLORS['dark'], family="Arial, sans-serif"),
-            showarrow=False,
-            x=0.5,
-            y=0.5
-        )
-        fig.add_annotation(
-            text="Total Expenses",
-            font=dict(size=12, color=COLORS['muted'], family="Arial, sans-serif"),
-            showarrow=False,
-            x=0.5,
-            y=0.44
-        )
-        
-        return dcc.Graph(figure=fig, config={'displayModeBar': False})
-    
-    except Exception as e:
-        print(f"Error in category chart: {e}")
-        return html.P("Error displaying category chart.", className="text-danger text-center py-3")
-
-# Recurring vs Non-recurring chart
-@callback(
-    Output('recurring-analysis-chart', 'children'),
-    Input('expense-data-filtered', 'data')
-)
-def update_recurring_analysis(data):
-    if not data:
-        return html.P("Add expenses to see recurring vs. one-time breakdown.", className="text-muted text-center py-3")
-    
-    # Get totals
-    recurring_total = data.get('total_recurring', 0)
-    non_recurring_total = data.get('total_non_recurring', 0)
-    
-    # Skip if no data
-    if recurring_total == 0 and non_recurring_total == 0:
-        return html.P("No expense amounts to display.", className="text-muted text-center py-3")
-    
-    # Create pie chart
-    labels = ['Monthly Recurring', 'One-time']
-    values = [recurring_total, non_recurring_total]
-    
-    fig = go.Figure()
-    
-    fig.add_trace(go.Pie(
-        labels=labels,
-        values=values,
-        hole=0.6,
-        marker=dict(
-            colors=BLUE_PALETTE[:2],  # Use two shades of blue
-            line=dict(color='#FFFFFF', width=1)
-        ),
-        textinfo='label+percent',
-        hoverinfo="label+percent+value",
-        textfont=dict(size=12, color=COLORS['dark'])
-    ))
-    
-    # Add center text
-    total = recurring_total + non_recurring_total
-    fig.add_annotation(
-        x=0.5,
-        y=0.5,
-        text=f"£{total:.0f}",
-        font=dict(size=18, color=COLORS['dark'], family="Arial, sans-serif"),
-        showarrow=False
-    )
-    
-    fig.add_annotation(
-        x=0.5,
-        y=0.42,
-        text="Total",
-        font=dict(size=12, color=COLORS['muted'], family="Arial, sans-serif"),
-        showarrow=False
-    )
-    
-    # Update layout
-    fig.update_layout(
-        margin=dict(l=10, r=10, t=10, b=10),
-        height=350,
-        showlegend=True,
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.15,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=12, color=COLORS['dark'])
-        ),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
-    
-    return dcc.Graph(figure=fig, config={'displayModeBar': False})
-
-# Callback for monthly overview chart with improved design
-@callback(
-    Output('monthly-overview-chart', 'children'),
-    Input('expenses-store', 'data'),
-    Input('total-income-store', 'data'),
-    Input('savings-target-store', 'data')
-)
-def update_monthly_overview(expenses_data, income, savings_target):
-    # Handle missing data scenarios
-    if not expenses_data:
-        expenses_data = []
-    
-    income = income or 0
-    savings_target = savings_target or 0
-    
-    # Calculate with error handling
-    try:
-        total_expenses = sum(e.get('amount', 0) for e in expenses_data)
-        remaining = max(0, income - total_expenses)  # Ensure not negative
-        discretionary = max(0, remaining - savings_target)
-    except Exception as e:
-        print(f"Error in monthly overview calculations: {e}")
-        total_expenses = 0
-        remaining = 0
-        discretionary = 0
-    
-    # Create data for the chart
-    data = {
-        'Category': ['Expenses', 'Savings', 'Remaining'],
-        'Amount': [total_expenses, savings_target, discretionary]
-    }
-    
-    df = pd.DataFrame(data)
-    
-    # Use blue color palette
-    colors = ['#2C3E50', '#3498DB', '#85C1E9']  # Dark to light blues
-    
-    # Use a more professional layout
-    fig = go.Figure()
-    
-    # Add bars
-    for i, (cat, amount) in enumerate(zip(df['Category'], df['Amount'])):
-        fig.add_trace(go.Bar(
-            x=[cat],
-            y=[amount],
-            name=cat,
-            text=[f"£{amount:.2f}"],
-            textposition='auto',
-            marker_color=colors[i],
-            hoverinfo="text",
-            hovertext=f"{cat}: £{amount:.2f}"
-        ))
-    
-    # Update layout for a more professional look
-    fig.update_layout(
-        margin=dict(l=10, r=10, t=20, b=10),
-        height=300,
-        showlegend=False,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(
-            showgrid=False,
-            zeroline=False,
-            showline=False
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridcolor=COLORS['light'],
-            zeroline=False,
-            showline=False,
-            showticklabels=False
-        ),
-        bargap=0.4
-    )
-    
-    # Add a total income annotation
-    fig.add_annotation(
-        x=0.5,
-        y=1.1,
-        text=f"Total Income: £{income:.2f}",
-        showarrow=False,
-        font=dict(size=12, color=COLORS['dark']),
-        xref="paper",
-        yref="paper"
-    )
-    
-    return dcc.Graph(figure=fig, config={'displayModeBar': False})
-
-
-# Callback for updating savings target and showing savings summary
-@callback(
-    Output('savings-target-store', 'data'),
-    Output('savings-summary', 'children'),
-    Input('update-savings-goal', 'n_clicks'),
-    State('savings-goal-input', 'value'),
-    State('total-income-store', 'data'),
-    State('expenses-store', 'data'),
-    prevent_initial_call=True
-)
-def update_savings_target(n, value, total_income, expenses_data):
-    if not n or value is None:
-        raise PreventUpdate
-
-    value = float(value)
-    
-    # Calculate total expenses
-    total_expenses = sum(e.get('amount', 0) for e in (expenses_data or []))
-    
-    # Calculate remaining income after expenses
-    remaining = (total_income or 0) - total_expenses
-
-    # Calculate savings percent
-    savings_percent = (value / remaining * 100) if remaining > 0 else 0
-    
-    # Determine if savings goal is realistic with professional styling
-    if remaining <= 0:
-        status = COLORS['danger']
-        status_icon = html.I(className="fas fa-exclamation-triangle")
-        message = "You need to reduce expenses before setting a savings goal."
-    elif value > remaining:
-        status = COLORS['warning']
-        status_icon = html.I(className="fas fa-exclamation-circle")
-        message = "Your savings goal exceeds your remaining income."
-    elif savings_percent > 50:
-        status = COLORS['warning']
-        status_icon = html.I(className="fas fa-chart-line")
-        message = f"Your savings target is {savings_percent:.1f}% of remaining income."
+    # Update the local store
+    if expenses:
+        expenses.append(new_expense)
     else:
-        status = COLORS['success']
-        status_icon = html.I(className="fas fa-check-circle")
-        message = f"Your savings target is {savings_percent:.1f}% of remaining income."
-        
-    summary = html.Div([
-        html.Div([
-            html.Span(status_icon, className="me-2"),
-            html.Span(message)
-        ], style={"color": status, "fontWeight": "500", "marginBottom": "12px"}),
-        
-        html.Div([
-            dbc.Row([
-                dbc.Col([
-                    html.Div("Target:", className="text-muted small"),
-                    html.Div(f"£{value:.2f}", className="h5 mb-0")
-                ], width=6),
-                dbc.Col([
-                    html.Div("Available:", className="text-muted small"),
-                    html.Div(f"£{remaining:.2f}", 
-                             className="h5 mb-0", 
-                             style={"color": COLORS['success'] if remaining >= value else COLORS['danger']})
-                ], width=6)
-            ]),
-            html.Div([
-                dbc.Progress(
-                    value=min(100, (value/remaining*100) if remaining > 0 else 100),
-                    color=COLORS['success'] if remaining >= value else COLORS['danger'],
-                    className="mt-3",
-                    style={"height": "6px", "borderRadius": "3px"}
-                )
-            ])
-        ])
-    ])
+        expenses = [new_expense]
+
+    # Clear form fields
+    return expenses, "", None, None, datetime.date.today(), False
+
+# Delete expense callback
+@callback(
+    Output("expenses-store", "data", allow_duplicate=True),
+    [Input({"type": "delete-expense", "index": ALL}, "n_clicks")],
+    [State("expenses-store", "data"),
+     State("user-id", "data")],
+    prevent_initial_call=True
+)
+def delete_expense(n_clicks_list, expenses, user_id):
+    """Delete an expense from the database and update the store"""
+    # Extract the actual user ID value from the dictionary
+    if isinstance(user_id, dict):
+        actual_user_id = user_id.get('user_id')
+        print(f'Extracted user_id value: {actual_user_id}')
+    else:
+        actual_user_id = user_id
+
+    if not any(n_clicks_list) or not expenses:
+        raise PreventUpdate
     
-    return value, summary
-
-@callback(
-    Output('expenses-store', 'data', allow_duplicate=True),
-    Input({'type': 'delete-expense', 'index': ALL}, 'n_clicks'),
-    State('expenses-store', 'data'),
-    prevent_initial_call=True
-)
-def delete_expense(clicks, expenses_data):
-    # Check if any buttons were clicked
-    if not ctx.triggered or not any(c for c in clicks if c):
+    # Get the index of the button that was clicked
+    triggered_id = ctx.triggered_id
+    if triggered_id is None:
         raise PreventUpdate
+    
+    # Extract the index from the triggered ID
+    expense_index = triggered_id.get('index')
+    
+    # Find the expense to delete
+    if expense_index < len(expenses):
+        expense_to_delete = expenses[expense_index]
+        expense_id = expense_to_delete.get('id')
+        is_recurring = expense_to_delete.get('recurring', False)
         
-    # Find which button was clicked
-    trigger = ctx.triggered[0]
-    if not trigger['prop_id']:
+        # Delete from database
+        conn = get_db_connection()
+        if conn:
+            try:
+                with conn.cursor() as cur:
+                    if is_recurring:
+                        # Delete from expense table
+                        cur.execute(
+                            "DELETE FROM expense WHERE expense_id = %s AND user_id = %s",
+                            (expense_id, actual_user_id)
+                        )
+                    else:
+                        # Delete from transactions table
+                        cur.execute(
+                            "DELETE FROM transactions WHERE transaction_id = %s AND user_id = %s",
+                            (expense_id, actual_user_id)
+                        )
+                    conn.commit()
+            except Exception as e:
+                print(f"Error deleting expense: {e}")
+            finally:
+                conn.close()
+        
+        # Update the local store
+        expenses.pop(expense_index)
+    
+    return expenses
+
+# Update savings target callback
+@callback(
+    Output("savings-target-store", "data", allow_duplicate=True),
+    [Input("update-savings-goal", "n_clicks")],
+    [State("savings-goal-input", "value"),
+     State("user-id", "data")],
+    prevent_initial_call=True
+)
+def update_savings_target(n_clicks, savings_goal, user_id):
+    """Update the savings target in the database and store"""
+    # Extract the actual user ID value from the dictionary
+    if isinstance(user_id, dict):
+        actual_user_id = user_id.get('user_id')
+        print(f'Extracted user_id value: {actual_user_id}')
+    else:
+        actual_user_id = user_id
+
+    if n_clicks is None or savings_goal is None:
         raise PreventUpdate
-        
-    # Extract the expense ID from the triggered component
-    try:
-        expense_id = json.loads(trigger['prop_id'].split('.')[0])['index']
-        
-        # Create a new list without the deleted expense
-        updated_expenses = [exp for exp in expenses_data if exp.get('id') != expense_id]
-        
-        return updated_expenses
-    except Exception as e:
-        print(f"Error in delete_expense: {e}")
-        # Return unmodified data if there's an error
-        return expenses_data
+    
+    today = date.today()
 
-import json
+    savings_amount = float(savings_goal)
+    
+    # Update database
+    conn = get_db_connection()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                # Check if a record already exists
+                cur.execute("SELECT amount FROM savings_target WHERE user_id = %s", (actual_user_id,))
+                existing = cur.fetchone()
+                
+                if existing:
+                    # Update existing record
+                    cur.execute(
+                        "UPDATE savings_target SET amount = %s, date = %s WHERE user_id = %s",
+                        (savings_amount, today, actual_user_id)
+                    )
+                else:
+                    # Insert new record
+                    cur.execute(
+                        "INSERT INTO savings_target (user_id, amount, date) VALUES (%s, %s, %s)",
+                        (actual_user_id, savings_amount, today)
+                    )
+                conn.commit()
+        except Exception as e:
+            print(f"Error updating savings target: {e}")
+        finally:
+            conn.close()
+    
+    return savings_amount
 
-def update_transaction_store(expenses_data):
-    """
-    Filters non-recurring expenses and updates the Transaction-store.
-
-    Args:
-        expenses_data (list): The current list of expenses from the expenses-store.
-
-    Returns:
-        list: A list of non-recurring transactions to store in the Transaction-store.
-    """
-    if not expenses_data:
-        return []
-
-    # Filter non-recurring expenses
-    non_recurring_transactions = [
-        {
-            'id': exp.get('id'),
-            'description': exp.get('description'),
-            'amount': exp.get('amount'),
-            'category': exp.get('category'),
-            'date_added': exp.get('date_added'),
-            'due_date': exp.get('due_date'),
-        }
-        for exp in expenses_data if not exp.get('recurring', False)
-    ]
-
-    return non_recurring_transactions
-
+# Tab switching callbacks
 @callback(
-    Output('Transaction-store', 'data'),
-    Input('expenses-store', 'data'),
+    [Output("tab-all-btn", "style"),
+     Output("tab-recurring-btn", "style"),
+     Output("tab-non-recurring-btn", "style"),
+     Output("active-tab-store", "data")],
+    [Input("tab-all-btn", "n_clicks"),
+     Input("tab-recurring-btn", "n_clicks"),
+     Input("tab-non-recurring-btn", "n_clicks")],
+    [State("active-tab-store", "data")],
     prevent_initial_call=True
 )
-def sync_transaction_store(expenses_data):
-    # Use the helper function to filter non-recurring transactions
-    updated_transactions = update_transaction_store(expenses_data)
-
-    return updated_transactions
-
-@callback(
-    Output('active-tab-store', 'data'),
-    Output('tab-all-btn', 'style'),
-    Output('tab-recurring-btn', 'style'),
-    Output('tab-non-recurring-btn', 'style'),
-    Input('tab-all-btn', 'n_clicks'),
-    Input('tab-recurring-btn', 'n_clicks'),
-    Input('tab-non-recurring-btn', 'n_clicks'),
-    State('active-tab-store', 'data'),
-    prevent_initial_call=True
-)
-def update_active_tab(all_clicks, recurring_clicks, non_recurring_clicks, current_tab):
-    # Default styles - all light gray when none are active
+def switch_expense_tab(all_clicks, recurring_clicks, non_recurring_clicks, active_tab):
+    """Switch between expense tabs"""
+    ctx_triggered = ctx.triggered_id
+    
+    if ctx_triggered is None:
+        # Default to 'all' if no tab is active
+        active_tab = active_tab or 'all'
+    else:
+        # Set active tab based on which button was clicked
+        if ctx_triggered == "tab-all-btn":
+            active_tab = 'all'
+        elif ctx_triggered == "tab-recurring-btn":
+            active_tab = 'recurring'
+        elif ctx_triggered == "tab-non-recurring-btn":
+            active_tab = 'non-recurring'
+    
+    # Base styles
     all_style = {
         "backgroundColor": COLORS['light'],
         "color": COLORS['dark'],
@@ -1178,54 +1032,669 @@ def update_active_tab(all_clicks, recurring_clicks, non_recurring_clicks, curren
         "borderRadius": "0 6px 6px 0",
         "padding": "10px 15px"
     }
-
-    new_tab = None
     
-    # Get the button that was clicked
-    triggered = ctx.triggered_id
-    
-    # Handle first load with no clicks (no tab selected)
-    if not triggered:
-        # All tabs are light gray when none are active
-        return None, all_style, recurring_style, non_recurring_style
-    
-    # Set active style for the clicked tab or toggle off if clicked again
-    if triggered == 'tab-all-btn':
-        # If tab is already active, deactivate it
-        if current_tab == 'tab-all':
-            new_tab = None  # Set to None to indicate no active tab
-        else:
-            # Otherwise, activate it
-            all_style["backgroundColor"] = COLORS['primary']
-            all_style["color"] = COLORS['white']
-            new_tab = 'tab-all'
-    elif triggered == 'tab-recurring-btn':
-        if current_tab == 'tab-recurring':
-            new_tab = None  # Set to None to indicate no active tab
-        else:
-            recurring_style["backgroundColor"] = COLORS['primary']
-            recurring_style["color"] = COLORS['white']
-            new_tab = 'tab-recurring'
-    elif triggered == 'tab-non-recurring-btn':
-        if current_tab == 'tab-non-recurring':
-            new_tab = None  # Set to None to indicate no active tab
-        else:
-            non_recurring_style["backgroundColor"] = COLORS['primary']
-            non_recurring_style["color"] = COLORS['white']
-            new_tab = 'tab-non-recurring'
-    else:
-        new_tab = current_tab
-        
-    # Set active tab style only if there is an active tab
-    if new_tab == 'tab-all':
+    # Update style for active tab
+    if active_tab == 'all':
         all_style["backgroundColor"] = COLORS['primary']
         all_style["color"] = COLORS['white']
-    elif new_tab == 'tab-recurring':
+    elif active_tab == 'recurring':
         recurring_style["backgroundColor"] = COLORS['primary']
         recurring_style["color"] = COLORS['white']
-    elif new_tab == 'tab-non-recurring':
+    elif active_tab == 'non-recurring':
         non_recurring_style["backgroundColor"] = COLORS['primary']
         non_recurring_style["color"] = COLORS['white']
-    # If new_tab is None, all styles remain light gray (default)
     
-    return new_tab, all_style, recurring_style, non_recurring_style
+    return all_style, recurring_style, non_recurring_style, active_tab
+
+# Filter expenses based on active tab
+@callback(
+    Output("expense-data-filtered", "data"),
+    [Input("active-tab-store", "data"),
+     Input("expenses-store", "data")],
+    prevent_initial_call=True
+)
+def filter_expenses(active_tab, expenses):
+    """Filter expenses based on the active tab"""
+    if not expenses:
+        return []
+    
+    # Default to all expenses
+    if active_tab is None or active_tab == 'all':
+        return expenses
+    
+    # Filter by recurring status
+    if active_tab == 'recurring':
+        return [exp for exp in expenses if exp.get('recurring', False)]
+    elif active_tab == 'non-recurring':
+        return [exp for exp in expenses if not exp.get('recurring', False)]
+    
+    # Default case: return all expenses
+    return expenses
+
+# Generate expense list
+@callback(
+    Output("expense-list-container", "children"),
+    [Input("expense-data-filtered", "data")],
+    prevent_initial_call=True
+)
+def generate_expense_list(expenses):
+    """Generate the expense list based on filtered data"""
+    if not expenses:
+        return html.Div("No expenses to display.", className="text-muted p-3")
+    
+    # Create a list of expense items
+    expense_items = []
+    
+    # Get current date for comparison
+    today = datetime.date.today()
+    
+    for i, expense in enumerate(expenses):
+        # Get expense details
+        desc = expense.get('description', 'N/A')
+        amount = expense.get('amount', 0)
+        category = expense.get('category', 'Other')
+        due_date = expense.get('due_date', today.isoformat())
+        recurring = expense.get('recurring', False)
+        
+        # Format due date
+        try:
+            if isinstance(due_date, str):
+                due_date_obj = datetime.datetime.fromisoformat(due_date).date()
+            else:
+                due_date_obj = due_date
+                
+            # If expense is recurring and due date has passed, calculate next due date
+            if recurring and due_date_obj < today:
+                # Keep adding 30 days until the due date is in the future
+                while due_date_obj < today:
+                    due_date_obj = due_date_obj + datetime.timedelta(days=30)
+                
+                # Format the adjusted date for display
+                due_date_str = due_date_obj.strftime("%b %d, %Y")
+            else:
+                # Format the original date for display
+                due_date_str = due_date_obj.strftime("%b %d, %Y")
+        except:
+            due_date_str = "Unknown"
+        
+        # Create expense list item
+        expense_item = html.Div([
+            dbc.Row([
+                # Description and category
+                dbc.Col([
+                    html.Div([
+                        html.H6(desc, className="mb-0"),
+                        html.Span(category, className="badge badge-light",
+                                 style={
+                                     "backgroundColor": CATEGORY_COLORS.get(category, COLORS['muted']),
+                                     "color": COLORS['white'],
+                                     "fontSize": "12px",
+                                     "borderRadius": "30px",
+                                     "padding": "4px 8px",
+                                     "marginTop": "4px"
+                                 })
+                    ])
+                ], width=6),
+                # Amount
+                dbc.Col([
+                    html.Div([
+                        html.H6(f"£{amount:.2f}", className="mb-0 text-end",
+                               style={"color": COLORS['accent'], "fontWeight": "bold"})
+                    ])
+                ], width=2),
+                # Due date and recurring status
+                dbc.Col([
+                    html.Div([
+                        html.P(due_date_str, className="mb-0 text-muted text-end",
+                              style={"fontSize": "12px"}),
+                        html.P(
+                            "Monthly" if recurring else "One-time",
+                            className="mb-0 text-end",
+                            style={
+                                "fontSize": "11px",
+                                "color": COLORS['success'] if recurring else COLORS['warning']
+                            }
+                        )
+                    ])
+                ], width=2),
+                # Delete button
+                dbc.Col([
+                    html.Button(
+                        html.I(className="fas fa-trash"),
+                        id={"type": "delete-expense", "index": i},
+                        className="btn btn-link btn-sm",
+                        style={"fontSize": "14px", "padding": "4px"}
+                    )
+                ], width=2, className="text-end")
+            ], className="align-items-center"),
+            html.Hr(style={"margin": "10px 0", "opacity": "0.2"})
+        ], className="expense-item mb-2")
+        
+        expense_items.append(expense_item)
+    
+    return html.Div(expense_items, className="expense-list")
+
+# Update total expense badge
+@callback(
+    Output("total-expense-badge", "children"),
+    [Input("expenses-store", "data")],
+    prevent_initial_call=True
+)
+def update_total_expense_badge(expenses):
+    """Update the total expense badge"""
+    if not expenses:
+        return "Total: £0.00"
+    
+    # Calculate total expenses
+    total = sum(exp.get('amount', 0) for exp in expenses)
+    
+    return f"Total: £{total:.2f}"
+
+# Update savings summary
+@callback(
+    Output("savings-summary", "children"),
+    [Input("savings-target-store", "data"),
+     Input("expenses-store", "data"),
+     Input("total-income-store", "data")],
+    prevent_initial_call=True
+)
+def update_savings_summary(savings_target, expenses, total_income):
+    """Update the savings summary based on income, expenses, and savings target"""
+    # Default values
+    if not savings_target:
+        savings_target = 0
+    
+    if not expenses:
+        total_expenses = 0
+    else:
+        total_expenses = sum(exp.get('amount', 0) for exp in expenses)
+    
+    if not total_income:
+        total_income = 0
+    else:
+        total_income = sum(income.get('amount', 0) for income in total_income)
+    
+    # Calculate remaining income after expenses
+    remaining = total_income - total_expenses
+    
+    # Calculate if savings target can be met
+    if savings_target > remaining:
+        # Not enough remaining for savings target
+        style = {"color": COLORS['danger']}
+        message = f"You need to reduce expenses by £{(savings_target - remaining):.2f} to meet your savings goal."
+    else:
+        # Enough remaining for savings target
+        style = {"color": COLORS['success']}
+        message = f"You will have £{(remaining - savings_target):.2f} left after meeting your savings goal."
+    
+    return html.Div([
+        html.H5(f"Monthly Budget Summary", className="mb-3"),
+        html.P([
+            "Income: ",
+            html.Span(f"£{total_income:.2f}", style={"fontWeight": "bold"})
+        ]),
+        html.P([
+            "Expenses: ",
+            html.Span(f"£{total_expenses:.2f}", style={"fontWeight": "bold"})
+        ]),
+        html.P([
+            "Savings Goal: ",
+            html.Span(f"£{float(savings_target):.2f}", style={"fontWeight": "bold"})
+        ]),
+        html.Hr(style={"margin": "10px 0"}),
+        html.P([
+            "Remaining: ",
+            html.Span(f"£{remaining:.2f}", style={"fontWeight": "bold", "color": COLORS['accent']})
+        ]),
+        html.P(message, style=style)
+    ])
+
+# Generate category sunburst chart
+@callback(
+    Output("expense-category-chart", "children"),
+    [Input("expenses-store", "data")],
+    prevent_initial_call=True
+)
+def generate_category_chart(user_data):
+    """Generate professional charts for expense analysis by category and recurring status."""
+    if not user_data:
+        return html.P("No transaction data available.", className="text-muted")
+
+    data = []
+
+    # Process the data into categories and recurring status
+    for item in user_data:
+        status = "Recurring" if item.get('recurring', False) else "Non-Recurring"
+        data.append({
+            'Recurring': status,
+            'Category': item.get('category', 'Other'),
+            'Description': item.get('description', 'Unlabeled'),
+            'Amount': item.get('amount', 0)
+        })
+
+    # Create a DataFrame from the processed data
+    df = pd.DataFrame(data)
+    df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce').fillna(0)
+    
+    # Sophisticated blue color palette
+    professional_blues = [
+        "#1a365d", "#2a4a7f", "#3c64a1", "#5682c3", "#7ba0e5", 
+        "#a8c0ff", "#d4e0ff", "#e8f0ff"
+    ]
+    
+    # Create a container for both charts
+    chart_container = html.Div([
+        # Top section: Category distribution
+        html.Div([
+            # html.H6("Expense Distribution by Category", 
+            #        className="chart-title mb-0",
+            #        style={"fontSize": "14px", "fontWeight": "600", "color": "#2c3e50"}),
+            
+            dcc.Graph(
+                id="category-treemap",
+                figure=create_category_sunburst(df, professional_blues),
+                config={'displayModeBar': False, 'responsive': True},
+                style={"height": "450px"}
+            )
+        ], className="mb-4"),
+
+        # Bottom section: Recurring vs Non-recurring
+        html.Div([
+            # html.H6("Recurring vs. Non-Recurring Expenses", 
+            #        className="chart-title mb-0",
+            #        style={"fontSize": "14px", "fontWeight": "600", "color": "#2c3e50"}),
+                   
+            dcc.Graph(
+                id="recurring-bar-chart",
+                figure=create_recurring_bar_chart(df, professional_blues),
+                config={'displayModeBar': False, 'responsive': True},
+                style={"height": "250px"}
+            )
+        ])
+
+    ], className="chart-container")
+    
+    return chart_container
+
+def create_category_sunburst(df, color_palette):
+    """Create a professional sunburst chart showing Recurring > Category > Description."""
+    # Clean and group data
+    df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce').fillna(0)
+    df = df[df['Amount'] > 0]  # Filter zero/negative amounts
+
+    fig = px.sunburst(
+        df,
+        path=['Recurring', 'Category', 'Description'],
+        values='Amount',
+        color='Amount',
+        color_continuous_scale=color_palette,
+        color_continuous_midpoint=df['Amount'].median()
+    )
+
+    fig.update_traces(
+        hovertemplate='<b>%{label}</b><br>£%{value:,.2f}<br>%{percentRoot:.1%} of total',
+        textinfo='label+percent entry',
+        textfont=dict(
+            family="'Inter', 'Segoe UI', Arial, sans-serif",
+            size=11
+        ),
+        insidetextorientation='auto'
+    )
+
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        uniformtext_minsize=10,
+        uniformtext_mode='hide',
+        font=dict(
+            family="'Inter', 'Segoe UI', Arial, sans-serif",
+            color="#2c3e50"
+        ),
+        coloraxis_showscale=False
+    )
+
+    return fig
+
+def create_recurring_bar_chart(df, color_palette):
+    """Create a professional bar chart comparing recurring vs non-recurring expenses."""
+    # Group by recurring status and category
+    recurring_category = df.pivot_table(
+        index='Category', 
+        columns='Recurring', 
+        values='Amount', 
+        aggfunc='sum'
+    ).fillna(0).reset_index()
+    
+    # Sort by total amount
+    if 'Recurring' in recurring_category.columns and 'Non-Recurring' in recurring_category.columns:
+        recurring_category['Total'] = recurring_category['Recurring'] + recurring_category['Non-Recurring']
+    elif 'Recurring' in recurring_category.columns:
+        recurring_category['Total'] = recurring_category['Recurring']
+    elif 'Non-Recurring' in recurring_category.columns:
+        recurring_category['Total'] = recurring_category['Non-Recurring']
+    else:
+        recurring_category['Total'] = 0
+        
+    recurring_category = recurring_category.sort_values('Total', ascending=False)
+    
+    # Create a horizontal grouped bar chart
+    fig = go.Figure()
+    
+    # Add bars for recurring expenses if they exist
+    if 'Recurring' in recurring_category.columns:
+        fig.add_trace(go.Bar(
+            y=recurring_category['Category'],
+            x=recurring_category['Recurring'],
+            name='Recurring',
+            orientation='h',
+            marker=dict(color=color_palette[1]),
+            hovertemplate='<b>%{y}</b><br>Recurring: £%{x:,.2f}<extra></extra>'
+        ))
+    
+    # Add bars for non-recurring expenses if they exist
+    if 'Non-Recurring' in recurring_category.columns:
+        fig.add_trace(go.Bar(
+            y=recurring_category['Category'],
+            x=recurring_category['Non-Recurring'],
+            name='Non-Recurring',
+            orientation='h',
+            marker=dict(color=color_palette[5]),
+            hovertemplate='<b>%{y}</b><br>Non-Recurring: £%{x:,.2f}<extra></extra>'
+        ))
+    
+    # Update layout for professional appearance
+    fig.update_layout(
+        barmode='group',
+        margin=dict(l=5, r=5, t=5, b=5, pad=0),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(
+            family="'Inter', 'Segoe UI', Arial, sans-serif",
+            size=12,
+            color="#2c3e50"
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(size=11)
+        ),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(220,220,220,0.4)',
+            showline=True,
+            linewidth=1,
+            linecolor='rgba(220,220,220,0.8)',
+            tickformat='£,.0f'
+        ),
+        yaxis=dict(
+            showgrid=False,
+            showline=False
+        ),
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="#1a365d",
+            font_family="'Inter', 'Segoe UI', Arial, sans-serif"
+        )
+    )
+    
+    return fig
+
+# Generate monthly overview chart
+@callback(
+    Output("monthly-overview-chart", "children"),
+    [Input("expenses-store", "data"),
+     Input("total-income-store", "data"),
+     Input("savings-target-store", "data")],
+    prevent_initial_call=True
+)
+def generate_monthly_overview(expenses, total_income, savings_target):
+    """Generate a chart showing monthly income, expenses, and savings"""
+    if not expenses and not total_income:
+        return html.P("No data available", className="text-muted")
+    
+    # Handle missing data gracefully
+    total_income_amount = 0
+    total_expenses = 0
+    savings_target_amount = 0
+
+    if total_income:
+        total_income_amount = sum(income.get('amount', 0) for income in total_income)
+
+    if expenses:
+        total_expenses = sum(exp.get('amount', 0) for exp in expenses)
+
+    if savings_target:
+        savings_target_amount = savings_target
+    
+    # Calculate remaining after expenses and savings
+    remaining = max(0, total_income_amount - total_expenses - savings_target_amount)
+    
+    # Create data for the chart
+    categories = ['Income', 'Expenses', 'Savings Target', 'Remaining']
+    values = [total_income_amount, total_expenses, savings_target_amount, remaining]
+
+    # Sophisticated blue color palette
+    professional_blues = [
+        "#1a365d", "#2a4a7f", "#3c64a1", "#5682c3", "#7ba0e5", 
+        "#a8c0ff", "#d4e0ff", "#e8f0ff"
+    ]
+    
+    # Premium professional blue palette with sophisticated gradient
+    colors = professional_blues[:4]
+    
+    # Create bar chart with modern gradient fill
+    fig = go.Figure()
+    
+            # Add bars with premium styling and gradient effect
+    for i, (cat, val, color) in enumerate(zip(categories, values, colors)):
+        fig.add_trace(go.Bar(
+            x=[cat],
+            y=[val],
+            text=[f"£{val:.2f}"],
+            textposition='inside',
+            textfont=dict(
+                family='Segoe UI, Arial, sans-serif',
+                size=13,
+                color='rgba(255,255,255,0.95)'
+            ),
+            marker=dict(
+                color=color,  # ✅ valid
+                line=dict(width=0.5, color='#ffffff')
+            ),
+            hoverinfo='text',
+            hovertext=f"<b>{cat}</b><br>£{val:.2f}",
+            width=0.7
+        ))
+
+    
+    # Update layout with premium, sophisticated styling
+    fig.update_layout(
+        xaxis=dict(
+            showgrid=False,
+            showline=True,
+            linecolor='#E0E0E0',
+            zeroline=False,
+            tickfont=dict(family='Segoe UI, Arial, sans-serif', size=12, color="#555555")
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(230,230,230,0.3)',
+            zeroline=True,
+            zerolinecolor='#E0E0E0',
+            showline=True,
+            linecolor='#E0E0E0',
+            tickfont=dict(family='Segoe UI, Arial, sans-serif', size=12, color="#555555"),
+            title=None
+        ),
+        margin=dict(l=10, r=10, t=20, b=20),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(
+            family='Segoe UI, Arial, sans-serif',
+            color='#333333'
+        ),
+        hoverlabel=dict(
+            bgcolor='#f8f9fa',
+            font_size=12,
+            font_family='Segoe UI, Arial, sans-serif'
+        ),
+        bargap=0.35,
+        showlegend=False,
+        shapes=[
+            # Add subtle background shading for professional look
+            dict(
+                type="rect",
+                xref="paper",
+                yref="paper",
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                fillcolor="rgba(240,249,255,0.5)",
+                opacity=0.2,
+                layer="below",
+                line=dict(width=0)
+            )
+        ]
+    )
+    
+    return dcc.Graph(figure=fig, config={'displayModeBar': False})
+
+# Generate recurring vs one-time analysis chart
+@callback(
+    Output("recurring-analysis-chart", "children"),
+    [Input("expenses-store", "data")],
+    prevent_initial_call=True
+)
+def generate_recurring_analysis(expenses):
+    """Generate a chart showing recurring vs one-time expenses"""
+    if not expenses:
+        return html.P("No expense data available", className="text-muted")
+    
+    # Sophisticated blue color palette
+    professional_blues = [
+        "#1a365d", "#2a4a7f", "#3c64a1", "#5682c3", "#7ba0e5", 
+        "#a8c0ff", "#d4e0ff", "#e8f0ff"
+    ]
+    
+    # Categorize expenses as recurring or one-time
+    recurring_expenses = [exp for exp in expenses if exp.get('recurring', False)]
+    one_time_expenses = [exp for exp in expenses if not exp.get('recurring', False)]
+    
+    # Calculate totals
+    recurring_total = sum(exp.get('amount', 0) for exp in recurring_expenses)
+    one_time_total = sum(exp.get('amount', 0) for exp in one_time_expenses)
+    
+    # Create data for the donut chart
+    labels = ['Recurring', 'One-time']
+    values = [recurring_total, one_time_total]
+    colors = [professional_blues[1], professional_blues[3]]
+    
+    # Create donut chart with enhanced styling
+    fig = go.Figure()
+    
+    # Add donut chart with premium styling
+    fig.add_trace(go.Pie(
+        labels=labels,
+        values=values,
+        textinfo='label+percent',
+        insidetextorientation='radial',
+        textfont=dict(
+            family='Segoe UI, Arial, sans-serif',
+            size=14,
+            color='#ffffff'
+        ),
+        marker=dict(
+            colors=colors,
+            line=dict(color='#ffffff', width=1),
+            pattern=dict(
+                shape=['', ''],
+                solidity=0.9
+            )
+        ),
+        hole=0.75,  # Even larger hole for premium donut look
+        hoverinfo='label+value+percent',
+        hovertemplate='<b>%{label}</b><br>£%{value:.2f}<br>%{percent}',
+        pull=[0, 0],  # No pull for cleaner look
+        rotation=90  # Start from the top
+    ))
+    
+    # Update layout with premium styling
+    fig.update_layout(
+        margin=dict(l=10, r=10, t=20, b=20),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(
+            family='Segoe UI, Arial, sans-serif',
+            color='#333333',
+            size=12
+        ),
+        hoverlabel=dict(
+            bgcolor='rgba(240,249,255,0.95)',
+            bordercolor='#0353a4',
+            font_size=12,
+            font_family='Segoe UI, Arial, sans-serif'
+        ),
+        annotations=[
+            dict(
+                text=f'£{recurring_total + one_time_total:.2f}',
+                showarrow=False,
+                font=dict(size=20, color='#023e7d', family='Segoe UI, Arial, sans-serif', weight='bold'),
+                x=0.5,
+                y=0.5
+            ),
+            dict(
+                text='TOTAL',
+                showarrow=False,
+                font=dict(size=12, color='#555555', family='Segoe UI, Arial, sans-serif'),
+                x=0.5,
+                y=0.42
+            )
+        ],
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.1,
+            xanchor="center",
+            x=0.5,
+            font=dict(
+                family='Segoe UI, Arial, sans-serif',
+                size=12,
+                color='#333333'
+            ),
+            bordercolor='#E0E0E0',
+            borderwidth=1
+        ),
+        shapes=[
+            # Add subtle background gradient for professional look
+            dict(
+                type="rect",
+                xref="paper",
+                yref="paper",
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                fillcolor="rgba(240,249,255,0.5)",
+                opacity=0.2,
+                layer="below",
+                line=dict(width=0)
+            )
+        ]
+    )
+    
+    return dcc.Graph(figure=fig, config={'displayModeBar': False})
+
+# Add this callback to trigger on page load
+@callback(
+    Output("app-loaded-store", "data"),
+    Input("app-loaded-store", "id"),
+    prevent_initial_call=False  # Important: Allow initial call
+)
+def set_app_loaded(_):
+    """Set the app-loaded flag to True when the page loads"""
+    return True

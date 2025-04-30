@@ -1,0 +1,460 @@
+/* Dashboard Component Styles */
+
+.chat-dashboard-container {
+    display: flex;
+    height: calc(100vh - 80px);
+    margin-top: 80px;
+}
+
+.chat-sidebar {
+    width: 320px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* max-height: 800px; Example fixed maximum height */
+    /* overflow-y: auto; */
+}
+
+.sidebar-title {
+    padding: 20px;
+    margin: 0;
+    color: #2C3E50;
+    font-size: 1.5rem;
+}
+
+.sidebar-description {
+    padding: 0 20px 10px;
+    color: #6c757d;
+    margin: 0;
+}
+
+.chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.user-message {
+    align-self: flex-end;
+    max-width: 80%;
+    background-color: #3498DB;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 18px 18px 0 18px;
+    margin-bottom: 8px;
+}
+
+.user-message-content {
+    word-wrap: break-word;
+}
+
+.ai-message {
+    display: flex;
+    align-self: flex-start;
+    max-width: 90%;
+    margin-bottom: 8px;
+}
+
+.ai-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.ai-message-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-message-content {
+    background-color: #f0f2f5;
+    padding: 10px 15px;
+    border-radius: 18px 18px 18px 0;
+    color: #212529;
+    word-wrap: break-word;
+}
+
+.ai-chart-container {
+    margin-top: 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background: white;
+}
+
+.add-to-dashboard-button {
+    margin-top: 8px;
+    align-self: flex-start;
+    background-color: #3498DB;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-to-dashboard-button:hover {
+    background-color: #2980b9;
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 10px 20px;
+    border-top: 1px solid #e9ecef;
+    background-color: white;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 20px;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.send-chat-button {
+    background-color: #3498DB;
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.send-chat-button:hover {
+    background-color: #2980b9;
+}
+
+/* Dashboard Main Area */
+.dashboard-main {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-title {
+    margin: 0;
+    color: #2C3E50;
+    font-size: 1.8rem;
+}
+
+.last-updated {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+    gap: 16px;
+    position: relative;
+}
+
+.dashboard-grid > div {
+    transition: all 0.2s ease-out;
+}
+
+.dashboard-grid > div.dragging {
+    opacity: 0.8;
+    z-index: 100;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+
+/* Dashboard Components */
+.dashboard-component {
+    background-color: #f9f9f9; /* Light gray background */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 12px;
+    min-height: 300px !important;
+    min-width: 200px !important;
+}
+
+.dashboard-component.dragging {
+    z-index: 100;
+    opacity: 0.8;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.dashboard-component-placeholder {
+    background-color: rgba(52, 152, 219, 0.1);
+    border: 2px dashed rgba(52, 152, 219, 0.5);
+    border-radius: 10px;
+}
+
+.component-control.drag-handle {
+    cursor: move;
+}
+
+.component-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.component-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.component-control {
+    background: none;
+    border: none;
+    color: #95A5A6;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.component-control:hover {
+    background-color: #f0f2f5;
+    color: #2C3E50;
+}
+
+.component-graph {
+    height: calc(100% - 50px) !important;
+    min-height: 400px !important;
+}
+
+.remove-btn:hover {
+    color: #E74C3C;
+}
+
+.component-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 10px;
+}
+
+.drag-handle {
+    cursor: grab;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.remove-btn:hover {
+    color: #E74C3C;
+}
+
+/* Empty Dashboard State */
+/* Container for the entire empty dashboard */
+.empty-dashboard-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f9f9f9;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+}
+
+/* Content section */
+.empty-dashboard-content {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 1 4px 10px rgba(0, 0, 0, 0.2);
+    max-width: 1800px;
+    width: 100%;
+}
+
+/* Hero image container */
+.empty-dashboard-img-container {
+    margin-bottom: 30px;
+    border-radius: 10px;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+/* Image styling */
+.empty-dashboard-img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* Title Styling */
+.empty-dashboard-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #001233; /* Blue to match the assistant’s style */
+    margin-bottom: 10px;
+}
+
+/* Description Styling */
+.empty-dashboard-desc {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* Prompt Button Styling */
+.sample-prompt-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.sample-prompt-button:hover {
+    background-color: #45a049;
+}
+
+/* Tip or Additional Information Styling */
+.empty-dashboard-tip {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 20px;
+}
+
+/* Icon for the assistant (optional) */
+.assistant-icon-container {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.assistant-welcome-icon {
+    width: 100px;
+    height: auto;
+    margin-top: 10px;
+}
+
+.sample-prompt-button {
+    background-color: #3498DB;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sample-prompt-button:hover {
+    background-color: #2980b9;
+}
+
+
+/* Card Styling
+/* THIS IS WHAT IT WAS */
+.react-grid-item {
+    min-height: 600px !important;
+    min-width: 400px !important;
+}
+
+.react-grid-item.react-draggable-dragging {
+    cursor: move !important;
+    z-index: 100 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    transform: scale(1.02) !important;
+    transition: transform 0.2s ease !important;
+}
+
+.react-grid-item > .react-resizable-handle {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    bottom: 0;
+    right: 0;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="%23333" d="M22,22H16v-2h4v-4h2V22z M8,22H2v-8h2v6h4V22z M22,8h-2V2h-6V0h8V8z M8,0v2H2v6H0V0H8z"/></svg>');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding: 0 5px 5px 0;
+    cursor: se-resize;
+    border-bottom-right-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-top-left-radius: 4px;
+    box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.react-grid-item:hover > .react-resizable-handle {
+    background-color: rgba(255, 255, 255, 0.95);
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+.dashboard-component:hover {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.3s ease;
+}
+
+.component-header {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: move;
+}
+
+.component-control-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+
+/* Login Modal Style
+/* Add to your existing CSS file */
+.overlay-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.overlay-title {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+/* To prevent interaction with elements behind the overlay */
+#login-overlay {
+    pointer-events: auto;
+}
+
+#login-overlay ~ * {
+    pointer-events: none;
+}
+
+#login-overlay:not([style*="display: none"]) ~ * {
+    filter: blur(4px);
+    transition: filter 0.3s ease;
+}

@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, callback, Input, Output, State, register_page
+from dash import html, dcc, callback, Input, Output, State, register_page, clientside_callback
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from datetime import datetime, timedelta
@@ -13,7 +13,7 @@ from datetime import date
 import json
 import os
 import random
-# from app import app
+from flask_login import current_user
 
 # Register this file as the dashboard page
 register_page(__name__, path='/dashboard', name='Dashboard')
@@ -58,6 +58,14 @@ def get_session_data():
 
 # Change from 'layout()' function to 'layout' variable to work with Dash pages
 layout = html.Div([
+
+    # Session and Routing
+    dcc.Store(id='session-data-store', storage_type='local'),
+    dcc.Store(id='user-id', storage_type='local'),  # Make sure this is included
+    dcc.Location(id='url', refresh=False),
+    dcc.Store(id="dropdown-state", data=False),  # Default state is False (hidden)
+
+
     # Dashboard Header
     html.Div([
         
@@ -108,7 +116,24 @@ layout = html.Div([
                 
                 html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
                 
-            ], className="nav-menu", id="nav-menu")
+            ], className="nav-menu", id="nav-menu"),
+            # User account area (right side of navbar)
+                html.Div([
+                    # User profile dropdown
+                    html.Div([
+                        html.Button([
+                            html.I(className="fas fa-user-circle", style={'fontSize': '24px'}),
+                        ], id="user-dropdown-button", className="user-dropdown-button"),
+                        
+                        # Dropdown menu
+                        html.Div([
+                            html.Div(id="user-email-display", className="user-email"),
+                            html.Hr(style={'margin': '8px 0'}),
+                            html.A("Profile", href="/profile", className="dropdown-item"),
+                            html.A("Logout", id="logout-link", href="/logout", className="dropdown-item")
+                        ], id="user-dropdown-content", className="user-dropdown-content")
+                    ], className="user-dropdown"),
+                ], id="user-account-container", className="user-account-container"),
         ], className="nav-bar"),
     ], className="header-container"),
 
@@ -351,9 +376,11 @@ layout = html.Div([
             ], className="dashboard-card")
         ], className="row-container")
     ], className="main-content-container p-3", style={"width": "100%", "maxWidth": "100%"}),
+
+    html.Div(id='auth-check'),
     
     # Store components for data
-    dcc.Store(id='session-data-store', data=get_session_data()),
+    # dcc.Store(id='session-data-store', data=get_session_data()),
     dcc.Store(id="total-income-store", storage_type="local"),
     dcc.Store(id='expenses-store', storage_type='local'),
     dcc.Store(id='total-expenses-store', storage_type='local'),
@@ -1667,3 +1694,50 @@ def update_savings_rate_insight(total_income, total_expenses):
                 "borderLeft": f"4px solid {COLORS['warning']}"
             })
         ])
+
+from dash import callback_context
+
+@callback(
+    [Output("dropdown-state", "data", allow_duplicate=True),
+     Output("user-dropdown-content", "className", allow_duplicate=True)],
+    [Input("user-dropdown-button", "n_clicks"),
+     Input("dropdown-state", "data")],
+    prevent_initial_call=True
+)
+def toggle_and_update_dropdown(n_clicks, is_open):
+    if n_clicks:
+        # Toggle dropdown state
+        is_open = not is_open if is_open is not None else False
+
+    # Update dropdown content visibility
+    dropdown_class = "user-dropdown-content show" if is_open else "user-dropdown-content"
+    
+    return is_open, dropdown_class
+
+# Logout logic (client-side)
+clientside_callback(
+    """
+    function(n_clicks) {
+        if (n_clicks) {
+            // Remove session data from localStorage
+            localStorage.removeItem("session-data-store");
+            // Trigger a redirect using Dash's dcc.Location to logout route
+            return {pathname: '/'}; // Redirect to the logout route
+        }
+        return window.dash_clientside.no_update;
+    }
+    """,
+    Output("session-data-store", "data", allow_duplicate=True),
+    Input("logout-link", "n_clicks"),
+    prevent_initial_call=True
+)
+
+# Sync user data for dropdown based on session
+@callback(
+    Output("user-id", "data", allow_duplicate=True),
+    Input("session-data-store", "data"),
+    prevent_initial_call=True
+)
+def sync_user_data(session_data):
+    return {'user_id': session_data.get('user_id')} if session_data and 'user_id' in session_data else {}
+

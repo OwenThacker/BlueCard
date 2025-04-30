@@ -1,7 +1,8 @@
 import dash
-from dash import html, dcc
+from dash import html, dcc, clientside_callback
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback
+from utils.db import connect_db
 
 # Register this file as the home page
 dash.register_page(__name__, path="/", name="Home")
@@ -21,6 +22,12 @@ COLORS = {
 
 # Layout for the Home page
 layout = html.Div([
+
+    # Session and Routing
+    dcc.Store(id='session-data-store', storage_type='local'),
+    dcc.Store(id='user-id', storage_type='local'),  # Make sure this is included
+    dcc.Location(id='url', refresh=False),
+    dcc.Store(id='dropdown-state', data=False),
     
     # Dashboard Header and Navigation Bar
     html.Div([
@@ -38,12 +45,34 @@ layout = html.Div([
 
             html.Ul([
                 html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link active"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
-            ], className="nav-menu", id="nav-menu")
+                html.Li(html.A([html.Span(className="nav-icon"), "About"], href="/about", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Chat"], href="/chat", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Pricing"], href="/pricing", className="nav-link"), className="nav-item"),
+                # html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
+                # html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
+                # html.Li(html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link"), className="nav-item"),
+                # html.Li(html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link"), className="nav-item"),
+                # html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
+            ], className="nav-menu", id="nav-menu"),
+
+            # User account area (right side of navbar)
+                html.Div([
+                    # User profile dropdown
+                    html.Div([
+                        html.Button([
+                            html.I(className="fas fa-user-circle", style={'fontSize': '24px'}),
+                        ], id="user-dropdown-button", className="user-dropdown-button"),
+                        
+                        # Dropdown menu
+                        html.Div([
+                            html.Div(id="user-email-display", className="user-email"),
+                            html.Hr(style={'margin': '8px 0'}),
+                            html.A("Profile", href="/profile", className="dropdown-item"),
+                            html.A("Logout", id="logout-link", href="/", className="dropdown-item")
+                        ], id="user-dropdown-content", className="user-dropdown-content")
+                    ], className="user-dropdown"),
+                ], id="user-account-container", className="user-account-container"),
+
         ], className="nav-bar"),
     ], className="header-container", style={
         'backgroundColor': COLORS['white'],
@@ -109,7 +138,7 @@ layout = html.Div([
             'padding': '0 20px'
         })
     ], className="hero-section", style={
-        'backgroundImage': 'url("/assets/home_background.PNG")',
+        'backgroundImage': 'url("/assets/geodesign.png")',
         'backgroundSize': 'cover',
         'backgroundPosition': 'center',
         'height': '85vh',
@@ -1396,75 +1425,142 @@ html.Div([
 
 ], style={"width": "100%", "margin": "0", "padding": "0"})
 
+# Mailing list needs updating
+# @callback(
+#     [Output("signup-success", "style"),
+#      Output("mailing-list-email", "value")],
+#     Input("subscribe-button", "n_clicks"),
+#     State("mailing-list-email", "value"),
+#     prevent_initial_call=True
+# )
+# def submit_email(n_clicks, email):
+#     if n_clicks and email:
+#         try:
+#             # Validate email format
+#             import re
+#             email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+#             if not re.match(email_pattern, email):
+#                 # Invalid email format - could show error message instead
+#                 return {'display': 'none'}, email
+            
+#             # Option 1: If you're using a database like PostgreSQL (Render supports this)
+#             # import psycopg2
+#             # DATABASE_URL = os.environ.get('DATABASE_URL')
+#             # conn = psycopg2.connect(DATABASE_URL)
+#             # cursor = conn.cursor()
+#             # cursor.execute("INSERT INTO mailing_list (email, signup_date) VALUES (%s, NOW())", (email,))
+#             # conn.commit()
+#             # cursor.close()
+#             # conn.close()
+            
+#             # Option 2: Store in a CSV file (for simpler deployments)
+#             import os
+#             import csv
+#             from datetime import datetime
+            
+#             # Make sure this directory exists and is writable in your Render deployment
+#             data_dir = os.path.join(os.getcwd(), 'data')
+#             os.makedirs(data_dir, exist_ok=True)
+            
+#             file_path = os.path.join(data_dir, 'mailing_list.csv')
+#             file_exists = os.path.isfile(file_path)
+            
+#             with open(file_path, mode='a', newline='') as file:
+#                 writer = csv.writer(file)
+#                 if not file_exists:
+#                     writer.writerow(['Email', 'Signup Date'])
+#                 writer.writerow([email, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+            
+#             # Option 3: Send to a third-party API like Mailchimp
+#             # import requests
+#             # api_key = os.environ.get('MAILCHIMP_API_KEY')
+#             # list_id = os.environ.get('MAILCHIMP_LIST_ID')
+#             # data = {
+#             #     "email_address": email,
+#             #     "status": "subscribed"
+#             # }
+#             # url = f"https://<dc>.api.mailchimp.com/3.0/lists/{list_id}/members"
+#             # response = requests.post(
+#             #     url, 
+#             #     auth=("username", api_key),
+#             #     json=data
+#             # )
+            
+#             # Show success message and clear the input
+#             return {'display': 'block', 'marginTop': '15px', 'color': 'white', 'textAlign': 'center'}, ""
+        
+#         except Exception as e:
+#             print(f"Error saving email: {str(e)}")
+#             # For security, don't show the actual error to users
+#             # You could log this error or send yourself a notification
+#                # Return a neutral message or no message
+#             return {'display': 'none'}, email
+    
+#     return {'display': 'none'}, ""
+
+# Callback to update user email based on user_id
 @callback(
-    [Output("signup-success", "style"),
-     Output("mailing-list-email", "value")],
-    Input("subscribe-button", "n_clicks"),
-    State("mailing-list-email", "value"),
+    Output("user-email-display", "children", allow_duplicate=True),
+    Input("user-id", "data"),
     prevent_initial_call=True
 )
-def submit_email(n_clicks, email):
-    if n_clicks and email:
-        try:
-            # Validate email format
-            import re
-            email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-            if not re.match(email_pattern, email):
-                # Invalid email format - could show error message instead
-                return {'display': 'none'}, email
-            
-            # Option 1: If you're using a database like PostgreSQL (Render supports this)
-            # import psycopg2
-            # DATABASE_URL = os.environ.get('DATABASE_URL')
-            # conn = psycopg2.connect(DATABASE_URL)
-            # cursor = conn.cursor()
-            # cursor.execute("INSERT INTO mailing_list (email, signup_date) VALUES (%s, NOW())", (email,))
-            # conn.commit()
-            # cursor.close()
-            # conn.close()
-            
-            # Option 2: Store in a CSV file (for simpler deployments)
-            import os
-            import csv
-            from datetime import datetime
-            
-            # Make sure this directory exists and is writable in your Render deployment
-            data_dir = os.path.join(os.getcwd(), 'data')
-            os.makedirs(data_dir, exist_ok=True)
-            
-            file_path = os.path.join(data_dir, 'mailing_list.csv')
-            file_exists = os.path.isfile(file_path)
-            
-            with open(file_path, mode='a', newline='') as file:
-                writer = csv.writer(file)
-                if not file_exists:
-                    writer.writerow(['Email', 'Signup Date'])
-                writer.writerow([email, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
-            
-            # Option 3: Send to a third-party API like Mailchimp
-            # import requests
-            # api_key = os.environ.get('MAILCHIMP_API_KEY')
-            # list_id = os.environ.get('MAILCHIMP_LIST_ID')
-            # data = {
-            #     "email_address": email,
-            #     "status": "subscribed"
-            # }
-            # url = f"https://<dc>.api.mailchimp.com/3.0/lists/{list_id}/members"
-            # response = requests.post(
-            #     url, 
-            #     auth=("username", api_key),
-            #     json=data
-            # )
-            
-            # Show success message and clear the input
-            return {'display': 'block', 'marginTop': '15px', 'color': 'white', 'textAlign': 'center'}, ""
-        
-        except Exception as e:
-            print(f"Error saving email: {str(e)}")
-            # For security, don't show the actual error to users
-            # You could log this error or send yourself a notification
-            
-            # Return a neutral message or no message
-            return {'display': 'none'}, email
+def update_user_email(user_data):
+    if user_data and 'user_id' in user_data:
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT email FROM users WHERE user_id = %s', (user_data['user_id'],))
+        user = cursor.fetchone()
+        conn.close()
+        if user:
+            return user[0]
+    return "Guest"
+
+# Logout logic (client-side)
+clientside_callback(
+    """
+    function(n_clicks) {
+        if (n_clicks) {
+            // Remove session data from localStorage
+            localStorage.removeItem("session-data-store");
+            // Trigger a redirect using Dash's dcc.Location to logout route
+            return {pathname: '/'}; // Redirect to the logout route
+        }
+        return window.dash_clientside.no_update;
+    }
+    """,
+    Output("session-data-store", "data"),
+    Input("logout-link", "n_clicks"),
+    prevent_initial_call=True
+)
+
+# Sync user data for dropdown based on session
+@callback(
+    Output("user-id", "data"),
+    Input("session-data-store", "data")
+)
+def sync_user_data(session_data):
+    if session_data and 'user_id' in session_data:
+        return {'user_id': session_data['user_id']}
+    return {}
+
+# Toggle overlay based on authentication and page
+@callback(
+    Output("auth-check", "children"),
+    [Input("session-data-store", "data"),
+     Input("url", "pathname")]
+)
+def check_auth_overlay(session_data, pathname):
+    # Skip overlay display if on the home page
+    if pathname == '/':
+        return None
     
-    return {'display': 'none'}, ""
+    # If not authenticated, show overlay
+    if not session_data or 'user_id' not in session_data:
+        return html.Div(
+            "You must be logged in to access this page.",
+            id="auth-overlay",
+            className="overlay"  # You can style this with CSS
+        )
+
+    # If authenticated, remove the overlay
+    return None

@@ -1,0 +1,44 @@
+/* assets/auth.css */
+
+.login-btn-primary-custom {
+    background-color: #007bff !important;
+    color: white !important;
+    border: none;
+}
+
+.login-btn-primary-custom:hover {
+    background-color: #163155 !important;
+}
+
+/* Override active tab styling completely */
+body .nav-tabs .nav-link.active {
+    background-color: #163155 !important;  /* Custom blue for active tab */
+    color: white !important;  /* Ensure text color is white */
+    border: none !important;  /* Remove default border */
+    border-bottom: 3px solid #163155 !important;  /* Custom bottom border */
+    font-weight: 600;
+    box-shadow: none !important;  /* Remove any box-shadow */
+}
+
+/* Inactive tabs */
+body .nav-tabs .nav-link {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: none;
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+/* Hover effect for inactive tabs */
+body .nav-tabs .nav-link:hover {
+    background-color: #e2e6ea;
+    color: #000;
+}
+
+/* Focus state for active tab */
+body .nav-tabs .nav-link:focus {
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: transparent !important;
+}

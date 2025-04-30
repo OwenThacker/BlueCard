@@ -42,6 +42,11 @@ HEADER_STYLE = {
 layout = html.Div([
     # Hidden div for initialization
     html.Div(id='initialization-trigger', style={'display': 'none'}),
+
+    # Session and Routing
+    dcc.Store(id='session-data-store', storage_type='local'),
+    dcc.Store(id='user-id', storage_type='local'),  # Make sure this is included
+    dcc.Location(id='url', refresh=False),
     
     # Header
     html.Div([
@@ -61,7 +66,24 @@ layout = html.Div([
                 html.Li([html.A([html.Span(className="nav-icon"), "Expenses"], href="/expenses", className="nav-link")], className="nav-item"),
                 html.Li([html.A([html.Span(className="nav-icon"), "Savings Analysis"], href="/savings", className="nav-link active")], className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "Settings"], href="/settings", className="nav-link"), className="nav-item")
-            ], className="nav-menu", id="nav-menu")
+            ], className="nav-menu", id="nav-menu"),
+            # User account area (right side of navbar)
+                html.Div([
+                    # User profile dropdown
+                    html.Div([
+                        html.Button([
+                            html.I(className="fas fa-user-circle", style={'fontSize': '24px'}),
+                        ], id="user-dropdown-button", className="user-dropdown-button"),
+                        
+                        # Dropdown menu
+                        html.Div([
+                            html.Div(id="user-email-display", className="user-email"),
+                            html.Hr(style={'margin': '8px 0'}),
+                            html.A("Profile", href="/profile", className="dropdown-item"),
+                            html.A("Logout", id="logout-link", href="/logout", className="dropdown-item")
+                        ], id="user-dropdown-content", className="user-dropdown-content")
+                    ], className="user-dropdown"),
+                ], id="user-account-container", className="user-account-container"),
         ], className="nav-bar"),
     ], className="header-container"),
 
@@ -108,8 +130,9 @@ layout = html.Div([
                         dbc.Button(
                             [html.I(className="fas fa-plus mr-2"), "Add Savings"], 
                             id='btn-add-savings', 
-                            color='primary', 
-                            className='w-100 mb-3'
+                            color="transparent",  # Set background as transparent first
+                            className='w-100 mb-3', 
+                            style={'background-color': COLORS['accent'], 'color': 'white', 'border': f'2px solid {COLORS["accent"]}'}
                         ),
                     ], style={'padding': '20px'})
                 ], style=CARD_STYLE),
@@ -148,8 +171,9 @@ layout = html.Div([
                         dbc.Button(
                             [html.I(className="fas fa-bullseye mr-2"), "Add Goal"], 
                             id='btn-add-goal', 
-                            color='primary', 
-                            className='w-100 mb-2'
+                            color="transparent",  # Set background as transparent first
+                            className='w-100 mb-3', 
+                            style={'background-color': COLORS['accent'], 'color': 'white', 'border': f'2px solid {COLORS["accent"]}'}
                         ),
                     ], style={'padding': '20px'})
                 ], style=CARD_STYLE),
@@ -916,3 +940,4 @@ def delete_goal(n_clicks_list, goals_data):
     if goals_data and 'goals' in goals_data:
         goals_data['goals'].pop(triggered_index)
     return goals_data
+

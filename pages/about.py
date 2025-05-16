@@ -1,7 +1,7 @@
 import dash
 from dash import html, dcc, callback, Input, Output, State
 import dash_bootstrap_components as dbc
-import dash_html_components as html
+from dash import html
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib

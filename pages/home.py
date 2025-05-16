@@ -46,7 +46,7 @@ layout = html.Div([
             html.Ul([
                 html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link active"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "About"], href="/about", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Chat"], href="/chat", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/chat", className="nav-link"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "Pricing"], href="/pricing", className="nav-link"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
@@ -108,25 +108,28 @@ layout = html.Div([
                     'textShadow': '0 1px 3px rgba(0, 0, 0, 0.2)',
                     'animation': 'fadeIn 1.2s ease-in-out 0.5s both'
                 }),
-                dbc.Button(
-                    "Get Started",
-                    href="/dashboard",
-                    className="hero-button",
-                    style={
-                        'backgroundColor': COLORS['accent'],
-                        'border': 'none',
-                        'color': COLORS['white'],
-                        'padding': '15px 35px',
-                        'fontSize': '1.2rem',
-                        'borderRadius': '8px',
-                        'fontWeight': '600',
-                        'boxShadow': '0 4px 15px rgba(0, 0, 0, 0.15)',
-                        'transition': 'all 0.3s ease',
-                        'position': 'relative',
-                        'overflow': 'hidden',
-                        'animation': 'slideUp 1s ease-out 1s both'
-                    }
-                )
+                dcc.Link(
+                    dbc.Button(
+                        "Get Started",
+                        href="/dashboard",
+                        className="hero-button",
+                        style={
+                            'backgroundColor': COLORS['accent'],
+                            'border': 'none',
+                            'color': COLORS['white'],
+                            'padding': '15px 35px',
+                            'fontSize': '1.2rem',
+                            'borderRadius': '8px',
+                            'fontWeight': '600',
+                            'boxShadow': '0 4px 15px rgba(0, 0, 0, 0.15)',
+                            'transition': 'all 0.3s ease',
+                            'position': 'relative',
+                            'overflow': 'hidden',
+                            'animation': 'slideUp 1s ease-out 1s both'
+                        }
+                ),
+                href='/chat'  # This is the URL the button will link to
+            ),
             ], className="hero-content")
         ], className="hero-overlay", style={
             'backgroundImage': 'linear-gradient(135deg, rgba(26, 54, 93, 0.85) 0%, rgba(42, 74, 127, 0.65) 100%)',
@@ -148,7 +151,7 @@ layout = html.Div([
         'justifyContent': 'center',
         'textAlign': 'center',
         'boxShadow': 'inset 0 -10px 20px rgba(0, 0, 0, 0.2)',
-        'animation': 'fadeIn 1.5s ease-in-out'
+        'transition': 'background-position 0.5s ease-out, transform 0.5s ease-out',
     }),
 
     # Add these to your hero section with enhanced animations
@@ -629,102 +632,102 @@ layout = html.Div([
         'position': 'relative',
         'overflow': 'hidden'
     }),
-    # Then add this section before the statistics section
-    html.Div([
-        html.Div([
-            html.H2("Help Us Shape the Future of Personal Finance", className="section-title", style={
-                'color': COLORS['white'],
-                'textAlign': 'center',
-                'fontSize': '2.3rem',
-                'fontWeight': '600',
-                'marginBottom': '1.5rem',
-                'position': 'relative',
-                'paddingBottom': '15px'
-            }),
+    # # Then add this section before the statistics section
+    # html.Div([
+    #     html.Div([
+    #         html.H2("Help Us Shape the Future of Personal Finance", className="section-title", style={
+    #             'color': COLORS['white'],
+    #             'textAlign': 'center',
+    #             'fontSize': '2.3rem',
+    #             'fontWeight': '600',
+    #             'marginBottom': '1.5rem',
+    #             'position': 'relative',
+    #             'paddingBottom': '15px'
+    #         }),
             
-            # Decorative line under the section title
-            html.Div(style={
-                'position': 'absolute',
-                'width': '80px',
-                'height': '4px',
-                'backgroundColor': COLORS['accent-light'],
-                'left': '50%',
-                'transform': 'translateX(-50%)',
-                'marginTop': '-1.2rem'
-            }),
+    #         # Decorative line under the section title
+    #         html.Div(style={
+    #             'position': 'absolute',
+    #             'width': '80px',
+    #             'height': '4px',
+    #             'backgroundColor': COLORS['accent-light'],
+    #             'left': '50%',
+    #             'transform': 'translateX(-50%)',
+    #             'marginTop': '-1.2rem'
+    #         }),
             
-            html.P("Interested in our future features and updates? Join our mailing list to share feedback and be the first to know about new tools that can improve your financial journey.", 
-                className="mailing-list-description",
-                style={
-                    'color': COLORS['white'],
-                    'fontSize': '1.2rem',
-                    'maxWidth': '700px',
-                    'margin': '0 auto 2rem auto',
-                    'textAlign': 'center',
-                    'lineHeight': '1.6'
-                }),
+    #         html.P("Interested in our future features and updates? Join our mailing list to share feedback and be the first to know about new tools that can improve your financial journey.", 
+    #             className="mailing-list-description",
+    #             style={
+    #                 'color': COLORS['white'],
+    #                 'fontSize': '1.2rem',
+    #                 'maxWidth': '700px',
+    #                 'margin': '0 auto 2rem auto',
+    #                 'textAlign': 'center',
+    #                 'lineHeight': '1.6'
+    #             }),
             
-            # Email signup form with animation
-            html.Div([
-                dbc.Input(
-                    id="mailing-list-email",
-                    type="email",
-                    placeholder="Enter your email address",
-                    style={
-                        'border': 'none',
-                        'borderRadius': '8px 0 0 8px',
-                        'padding': '12px 20px',
-                        'fontSize': '1.1rem',
-                        'width': '100%',
-                        'backgroundColor': 'rgba(255, 255, 255, 0.9)',
-                        'boxShadow': 'inset 0 2px 5px rgba(0, 0, 0, 0.1)'
-                    }
-                ),
-                dbc.Button(
-                    "Subscribe",
-                    id="subscribe-button",
-                    className="signup-button",
-                    style={
-                        'backgroundColor': COLORS['accent-light'],
-                        'border': 'none',
-                        'borderRadius': '0 8px 8px 0',
-                        'color': COLORS['primary'],
-                        'fontWeight': '600',
-                        'padding': '12px 25px',
-                        'fontSize': '1.1rem',
-                        'whiteSpace': 'nowrap',
-                        'boxShadow': '0 4px 10px rgba(0, 0, 0, 0.1)'
-                    }
-                )
-            ], className="email-signup-form", style={
-                'display': 'flex',
-                'maxWidth': '550px',
-                'margin': '0 auto',
-                'animation': 'fadeIn 1s ease-in-out'
-            }),
+    #         # Email signup form with animation
+    #         html.Div([
+    #             dbc.Input(
+    #                 id="mailing-list-email",
+    #                 type="email",
+    #                 placeholder="Enter your email address",
+    #                 style={
+    #                     'border': 'none',
+    #                     'borderRadius': '8px 0 0 8px',
+    #                     'padding': '12px 20px',
+    #                     'fontSize': '1.1rem',
+    #                     'width': '100%',
+    #                     'backgroundColor': 'rgba(255, 255, 255, 0.9)',
+    #                     'boxShadow': 'inset 0 2px 5px rgba(0, 0, 0, 0.1)'
+    #                 }
+    #             ),
+    #             dbc.Button(
+    #                 "Subscribe",
+    #                 id="subscribe-button",
+    #                 className="signup-button",
+    #                 style={
+    #                     'backgroundColor': COLORS['accent-light'],
+    #                     'border': 'none',
+    #                     'borderRadius': '0 8px 8px 0',
+    #                     'color': COLORS['primary'],
+    #                     'fontWeight': '600',
+    #                     'padding': '12px 25px',
+    #                     'fontSize': '1.1rem',
+    #                     'whiteSpace': 'nowrap',
+    #                     'boxShadow': '0 4px 10px rgba(0, 0, 0, 0.1)'
+    #                 }
+    #             )
+    #         ], className="email-signup-form", style={
+    #             'display': 'flex',
+    #             'maxWidth': '550px',
+    #             'margin': '0 auto',
+    #             'animation': 'fadeIn 1s ease-in-out'
+    #         }),
             
-            # Success message (hidden by default)
-            html.Div([
-                html.P([
-                    html.I(className="fas fa-check-circle", style={'marginRight': '10px', 'color': COLORS['accent-light']}),
-                    "Thank you for subscribing! We'll keep you updated on new features."
-                ], style={'fontSize': '1.1rem'})
-            ], id="signup-success", style={'display': 'none', 'marginTop': '15px', 'color': 'white', 'textAlign': 'center'})
+    #         # Success message (hidden by default)
+    #         html.Div([
+    #             html.P([
+    #                 html.I(className="fas fa-check-circle", style={'marginRight': '10px', 'color': COLORS['accent-light']}),
+    #                 "Thank you for subscribing! We'll keep you updated on new features."
+    #             ], style={'fontSize': '1.1rem'})
+    #         ], id="signup-success", style={'display': 'none', 'marginTop': '15px', 'color': 'white', 'textAlign': 'center'})
             
-        ], className="mailing-list-content", style={
-            'maxWidth': '900px',
-            'margin': '0 auto',
-            'padding': '20px',
-            'position': 'relative',
-            'zIndex': '2'
-        })
-    ], className="mailing-list-section", style={
-        'padding': '60px 40px',
-        'backgroundColor': COLORS['secondary'],
-        'backgroundImage': f'linear-gradient(135deg, {COLORS["secondary"]} 0%, {COLORS["primary"]} 100%)',
-        'position': 'relative',
-        'overflow': 'hidden'
-    }),
+    #     ], className="mailing-list-content", style={
+    #         'maxWidth': '900px',
+    #         'margin': '0 auto',
+    #         'padding': '20px',
+    #         'position': 'relative',
+    #         'zIndex': '2'
+    #     })
+    # ], className="mailing-list-section", style={
+    #     'padding': '60px 40px',
+    #     'backgroundColor': COLORS['secondary'],
+    #     'backgroundImage': f'linear-gradient(135deg, {COLORS["secondary"]} 0%, {COLORS["primary"]} 100%)',
+    #     'position': 'relative',
+    #     'overflow': 'hidden'
+    # }),
 
     # Add some animated elements in the background for visual interest
     html.Div(className="floating-circle-ml-1", style={
@@ -818,7 +821,7 @@ layout = html.Div([
                             'margin': '0 auto 40px auto'
                         })
                     ]),
-                    html.H2("50,000+", style={
+                    html.H2("100+", style={
                         'color': COLORS['primary'],
                         'fontSize': '2.5rem',
                         'fontWeight': '700',
@@ -882,7 +885,7 @@ layout = html.Div([
                             'margin': '0 auto 40px auto'
                         })
                     ]),
-                    html.H2("£42M+", style={
+                    html.H2("£10,000+", style={
                         'color': COLORS['primary'],
                         'fontSize': '2.5rem',
                         'fontWeight': '700',
@@ -946,7 +949,7 @@ layout = html.Div([
                             'margin': '0 auto 40px auto'
                         })
                     ]),
-                    html.H2("100,000+", style={
+                    html.H2("50+", style={
                         'color': COLORS['primary'],
                         'fontSize': '2.5rem',
                         'fontWeight': '700',
@@ -1010,7 +1013,7 @@ layout = html.Div([
                             'margin': '0 auto 40px auto'
                         })
                     ]),
-                    html.H2("25+", style={
+                    html.H2("2+", style={
                         'color': COLORS['primary'],
                         'fontSize': '2.5rem',
                         'fontWeight': '700',
@@ -1037,139 +1040,141 @@ layout = html.Div([
         'position': 'relative'
     }),
 
-    # Image Collage Section with diagonal blue overlay
-    html.Div([
-        html.Div([
-            html.H2("Financial Success Stories", className="section-title", style={
-                'color': COLORS['white'],
-                'textAlign': 'center',
-                'fontSize': '2.5rem',
-                'fontWeight': '600',
-                'marginBottom': '3rem',
-                'position': 'relative',
-                'paddingBottom': '15px',
-                'zIndex': '2'
-            }),
+    # ----------------------------------------
+
+    # # Image Collage Section with diagonal blue overlay
+    # html.Div([
+    #     html.Div([
+    #         html.H2("Financial Success Stories", className="section-title", style={
+    #             'color': COLORS['white'],
+    #             'textAlign': 'center',
+    #             'fontSize': '2.5rem',
+    #             'fontWeight': '600',
+    #             'marginBottom': '3rem',
+    #             'position': 'relative',
+    #             'paddingBottom': '15px',
+    #             'zIndex': '2'
+    #         }),
             
-            # Decorative line under the section title
-            html.Div(style={
-                'position': 'absolute',
-                'width': '80px',
-                'height': '4px',
-                'backgroundColor': COLORS['accent-light'],
-                'left': '50%',
-                'transform': 'translateX(-50%)',
-                'marginTop': '-2.7rem',
-                'zIndex': '2'
-            }),
+    #         # Decorative line under the section title
+    #         html.Div(style={
+    #             'position': 'absolute',
+    #             'width': '80px',
+    #             'height': '4px',
+    #             'backgroundColor': COLORS['accent-light'],
+    #             'left': '50%',
+    #             'transform': 'translateX(-50%)',
+    #             'marginTop': '-2.7rem',
+    #             'zIndex': '2'
+    #         }),
             
-            # Modern Image Collage
-            html.Div([
-                dbc.Row([
-                    # Left Column - Larger Images
-                    dbc.Col([
-                        html.Div([
-                            html.Img(src="/assets/finance-success1.png", alt="Finance Success Story", className="collage-img", style={
-                                'width': '100%',
-                                'height': '300px',
-                                'objectFit': 'cover',
-                                'borderRadius': '10px',
-                                'marginBottom': '20px',
-                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
-                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
-                            })
-                        ], className="collage-img-container"),
-                        html.Div([
-                            html.Img(src="/assets/finance-success2.png", alt="Finance Success Story", className="collage-img", style={
-                                'width': '100%',
-                                'height': '200px',
-                                'objectFit': 'cover',
-                                'borderRadius': '10px',
-                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
-                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
-                            })
-                        ], className="collage-img-container"),
-                    ], md=6, style={'padding': '10px'}),
+    #         # Modern Image Collage
+    #         html.Div([
+    #             dbc.Row([
+    #                 # Left Column - Larger Images
+    #                 dbc.Col([
+    #                     html.Div([
+    #                         html.Img(src="/assets/finance-success1.png", alt="Finance Success Story", className="collage-img", style={
+    #                             'width': '100%',
+    #                             'height': '300px',
+    #                             'objectFit': 'cover',
+    #                             'borderRadius': '10px',
+    #                             'marginBottom': '20px',
+    #                             'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+    #                             'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+    #                         })
+    #                     ], className="collage-img-container"),
+    #                     html.Div([
+    #                         html.Img(src="/assets/finance-success2.png", alt="Finance Success Story", className="collage-img", style={
+    #                             'width': '100%',
+    #                             'height': '200px',
+    #                             'objectFit': 'cover',
+    #                             'borderRadius': '10px',
+    #                             'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+    #                             'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+    #                         })
+    #                     ], className="collage-img-container"),
+    #                 ], md=6, style={'padding': '10px'}),
                     
-                    # Right Column - Smaller Images
-                    dbc.Col([
-                        html.Div([
-                            html.Img(src="/assets/finance-success3.png", alt="Finance Success Story", className="collage-img", style={
-                                'width': '100%',
-                                'height': '200px',
-                                'objectFit': 'cover',
-                                'borderRadius': '10px',
-                                'marginBottom': '20px',
-                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
-                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
-                            })
-                        ], className="collage-img-container"),
-                        html.Div([
-                            html.Img(src="/assets/finance-success4.png", alt="Finance Success Story", className="collage-img", style={
-                                'width': '100%',
-                                'height': '300px',
-                                'objectFit': 'cover',
-                                'borderRadius': '10px',
-                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
-                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
-                            })
-                        ], className="collage-img-container"),
-                    ], md=6, style={'padding': '10px'})
-                ]),
+    #                 # Right Column - Smaller Images
+    #                 dbc.Col([
+    #                     html.Div([
+    #                         html.Img(src="/assets/finance-success3.png", alt="Finance Success Story", className="collage-img", style={
+    #                             'width': '100%',
+    #                             'height': '200px',
+    #                             'objectFit': 'cover',
+    #                             'borderRadius': '10px',
+    #                             'marginBottom': '20px',
+    #                             'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+    #                             'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+    #                         })
+    #                     ], className="collage-img-container"),
+    #                     html.Div([
+    #                         html.Img(src="/assets/finance-success4.png", alt="Finance Success Story", className="collage-img", style={
+    #                             'width': '100%',
+    #                             'height': '300px',
+    #                             'objectFit': 'cover',
+    #                             'borderRadius': '10px',
+    #                             'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+    #                             'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+    #                         })
+    #                     ], className="collage-img-container"),
+    #                 ], md=6, style={'padding': '10px'})
+    #             ]),
                 
-                # Bottom Row with 3 equal images
-                dbc.Row([
-                    dbc.Col([
-                        html.Div([
-                            html.Img(src="/assets/finance-success5.png", alt="Finance Success Story", className="collage-img", style={
-                                'width': '100%',
-                                'height': '180px',
-                                'objectFit': 'cover',
-                                'borderRadius': '10px',
-                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
-                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
-                            })
-                        ], className="collage-img-container"),
-                    ], md=4, style={'padding': '10px'}),
+    #             # Bottom Row with 3 equal images
+    #             dbc.Row([
+    #                 dbc.Col([
+    #                     html.Div([
+    #                         html.Img(src="/assets/finance-success5.png", alt="Finance Success Story", className="collage-img", style={
+    #                             'width': '100%',
+    #                             'height': '180px',
+    #                             'objectFit': 'cover',
+    #                             'borderRadius': '10px',
+    #                             'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+    #                             'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+    #                         })
+    #                     ], className="collage-img-container"),
+    #                 ], md=4, style={'padding': '10px'}),
                     
-                    dbc.Col([
-                        html.Div([
-                            html.Img(src="/assets/finance-success6.png", alt="Finance Success Story", className="collage-img", style={
-                                'width': '100%',
-                                'height': '180px',
-                                'objectFit': 'cover',
-                                'borderRadius': '10px',
-                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
-                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
-                            })
-                        ], className="collage-img-container"),
-                    ], md=4, style={'padding': '10px'}),
+    #                 dbc.Col([
+    #                     html.Div([
+    #                         html.Img(src="/assets/finance-success6.png", alt="Finance Success Story", className="collage-img", style={
+    #                             'width': '100%',
+    #                             'height': '180px',
+    #                             'objectFit': 'cover',
+    #                             'borderRadius': '10px',
+    #                             'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+    #                             'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+    #                         })
+    #                     ], className="collage-img-container"),
+    #                 ], md=4, style={'padding': '10px'}),
                     
-                    dbc.Col([
-                        html.Div([
-                            html.Img(src="/assets/finance-success7.png", alt="Finance Success Story", className="collage-img", style={
-                                'width': '100%',
-                                'height': '180px',
-                                'objectFit': 'cover',
-                                'borderRadius': '10px',
-                                'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
-                                'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
-                            })
-                        ], className="collage-img-container"),
-                    ], md=4, style={'padding': '10px'})
-                ], className="mt-3")
-            ], className="image-collage", style={'zIndex': '2', 'position': 'relative'})
-        ], className="collage-section-content", style={
-            'position': 'relative',
-            'zIndex': '2'
-        })
-    ], className="collage-section", style={
-        'padding': '80px 40px',
-        'backgroundColor': COLORS['accent'],  # Bright blue
-        'backgroundImage': f'linear-gradient(135deg, {COLORS["accent"]} 0%, {COLORS["primary"]} 100%)',
-        'position': 'relative',
-        'overflow': 'hidden'
-    }),
+    #                 dbc.Col([
+    #                     html.Div([
+    #                         html.Img(src="/assets/finance-success7.png", alt="Finance Success Story", className="collage-img", style={
+    #                             'width': '100%',
+    #                             'height': '180px',
+    #                             'objectFit': 'cover',
+    #                             'borderRadius': '10px',
+    #                             'boxShadow': '0 15px 25px rgba(0, 0, 0, 0.2)',
+    #                             'transition': 'transform 0.3s ease, box-shadow 0.3s ease',
+    #                         })
+    #                     ], className="collage-img-container"),
+    #                 ], md=4, style={'padding': '10px'})
+    #             ], className="mt-3")
+    #         ], className="image-collage", style={'zIndex': '2', 'position': 'relative'})
+    #     ], className="collage-section-content", style={
+    #         'position': 'relative',
+    #         'zIndex': '2'
+    #     })
+    # ], className="collage-section", style={
+    #     'padding': '80px 40px',
+    #     'backgroundColor': COLORS['accent'],  # Bright blue
+    #     'backgroundImage': f'linear-gradient(135deg, {COLORS["accent"]} 0%, {COLORS["primary"]} 100%)',
+    #     'position': 'relative',
+    #     'overflow': 'hidden'
+    # }),
 
 # Call to Action Section with a different blue shade
 html.Div([
@@ -1182,30 +1187,33 @@ html.Div([
                 'marginBottom': '1.5rem',
                 'lineHeight': '1.2'
             }),
-            html.P("Join thousands of satisfied users who are taking control of their finances with BlueCard Finance.", style={
+            html.P("Join hundreds of satisfied users who are taking control of their finances with BlueCard Finance.", style={
                 'color': COLORS['white'],
                 'fontSize': '1.2rem',
                 'marginBottom': '2.5rem',
                 'opacity': '0.9',
                 'maxWidth': '600px'
             }),
-            dbc.Button(
-                "Get Started Today",
-                href="/dashboard",
-                className="cta-button",
-                size="lg",
-                style={
-                    'backgroundColor': COLORS['white'],
-                    'color': COLORS['primary'],
-                    'border': 'none',
-                    'borderRadius': '8px',
-                    'padding': '15px 40px',
-                    'fontSize': '1.2rem',
-                    'fontWeight': '600',
-                    'boxShadow': '0 10px 20px rgba(0, 0, 0, 0.1)',
-                    'transition': 'all 0.3s ease'
-                }
-            )
+            dcc.Link(
+                dbc.Button(
+                    "Get Started Today",
+                    href="/dashboard",
+                    className="cta-button",
+                    size="lg",
+                    style={
+                        'backgroundColor': COLORS['white'],
+                        'color': COLORS['primary'],
+                        'border': 'none',
+                        'borderRadius': '8px',
+                        'padding': '15px 40px',
+                        'fontSize': '1.2rem',
+                        'fontWeight': '600',
+                        'boxShadow': '0 10px 20px rgba(0, 0, 0, 0.1)',
+                        'transition': 'all 0.3s ease'
+                    }
+                ),
+                href='/chat'  # This is the URL the button will link to
+            ),
         ], md=7, className="cta-content", style={
             'display': 'flex',
             'flexDirection': 'column',
@@ -1222,7 +1230,7 @@ html.Div([
                 'zIndex': '3',
                 'transform': 'translateX(-20px)'  # Offset to the left
             }),
-            html.Img(src="/assets/savings_analysis_pc.png", style={
+            html.Img(src="/assets/savings_analysis_pc.PNG", style={
                 'width': '60%',  # Match size with the first image
                 'borderRadius': '8px',
                 'boxShadow': '0 15px 30px rgba(0, 0, 0, 0.25)',
@@ -1250,178 +1258,187 @@ html.Div([
 
     # Footer
     html.Footer([
-    # Modern top section with logo and quick links
-    html.Div([
-        # Left side with logo and tagline
+        # Modern top section with logo and quick links
         html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
-                "height": "140px",
-                "marginBottom": "10px",
-                "filter": "brightness(1.1) contrast(1.1)"
+            # Left side with logo and tagline
+            html.Div([
+                html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
+                    "height": "140px",
+                    "marginBottom": "10px",
+                    "filter": "brightness(1.1) contrast(1.1)"
+                }),
+            ], className="footer-branding", style={
+                "flex": "2",
+                "marginRight": "40px"
             }),
-            # html.P("Empowering your financial future", style={
-            #     "color": "#ffffff",
-            #     "fontSize": "14px",
-            #     "fontWeight": "300",
-            #     "letterSpacing": "0.5px",
-            #     "margin": "0"
-            # })
-        ], className="footer-branding", style={
-            "flex": "2",
-            "marginRight": "40px"
+            
+            # Middle section with quick links
+            html.Div([
+                html.H4("Quick Links", style={
+                    "fontSize": "16px",
+                    "fontWeight": "600",
+                    "color": "#ffffff",
+                    "marginBottom": "15px",
+                    "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                    "paddingBottom": "8px"
+                }),
+                html.Ul([
+                    html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("About", href="/about", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("Dashboard", href="/chat", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("Pricing", href="/pricing", className="footer-link"), style={"marginBottom": "8px"}),
+                ], style={
+                    "listStyleType": "none",
+                    "padding": "0",
+                    "margin": "0"
+                })
+            ], className="footer-links", style={"flex": "1"}),
+            
+            # Right section with contact info and feedback form
+            html.Div([
+                html.H4("Contact & Feedback", style={
+                    "fontSize": "16px",
+                    "fontWeight": "600",
+                    "color": "#ffffff",
+                    "marginBottom": "15px",
+                    "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                    "paddingBottom": "8px"
+                }),
+                html.Div([
+                    html.P([
+                        html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
+                        "bluecardfinance@outlook.com"
+                    ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    # html.P([
+                    #     html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
+                    #     "(+44) 555-0XXX"
+                    # ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    html.P([
+                        html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
+                        "United Kingdom, London, LN"
+                    ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    
+                    # Feedback button
+                    html.Button([
+                        html.I(className="fas fa-comment-alt", style={"marginRight": "8px"}),
+                        "Share Feedback"
+                    ], 
+                    id="feedback-toggle-btn",
+                    className="feedback-toggle-btn")
+                ], className="footer-contact-info"),
+            ], className="footer-contact", style={"flex": "1"})
+        ], className="footer-top", style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "padding": "40px 60px",
+            "backgroundColor": "rgba(0,0,0,0.1)",
+            "borderBottom": "1px solid rgba(255,255,255,0.1)",
+            "flexWrap": "wrap",
+            "gap": "30px"
         }),
         
-        # Middle section with quick links
+        # Middle social media section
         html.Div([
-            html.H4("Quick Links", style={
-                "fontSize": "16px",
-                "fontWeight": "600",
+            html.H4("Connect With Us", style={
+                "margin": "0 20px 0 0",
                 "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
-            }),
-            html.Ul([
-                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
-            ], style={
-                "listStyleType": "none",
-                "padding": "0",
-                "margin": "0"
-            })
-        ], className="footer-links", style={"flex": "1"}),
-        
-        # Right section with contact info
-        html.Div([
-            html.H4("Contact", style={
                 "fontSize": "16px",
-                "fontWeight": "600",
-                "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
+                "fontWeight": "400"
             }),
             html.Div([
-                html.P([
-                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
-                    "support@bluecardfinance.com"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
-                    "(+44) 555-0XXX"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
-                    "123 Finance St, London, LN"
-                ], style={"marginBottom": "10px", "fontSize": "14px"})
+                html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon")
+            ], className="social-icons-container")
+        ], className="footer-social", style={
+            "display": "flex",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "padding": "20px 60px",
+            "borderBottom": "1px solid rgba(255,255,255,0.1)"
+        }),
+        
+        # Bottom copyright section
+        html.Div([
+            html.P("© 2025 BlueCard Finance. All rights reserved.", style={
+                "color": "rgba(255,255,255,0.7)",
+                "margin": "0",
+                "fontSize": "14px"
+            }),
+            html.Div([
+                html.A("Privacy Policy", href="#", className="footer-link"),
+                html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+                html.A("Terms of Service", href="#", className="footer-link"),
+                html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+                html.A("Cookie Policy", href="#", className="footer-link")
             ])
-        ], className="footer-contact", style={"flex": "1"})
-    ], className="footer-top", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "40px 60px",
-        "backgroundColor": "rgba(0,0,0,0.1)",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)",
-        "flexWrap": "wrap",
-        "gap": "30px"
-    }),
-    
-    # Middle social media section
-    html.Div([
-        html.H4("Connect With Us", style={
-            "margin": "0 20px 0 0",
-            "color": "#ffffff",
-            "fontSize": "16px",
-            "fontWeight": "400"
+        ], className="footer-bottom", style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "padding": "20px 60px",
+            "flexWrap": "wrap",
+            "gap": "15px"
         }),
+        
+        # Feedback Form Modal (positioned fixed over the page)
         html.Div([
-            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
+            # Close button
+            html.Button(
+                html.I(className="fas fa-times"), 
+                id="feedback-close-btn",
+                className="feedback-close-btn"
+            ),
+            
+            # Form header
+            html.H4("We Value Your Feedback", style={
+                "fontSize": "18px",
+                "fontWeight": "600",
+                "marginBottom": "15px",
+                "color": COLORS['dark'],
+                "borderBottom": f"2px solid {COLORS['accent']}",
+                "paddingBottom": "10px"
             }),
-            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            })
-        ], style={"display": "flex"})
-    ], className="footer-social", style={
-        "display": "flex",
-        "justifyContent": "center",
-        "alignItems": "center",
-        "padding": "20px 60px",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+            
+            # Form fields
+            # dcc.Input(
+            #     id="feedback-email",
+            #     type="email",
+            #     placeholder="Your Email",
+            #     className="feedback-field"
+            # ),
+            
+            dcc.Input(
+                id="feedback-subject",
+                type="text",
+                placeholder="Subject",
+                className="feedback-field"
+            ),
+            
+            dcc.Textarea(
+                id="feedback-message",
+                placeholder="Your message...",
+                className="feedback-field feedback-textarea"
+            ),
+            
+            # Submit button
+            html.Button(
+                "Submit Feedback",
+                id="feedback-submit-btn",
+                className="feedback-submit-btn"
+            ),
+            
+            # Status message area
+            html.Div(id="feedback-status", className="feedback-status")
+            
+        ], id="feedback-form-container", className="feedback-form-container")
+        
+    ], className="dashboard-footer", style={
+        "backgroundColor": COLORS['primary'],
+        "color": "#ffffff",
+        "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)",
+        "position": "relative"  # Needed for the modal positioning
     }),
-    
-    # Bottom copyright section
-    html.Div([
-        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
-            "color": "rgba(255,255,255,0.7)",
-            "margin": "0",
-            "fontSize": "14px"
-        }),
-        html.Div([
-            html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Terms of Service", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Cookie Policy", href="#", className="footer-link")
-        ])
-    ], className="footer-bottom", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "20px 60px",
-        "flexWrap": "wrap",
-        "gap": "15px"
-    })
-], className="dashboard-footer", style={
-    "backgroundColor": COLORS['primary'],
-    "color": "#ffffff",
-    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
-})
 
 ], style={"width": "100%", "margin": "0", "padding": "0"})
 

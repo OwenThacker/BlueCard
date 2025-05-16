@@ -284,7 +284,7 @@ layout = html.Div([
                 html.Div([
                     html.P([
                         html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
-                        "support@bluecardfinance.com"
+                        "bluecardfinance@outlook.com"
                     ], style={"marginBottom": "10px", "fontSize": "14px"}),
                     html.P([
                         html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),

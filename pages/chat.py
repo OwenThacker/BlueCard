@@ -17,6 +17,11 @@ import copy
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import dash_player
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import smtplib
+import os
 
 
 # Register this file as the chat page
@@ -1228,6 +1233,10 @@ def handle_insights_specific_modal(insights_data, user_data):
         print(f'Expenses data entries: {len(expenses_data)}')
         modal_content = generate_expenses_insights_modal(user_data)
         modal_title = "Expenses Analysis Dashboard"
+    elif insight_type == "finance_summary":
+        print('Generating financial summary cards')
+        modal_content = generate_summary_cards(user_data)
+        modal_title = "Financial Summary Dashboard"
     else:
         # Default content if no specific type matched
         modal_content = html.Div([
@@ -1270,7 +1279,7 @@ def prepare_insight_for_dashboard(n_clicks_list, current_settings, user_data, bu
     triggered_prop_id = ctx.triggered[0]['prop_id']
     
     # Debug logging
-    # print(f"Triggered property ID: {triggered_prop_id}")
+    print(f"Triggered property ID: {triggered_prop_id}")
     
     # Extract the exact button index that was clicked
     button_index = None
@@ -1299,18 +1308,25 @@ def prepare_insight_for_dashboard(n_clicks_list, current_settings, user_data, bu
     
     # Chart types and their settings
     chart_types = {
+        # Income chart types (1-6)
         1: {"type": "income_forecast", "title": "Income Forecast", "settings": {"chart_type": "line"}, "months_ahead": 6},
         2: {"type": "income_breakdown_pie", "title": "Income Sources", "settings": {"chart_type": "pie"}},
         3: {"type": "income_monte_carlo", "title": "Income Forecast Simulation", "settings": {"simulations": 100}},
         4: {"type": "income_heatmap", "title": "Income Heatmap", "settings": {}},
         5: {"type": "income_seasonality", "title": "Income Seasonality", "settings": {}},
-        6: {"type": "income_growth", "title": "Year-over-Year Growth", "settings": {}}
+        6: {"type": "income_growth", "title": "Year-over-Year Growth", "settings": {}},
+        
+        # Financial summary card types (10, 20, 30, 40)
+        10: {"type": "financial_summary_income", "title": "Monthly Income Summary", "settings": {}},
+        20: {"type": "financial_summary_expenses", "title": "Monthly Expenses Summary", "settings": {}},
+        30: {"type": "financial_summary_savings", "title": "Savings Goal Summary", "settings": {}},
+        40: {"type": "financial_summary_networth", "title": "Net Worth Summary", "settings": {}}
     }
     
     # Get the chart data for the clicked button
     chart_data = chart_types.get(button_index, {"type": "income_chart", "title": "Income Chart", "settings": {}})
     
-    # print(f"Selected chart type: {chart_data['type']}, title: {chart_data['title']}")
+    print(f"Selected chart type: {chart_data['type']}, title: {chart_data['title']}")
     
     # Calculate position and prepare component
     if not current_settings:
@@ -1344,8 +1360,8 @@ def prepare_insight_for_dashboard(n_clicks_list, current_settings, user_data, bu
         new_component['settings']['months_ahead'] = chart_data['months_ahead']
     
     # For debugging
-    # print(f"Adding chart to dashboard: {chart_data['title']}")
-    # print(f"New component: {new_component}")
+    print(f"Adding chart to dashboard: {chart_data['title']}")
+    print(f"New component: {new_component}")
     
     # Return the data needed to update the dashboard
     return {
@@ -1416,8 +1432,8 @@ def update_dashboard_with_insight(insight_data, current_settings, user_data, cur
             'y': next_position['y'],
             'w': bp_width,
             'h': component_height,
-            'minW': 4,
-            'minH': 4
+            'minW': 2,
+            'minH': 2
         })
 
     # Generate components with the updated settings
@@ -1445,6 +1461,17 @@ def generate_expense_breakdown(data, settings=None, period='monthly'):
     import plotly.express as px
     from datetime import datetime
     import numpy as np
+    
+    # Orange theme colors
+    COLORS_CHART = {
+        'primary': '#FF8C00',  # Dark Orange
+        'secondary': '#FFA500', # Standard Orange
+        'light': '#FFD580',    # Light Orange
+        'dark': '#CC7000',     # Deep Orange
+        'text': '#333333',     # Dark text
+        'background': '#FFFAF0', # Floral White
+        'chart_palette': ['#FF8C00', '#FFA500', '#FF7F50', '#FFD700', '#FFCC80', '#FFB347', '#FF9F45', '#FFAC1C', '#FF8300', '#FFA07A']
+    }
     
     # Default settings
     if settings is None:
@@ -1497,7 +1524,7 @@ def generate_expense_breakdown(data, settings=None, period='monthly'):
             textinfo='label+percent',
             textposition='outside',
             marker=dict(
-                COLORS_CHART=COLORS_CHART['chart_palette'],
+                colors=COLORS_CHART['chart_palette'],
                 line=dict(color='white', width=1)
             ),
             hole=hole_size,
@@ -1518,8 +1545,8 @@ def generate_expense_breakdown(data, settings=None, period='monthly'):
         # Create a clean bar chart
         fig = go.Figure()
         
-        # Determine gradient COLORS_CHART based on rank
-        color_scale = px.COLORS_CHART.sequential.Blues
+        # Determine gradient colors based on rank
+        color_scale = px.colors.sequential.Oranges
         
         # Create one trace with all bars
         fig.add_trace(go.Bar(
@@ -1527,7 +1554,7 @@ def generate_expense_breakdown(data, settings=None, period='monthly'):
             y=df_grouped['amount'],
             marker=dict(
                 color=df_grouped['amount'],
-                COLORS_CHARTcale=color_scale,
+                colorscale=color_scale,
                 line=dict(width=0)
             ),
             text=[f"£{amount:,.0f}" for amount in df_grouped['amount']],
@@ -1549,7 +1576,7 @@ def generate_expense_breakdown(data, settings=None, period='monthly'):
             path=['category'],
             values='amount',
             color='amount',
-            color_continuous_scale=px.COLORS_CHART.sequential.Blues,
+            color_continuous_scale=px.colors.sequential.Oranges,
             hover_data=['percent']
         )
         fig.update_traces(
@@ -1565,7 +1592,7 @@ def generate_expense_breakdown(data, settings=None, period='monthly'):
             path=['category'],
             values='amount',
             color='amount',
-            color_continuous_scale=px.COLORS_CHART.sequential.Blues,
+            color_continuous_scale=px.colors.sequential.Oranges,
             hover_data=['percent']
         )
         fig.update_traces(
@@ -1621,7 +1648,6 @@ def generate_expense_breakdown(data, settings=None, period='monthly'):
         )
     
     return fig
-
 
 # Add callback for adding expense charts to dashboard
 @callback(
@@ -1844,12 +1870,13 @@ def generate_monthly_spending_overview(expenses_data, options):
     - Plotly figure object with monthly spending bar chart and trend line
     """
     default_colors = {
-        'primary': '#1a73e8',
-        'secondary': '#4285f4',
-        'light': '#8ab4f8',
-        'dark': '#174ea6',
-        'background': '#f8f9fc',
-        'text': '#202124'
+        'primary': '#FF8C00',  # Dark Orange
+        'secondary': '#FFA500', # Standard Orange
+        'light': '#FFD580',    # Light Orange
+        'dark': '#CC7000',     # Deep Orange
+        'text': '#333333',     # Dark text
+        'background': '#FFFAF0', # Floral White
+        'chart_palette': ['#FF8C00', '#FFA500', '#FF7F50', '#FFD700', '#FFCC80', '#FFB347', '#FF9F45', '#FFAC1C', '#FF8300', '#FFA07A']
     }
     
     # Use provided color scheme or fall back to default
@@ -1931,12 +1958,13 @@ def generate_expense_categories_donut(expenses_data, options):
     - Plotly figure object with donut chart of expense categories
     """
     default_colors = {
-        'primary': '#1a73e8',
-        'secondary': '#4285f4',
-        'light': '#8ab4f8',
-        'dark': '#174ea6',
-        'background': '#f8f9fc',
-        'text': '#202124'
+        'primary': '#FF8C00',  # Dark Orange
+        'secondary': '#FFA500', # Standard Orange
+        'light': '#FFD580',    # Light Orange
+        'dark': '#CC7000',     # Deep Orange
+        'text': '#333333',     # Dark text
+        'background': '#FFFAF0', # Floral White
+        'chart_palette': ['#FF8C00', '#FFA500', '#FF7F50', '#FFD700', '#FFCC80', '#FFB347', '#FF9F45', '#FFAC1C', '#FF8300', '#FFA07A']
     }
     
     # Use provided color scheme or fall back to default
@@ -2028,12 +2056,13 @@ def generate_budget_vs_actual(expenses_data, budget_data, options):
     - Plotly figure object with budget vs. actual bar chart
     """
     default_colors = {
-        'primary': '#1a73e8',
-        'secondary': '#4285f4',
-        'light': '#8ab4f8',
-        'dark': '#174ea6',
-        'background': '#f8f9fc',
-        'text': '#202124'
+        'primary': '#FF8C00',  # Dark Orange
+        'secondary': '#FFA500', # Standard Orange
+        'light': '#FFD580',    # Light Orange
+        'dark': '#CC7000',     # Deep Orange
+        'text': '#333333',     # Dark text
+        'background': '#FFFAF0', # Floral White
+        'chart_palette': ['#FF8C00', '#FFA500', '#FF7F50', '#FFD700', '#FFCC80', '#FFB347', '#FF9F45', '#FFAC1C', '#FF8300', '#FFA07A']
     }
     
     # Use provided color scheme or fall back to default
@@ -2139,12 +2168,13 @@ def generate_top_spending_categories(expenses_data, options):
     - Plotly figure object with horizontal bar chart of top spending categories
     """
     default_colors = {
-        'primary': '#1a73e8',
-        'secondary': '#4285f4',
-        'light': '#8ab4f8',
-        'dark': '#174ea6',
-        'background': '#f8f9fc',
-        'text': '#202124'
+        'primary': '#FF8C00',  # Dark Orange
+        'secondary': '#FFA500', # Standard Orange
+        'light': '#FFD580',    # Light Orange
+        'dark': '#CC7000',     # Deep Orange
+        'text': '#333333',     # Dark text
+        'background': '#FFFAF0', # Floral White
+        'chart_palette': ['#FF8C00', '#FFA500', '#FF7F50', '#FFD700', '#FFCC80', '#FFB347', '#FF9F45', '#FFAC1C', '#FF8300', '#FFA07A']
     }
     
     # Use provided color scheme or fall back to default
@@ -2274,12 +2304,13 @@ def generate_spending_trends(expenses_data, options):
     - Plotly figure object with stacked area chart of spending trends
     """
     default_colors = {
-        'primary': '#1a73e8',
-        'secondary': '#4285f4',
-        'light': '#8ab4f8',
-        'dark': '#174ea6',
-        'background': '#f8f9fc',
-        'text': '#202124'
+        'primary': '#FF8C00',  # Dark Orange
+        'secondary': '#FFA500', # Standard Orange
+        'light': '#FFD580',    # Light Orange
+        'dark': '#CC7000',     # Deep Orange
+        'text': '#333333',     # Dark text
+        'background': '#FFFAF0', # Floral White
+        'chart_palette': ['#FF8C00', '#FFA500', '#FF7F50', '#FFD700', '#FFCC80', '#FFB347', '#FF9F45', '#FFAC1C', '#FF8300', '#FFA07A']
     }
     
     # Use provided color scheme or fall back to default
@@ -2441,12 +2472,13 @@ def generate_recurring_expenses(expenses_data, options):
     from plotly.subplots import make_subplots
     
     default_colors = {
-        'primary': '#1a73e8',
-        'secondary': '#4285f4',
-        'light': '#8ab4f8',
-        'dark': '#174ea6',
-        'background': '#f8f9fc',
-        'text': '#202124'
+        'primary': '#FF8C00',  # Dark Orange
+        'secondary': '#FFA500', # Standard Orange
+        'light': '#FFD580',    # Light Orange
+        'dark': '#CC7000',     # Deep Orange
+        'text': '#333333',     # Dark text
+        'background': '#FFFAF0', # Floral White
+        'chart_palette': ['#FF8C00', '#FFA500', '#FF7F50', '#FFD700', '#FFCC80', '#FFB347', '#FF9F45', '#FFAC1C', '#FF8300', '#FFA07A']
     }
     
     # Use provided color scheme or fall back to default
@@ -2586,7 +2618,6 @@ def generate_recurring_expenses(expenses_data, options):
     return fig
 
 # Layout for the chat/AI dashboard page
-# Layout for the chat/AI dashboard page
 layout = html.Div([
     # Stores for maintaining state
     dcc.Store(id="session-data-store", storage_type="local"),
@@ -2613,7 +2644,7 @@ layout = html.Div([
             html.Ul([
                 html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "About"], href="/about", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Chat"], href="/chat", className="nav-link active"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/chat", className="nav-link active"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "Pricing"], href="/pricing", className="nav-link"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
@@ -2639,157 +2670,90 @@ layout = html.Div([
         ], className="nav-bar"),
     ], className="header-container"),
     
-    # Main content area
+    # Main content area - REDUCED PADDING HERE
     html.Div([
-        # Sidebar for chat/AI interaction - Premium Version
         html.Div([
-            # Premium badge and title
+            # Title
             html.Div([
-                html.Div([
-                    # html.I(className="fas fa-robot", style={
-                    #     "color": "#0052CC",
-                    #     "fontSize": "20px",
-                    #     "marginRight": "10px"
-                    # }),
-                    html.H2("BlueCard AI", className="sidebar-title", style={
-                        "color": "#0A2540",
-                        "fontWeight": "600",
-                        "fontSize": "1.5rem",
-                        "marginLeft": "40px"
-                    })
-                ], style={"display": "flex", "alignItems": "center"}),
-                # html.Div([
-                #     html.Span("ELITE", className="ai-badge", style={
-                #         "backgroundColor": "#0A2540",
-                #         "color": "white",
-                #         "padding": "4px 8px",
-                #         "borderRadius": "20px",
-                #         "fontSize": "0.7rem",
-                #         "fontWeight": "600",
-                #         "letterSpacing": "1px"
-                #     })
-                # ])
-            ], style={
-                "display": "flex", 
-                "justifyContent": "space-between", 
-                "alignItems": "center",
-                "marginBottom": "5px"
-            }),
-            
-            # Premium AI description
-            html.P([
-                "Your advanced financial intelligence assistant. Ask anything about your portfolio, investments, or financial planning.",
-            ], className="sidebar-description", style={
-                "color": "#4A5568",
-                "lineHeight": "1.5",
-                "fontSize": "0.95rem",
-                "marginBottom": "20px"
-            }),
-            
-            # Premium chat features description
-            html.Div([
-                html.Div([
-                    html.I(className="fas fa-chart-line", style={"color": "#0052CC"}),
-                    html.Span("In-Depth Analysis", style={"marginLeft": "10px", "fontWeight": "500"})
-                ], style={"marginBottom": "8px"}),
-                # html.Div([
-                #     html.I(className="fas fa-lock", style={"color": "#0052CC"}),
-                #     html.Span("Exclusive Insights", style={"marginLeft": "10px", "fontWeight": "500"})
-                # ], style={"marginBottom": "8px"}),
-                html.Div([
-                    html.I(className="fas fa-bolt", style={"color": "#0052CC"}),
-                    html.Span("Predictive Intelligence", style={"marginLeft": "10px", "fontWeight": "500"})
-                ])
-            ], className="premium-features", style={
-                "padding": "15px",
-                "backgroundColor": "rgba(0, 82, 204, 0.05)",
-                "borderRadius": "8px",
-                "fontSize": "0.9rem",
-                "color": "#2D3748",
-                "marginBottom": "20px",
-                "border": "1px solid rgba(0, 82, 204, 0.1)"
-            }),
-            
-            # Enhanced chat history
-            html.Div(id="chat-history", className="chat-history", style={
+                html.H2("BlueCard Finance Assistant", style={
+                    "color": "#0A2540",
+                    "fontWeight": "600",
+                    "fontSize": "1rem",  # Reduced from 1.25rem
+                    "marginBottom": "8px"  # Reduced from 10px
+                })
+            ]),
+
+            # Description (more compact)
+            html.P(
+                "Ask questions about your finances.",  # Shortened text
+                style={
+                    "color": "#4A5568",
+                    "fontSize": "0.8rem",  # Reduced from 0.9rem
+                    "lineHeight": "1.3",  # Reduced from 1.4
+                    "marginBottom": "12px"  # Reduced from 20px
+                }
+            ),
+
+            # Chat history
+            html.Div(id="chat-history", style={
                 "backgroundColor": "#FFFFFF",
-                "borderRadius": "8px",
-                "padding": "15px",
-                "height": "calc(100vh - 380px)",
+                "borderRadius": "8px",  # Reduced from 10px
+                "padding": "10px",  # Reduced from 15px
+                "height": "calc(100vh - 280px)",  # Adjusted height
                 "overflowY": "auto",
-                "border": "1px solid rgba(203, 213, 224, 0.5)",
-                "boxShadow": "inset 0 2px 4px rgba(0,0,0,0.03)"
+                "border": "1px solid #E2E8F0",
+                "boxShadow": "inset 0 1px 2px rgba(0, 0, 0, 0.03)"
             }),
-            
-            # Premium chat input container
+
+            # Input row
             html.Div([
                 dcc.Input(
-                    id="chat-input", 
-                    type="text", 
-                    placeholder="Ask your financial advisor...", 
-                    className="chat-input",
+                    id="chat-input",
+                    type="text",
+                    placeholder="Type your message...",
                     style={
-                        "width": "100%",
-                        "padding": "12px 15px",
-                        "borderRadius": "8px",
-                        "border": "1px solid rgba(203, 213, 224, 0.7)",
-                        "fontSize": "0.95rem",
-                        "backgroundColor": "#FFFFFF",
-                        "boxShadow": "inset 0 2px 4px rgba(0,0,0,0.03)"
+                        "flex": "1",
+                        "padding": "8px 10px",  # Reduced from 10px 14px
+                        "fontSize": "0.8rem",  # Reduced from 0.9rem
+                        "borderRadius": "6px",  # Reduced from 8px
+                        "border": "1px solid #CBD5E0",
+                        "backgroundColor": "#F9FAFB",
+                        "outline": "none",
+                        "marginRight": "6px",  # Reduced from 8px
+                        "boxShadow": "inset 0 1px 2px rgba(0,0,0,0.04)"
                     }
                 ),
                 html.Button(
-                    [html.I(className="fas fa-paper-plane")], 
-                    id="send-chat", 
-                    className="send-chat-button",
+                    html.I(className="fas fa-paper-plane"),
+                    id="send-chat",
                     style={
-                        "backgroundColor": "#0052CC",
+                        "backgroundColor": "#0A2540",
                         "color": "white",
                         "border": "none",
-                        "borderRadius": "8px",
-                        "padding": "12px 18px",
-                        "marginLeft": "10px",
+                        "borderRadius": "6px",  # Reduced from 8px
+                        "padding": "8px 10px",  # Reduced from 10px 14px
                         "cursor": "pointer",
-                        "transition": "all 0.2s ease",
-                        "boxShadow": "0 2px 5px rgba(0, 82, 204, 0.2)"
+                        "transition": "background-color 0.2s ease",
+                        "boxShadow": "0 1px 4px rgba(10, 37, 64, 0.15)"  # Reduced shadow
                     }
                 )
-            ], className="chat-input-container", style={
-                "display": "flex", 
+            ], style={
+                "display": "flex",
                 "alignItems": "center",
-                "marginTop": "15px",
-            }),
-            
-            # # Premium badge at the bottom
-            # html.Div([
-            #     html.Div([
-            #         html.I(className="fas fa-shield-alt", style={
-            #             "color": "#0052CC",
-            #             "fontSize": "16px",
-            #             "marginRight": "8px"
-            #         }),
-            #         html.Span("BlueCard Premium", style={
-            #             "fontWeight": "600", 
-            #             "color": "#0A2540",
-            #             "fontSize": "0.9rem"
-            #         })
-            #     ], style={"display": "flex", "alignItems": "center"})
-            # ], style={
-            #     "marginTop": "25px",
-            #     "textAlign": "center",
-            #     "padding": "10px",
-            #     "backgroundColor": "rgba(0, 82, 204, 0.05)",
-            #     "borderRadius": "8px",
-            #     "border": "1px solid rgba(0, 82, 204, 0.1)"
-            # })
-        ], className="chat-sidebar", style={
-            "borderRadius": "12px",
+                "marginTop": "12px"  # Reduced from 16px
+            })
+
+        ], style={
+            "width": "300px",  # Reduced width to exactly 300px
+            "padding": "16px",  # Reduced padding from 24px
             "backgroundColor": "#F8FAFC",
-            "padding": "25px",
-            "boxShadow": "0 10px 25px rgba(0, 0, 0, 0.05)",
-            "border": "1px solid rgba(203, 213, 224, 0.5)",
-            "marginLeft": "20px",
-            "marginTop": "1px"    # Optional: adjust this to reduce top gap
+            "border": "1px solid #E2E8F0",
+            "borderRadius": "10px",  # Reduced from 12px
+            "boxShadow": "0 2px 8px rgba(0,0,0,0.04)",  # Reduced shadow
+            "display": "flex",
+            "flexDirection": "column",
+            "justifyContent": "flex-start",
+            "marginLeft": "10px"
         }),
 
         # Dashboard main area
@@ -2800,397 +2764,462 @@ layout = html.Div([
                 html.Div(id="last-updated", className="last-updated")
             ], className="dashboard-header", id="dashboard-header-section", style={"display": "none"}),
             
-            # For new users (Welcome Page) - PREMIUM VERSION
+            # For new users (Welcome Page) - MINIMAL PREMIUM VERSION
             html.Div([
-                # Main container with premium styling
+                # Main container with minimal premium styling
                 html.Div([
-                    # Top accent bar with premium gradient
+                    # Top accent bar with subtle gradient
                     html.Div(className="premium-accent-bar", style={
-                        "height": "6px",
-                        "background": "linear-gradient(90deg, #0A2540 0%, #0052CC 35%, #00C7FA 100%)",
+                        "height": "4px",
+                        "background": "linear-gradient(90deg, #0A2540 0%, #0052CC 100%)",
                         "borderRadius": "4px 4px 0 0",
-                        "marginBottom": "2px"
                     }),
                     
-                    # Header section with logo, title and premium badge
+                    # Header section with logo and title - simplified
                     html.Div([
                         html.Div([
-                            html.Img(src="/assets/Logo_slogan.png", className="welcome-logo"),
+                            html.Img(src="/assets/Logo_slogan.PNG", className="welcome-logo", style={
+                                "height": "45px",
+                                "objectFit": "contain"
+                            }),
                             html.Div([
                                 html.H2("Welcome to BlueCard Finance", className="welcome-title", style={
-                                    "fontWeight": "600",
+                                    "fontWeight": "500",
                                     "color": "#0A2540",
+                                    "fontSize": "1.8rem",
                                     "marginBottom": "4px"
                                 }),
                                 html.P("Premium Financial Intelligence", style={
-                                    "fontSize": "1.1rem",
+                                    "fontSize": "1rem",
                                     "color": "#4A5568",
-                                    "letterSpacing": "0.5px",
                                     "margin": "0"
                                 }),
                             ], className="welcome-title-container")
-                        ], className="welcome-header-left", style={"display": "flex", "alignItems": "center", "gap": "20px"}),
-                        
-                        # html.Div([
-                        #     html.Span("PREMIUM", className="premium-badge", style={
-                        #         "backgroundColor": "#0A2540",
-                        #         "color": "white",
-                        #         "padding": "6px 12px",
-                        #         "borderRadius": "20px",
-                        #         "fontSize": "0.8rem",
-                        #         "fontWeight": "600",
-                        #         "letterSpacing": "1px",
-                        #         "display": "inline-flex",
-                        #         "alignItems": "center",
-                        #         "boxShadow": "0 2px 10px rgba(10, 37, 64, 0.2)"
-                        #     }),
-                        # ], className="welcome-header-right")
+                        ], className="welcome-header-left", style={
+                            "display": "flex", 
+                            "alignItems": "center", 
+                            "gap": "20px"
+                        }),
                     ], className="welcome-header", style={
                         "display": "flex",
                         "justifyContent": "space-between",
                         "alignItems": "center",
-                        "paddingBottom": "15px",
-                        "borderBottom": "1px solid rgba(10, 37, 64, 0.1)"
+                        "padding": "25px 30px",
+                        "borderBottom": "1px solid rgba(10, 37, 64, 0.05)",
+                        "marginBottom": "30px"
                     }),
                     
-                    # Main content area
+                    # Main content area - simplified
                     html.Div([
-                        # Left side - Enhanced Video with frame
+                        # Introduction section - more concise
                         html.Div([
-                            html.Div([
-                                html.Video(
-                                    controls=True,
-                                    src="/assets/welcome_video.mp4",  # Update this path to your actual video file
-                                    className="welcome-video",
-                                    autoPlay=False,
-                                    style={
-                                        "width": "100%",
-                                        "borderRadius": "4px",
-                                        "boxShadow": "0 10px 25px rgba(0,0,0,0.1)"
-                                    }
-                                ),
-                                html.Div(className="video-frame-accent", style={
-                                    "position": "absolute",
-                                    "bottom": "-10px",
-                                    "right": "-10px",
-                                    "width": "80%",
-                                    "height": "80%",
-                                    "border": "2px solid #0052CC",
-                                    "borderRadius": "4px",
-                                    "zIndex": "-1"
-                                })
-                            ], className="video-container", style={
-                                "position": "relative",
-                                "margin": "20px 0"
-                            }),
-                            
-                            # Video testimonial note
-                            html.Div([
-                                html.Div([
-                                    html.I(className="fas fa-quote-left", style={
-                                        "color": "#0052CC",
-                                        "fontSize": "24px",
-                                        "marginRight": "10px"
-                                    })
-                                ], style={"marginBottom": "8px"}),
-                                html.P("BlueCard Finance transformed how I manage my wealth. The insights are incredible.", style={
-                                    "fontStyle": "italic",
-                                    "marginBottom": "10px",
-                                    "color": "#4A5568"
-                                }),
-                                html.Div([
-                                    html.Span("James Harrington", style={
-                                        "fontWeight": "600",
-                                        "color": "#0A2540"
-                                    }),
-                                    html.Span(" • ", style={"color": "#CBD5E0"}),
-                                    html.Span("CEO, Harrington Ventures", style={
-                                        "color": "#718096",
-                                        "fontSize": "0.9rem"
-                                    })
-                                ])
-                            ], className="video-testimonial", style={
-                                "padding": "20px",
-                                "backgroundColor": "#F7FAFC",
-                                "borderRadius": "4px",
-                                "borderLeft": "3px solid #0052CC",
-                                "marginTop": "25px"
-                            })
-                        ], className="welcome-visual"),
-                        
-                        # Right side - Getting started content with premium feel
-                        html.Div([
-                            html.Div([
-                                html.H3("Elite Financial Management", className="getting-started-title", style={
-                                    "color": "#0A2540",
-                                    "fontSize": "1.5rem",
-                                    "fontWeight": "600",
-                                    "marginBottom": "8px"
-                                }),
-                                html.P("Harness the power of premium financial intelligence with your personal AI assistant.", 
-                                    className="getting-started-subtitle", style={
-                                        "color": "#4A5568",
-                                        "fontSize": "1rem",
-                                        "marginBottom": "24px"
-                                    }),
-                                
-                                # Premium features list
-                                html.Div([
-                                    html.Div([
-                                        html.I(className="fas fa-check-circle", style={
-                                            "color": "#0052CC",
-                                            "fontSize": "16px"
-                                        }),
-                                        html.Span("Advanced financial insights", style={
-                                            "marginLeft": "10px",
-                                            "color": "#2D3748"
-                                        })
-                                    ], className="premium-feature"),
-                                    html.Div([
-                                        html.I(className="fas fa-check-circle", style={
-                                            "color": "#0052CC",
-                                            "fontSize": "16px"
-                                        }),
-                                        html.Span("Personalized wealth strategies", style={
-                                            "marginLeft": "10px",
-                                            "color": "#2D3748"
-                                        })
-                                    ], className="premium-feature"),
-                                    html.Div([
-                                        html.I(className="fas fa-check-circle", style={
-                                            "color": "#0052CC",
-                                            "fontSize": "16px"
-                                        }),
-                                        html.Span("Real-time market analysis", style={
-                                            "marginLeft": "10px",
-                                            "color": "#2D3748"
-                                        })
-                                    ], className="premium-feature"),
-                                ], className="premium-features-list", style={
-                                    "display": "flex",
-                                    "flexDirection": "column",
-                                    "gap": "12px",
-                                    "marginBottom": "30px"
-                                })
-                            ], className="premium-introduction", style={
-                                "marginBottom": "30px"
-                            }),
-                            
-                            html.H3("Start Your Financial Journey", className="getting-started-title", style={
+                            html.H3("Financial Management Simplified", className="section-title", style={
                                 "color": "#0A2540",
-                                "fontSize": "1.2rem",
-                                "fontWeight": "600",
-                                "marginBottom": "15px"
+                                "fontSize": "1.5rem",
+                                "fontWeight": "500",
+                                "marginBottom": "15px",
+                                "textAlign": "center"
                             }),
+                            html.P("Harness the power of premium financial intelligence at your fingertips.", 
+                                className="section-subtitle", style={
+                                    "color": "#4A5568",
+                                    "fontSize": "1.1rem",
+                                    "marginBottom": "40px",
+                                    "textAlign": "center",
+                                    "maxWidth": "700px",
+                                    "margin": "0 auto 40px"
+                                }),
                             
-                            # Command cards - visual, engaging way to show commands with premium styling
-                            html.Div([
-                                # Income card
-                                html.Div([
-                                    html.Div([
-                                        html.Div([
-                                            html.I(className="fas fa-plus-circle command-icon", style={
-                                                "color": "#0052CC",
-                                                "fontSize": "18px"
-                                            }),
-                                        ], style={
-                                            "width": "34px",
-                                            "height": "34px",
-                                            "borderRadius": "50%",
-                                            "backgroundColor": "rgba(0, 82, 204, 0.1)",
-                                            "display": "flex",
-                                            "alignItems": "center",
-                                            "justifyContent": "center"
-                                        }),
-                                        html.Span("Add Income", className="command-label", style={
-                                            "fontWeight": "600",
-                                            "color": "#0A2540"
-                                        })
-                                    ], className="command-header"),
-                                    html.P("\"I want to add to my income\"", className="command-example", style={
-                                        "color": "#718096",
-                                        "margin": "8px 0"
-                                    }),
-                                    html.Button("Try It", id="try-income-cmd", className="try-command-btn", style={
-                                        "backgroundColor": "#0052CC",
-                                        "color": "white",
-                                        "border": "none",
-                                        "borderRadius": "4px",
-                                        "padding": "8px 16px",
-                                        "cursor": "pointer",
-                                        "fontWeight": "500",
-                                        "transition": "all 0.2s ease"
-                                    })
-                                ], className="command-card", style={
-                                    "width": "100%",
-                                    "maxWidth": "500px",
-                                    "padding": "20px",
-                                    "backgroundColor": "white",
-                                    "borderRadius": "8px",
-                                    "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
-                                    "transition": "transform 0.2s ease, box-shadow 0.2s ease",
-                                    "border": "1px solid rgba(203, 213, 224, 0.5)",
-                                    "marginRight": "5px"
-                                }),
-                                
-                                # Expense card
-                                html.Div([
-                                    html.Div([
-                                        html.Div([
-                                            html.I(className="fas fa-minus-circle command-icon", style={
-                                                "color": "#0052CC",
-                                                "fontSize": "18px"
-                                            }),
-                                        ], style={
-                                            "width": "34px",
-                                            "height": "34px",
-                                            "borderRadius": "50%",
-                                            "backgroundColor": "rgba(0, 82, 204, 0.1)",
-                                            "display": "flex",
-                                            "alignItems": "center",
-                                            "justifyContent": "center"
-                                        }),
-                                        html.Span("Add Expense", className="command-label", style={
-                                            "fontWeight": "600",
-                                            "color": "#0A2540"
-                                        })
-                                    ], className="command-header"),
-                                    html.P("\"I want to add an expense\"", className="command-example", style={
-                                        "color": "#718096",
-                                        "margin": "8px 0"
-                                    }),
-                                    html.Button("Try It", id="try-expense-cmd", className="try-command-btn", style={
-                                        "backgroundColor": "#0052CC",
-                                        "color": "white",
-                                        "border": "none",
-                                        "borderRadius": "4px",
-                                        "padding": "8px 16px",
-                                        "cursor": "pointer",
-                                        "fontWeight": "500",
-                                        "transition": "all 0.2s ease"
-                                    })
-                                ], className="command-card", style={
-                                    "padding": "20px",
-                                    "backgroundColor": "white",
-                                    "borderRadius": "8px",
-                                    "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
-                                    "transition": "transform 0.2s ease, box-shadow 0.2s ease",
-                                    "border": "1px solid rgba(203, 213, 224, 0.5)"
-                                }),
-                                
-                                # View breakdown card
-                                html.Div([
-                                    html.Div([
-                                        html.Div([
-                                            html.I(className="fas fa-chart-pie command-icon", style={
-                                                "color": "#0052CC",
-                                                "fontSize": "18px"
-                                            }),
-                                        ], style={
-                                            "width": "34px",
-                                            "height": "34px",
-                                            "borderRadius": "50%",
-                                            "backgroundColor": "rgba(0, 82, 204, 0.1)",
-                                            "display": "flex",
-                                            "alignItems": "center",
-                                            "justifyContent": "center"
-                                        }),
-                                        html.Span("View Reports", className="command-label", style={
-                                            "fontWeight": "600",
-                                            "color": "#0A2540"
-                                        })
-                                    ], className="command-header"),
-                                    html.P("\"I want my income breakdown\"", className="command-example", style={
-                                        "color": "#718096",
-                                        "margin": "8px 0"
-                                    }),
-                                    html.Button("Try It", id="try-breakdown-cmd", className="try-command-btn", style={
-                                        "backgroundColor": "#0052CC",
-                                        "color": "white",
-                                        "border": "none",
-                                        "borderRadius": "4px",
-                                        "padding": "8px 16px",
-                                        "cursor": "pointer",
-                                        "fontWeight": "500",
-                                        "transition": "all 0.2s ease"
-                                    })
-                                ], className="command-card", style={
-                                    "padding": "20px",
-                                    "backgroundColor": "white",
-                                    "borderRadius": "8px",
-                                    "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
-                                    "transition": "transform 0.2s ease, box-shadow 0.2s ease",
-                                    "border": "1px solid rgba(203, 213, 224, 0.5)"
-                                }),
-                            ], className="command-cards-container", style={
-                                "display": "grid",
-                                "gridTemplateColumns": "repeat(auto-fit, minmax(250px, 1fr))",
-                                "gap": "16px",
-                                "marginBottom": "24px"
-                            }),
-                            
-                            # Quick tip section with premium styling
+                            # Premium features list - simplified horizontal arrangement
                             html.Div([
                                 html.Div([
                                     html.Div([
-                                        html.I(className="fas fa-lightbulb tip-icon", style={
-                                            "color": "#FDBA74",
+                                        html.I(className="fas fa-check-circle", style={
+                                            "color": "#0052CC",
                                             "fontSize": "18px"
-                                        })
+                                        }),
                                     ], style={
-                                        "width": "32px",
-                                        "height": "32px",
+                                        "width": "36px",
+                                        "height": "36px",
                                         "borderRadius": "50%",
-                                        "backgroundColor": "rgba(251, 211, 141, 0.2)",
+                                        "backgroundColor": "rgba(0, 82, 204, 0.05)",
                                         "display": "flex",
                                         "alignItems": "center",
                                         "justifyContent": "center",
-                                        "marginRight": "12px"
+                                        "marginBottom": "12px"
                                     }),
-                                    html.Span("EXPERT TIP", className="tip-label", style={
-                                        "fontWeight": "600",
+                                    html.H4("Advanced Insights", style={
                                         "color": "#0A2540",
-                                        "letterSpacing": "0.5px",
+                                        "fontSize": "1.1rem",
+                                        "fontWeight": "500",
+                                        "marginBottom": "8px"
+                                    }),
+                                    html.P("Sophisticated analysis and forecasting", style={
+                                        "color": "#4A5568",
                                         "fontSize": "0.9rem"
                                     })
-                                ], style={"display": "flex", "alignItems": "center"}),
-                                html.P("Ask advanced questions like \"What's my financial health?\" or \"How can I optimize my investment portfolio?\"", 
-                                    className="tip-text", style={
-                                        "margin": "10px 0 0 44px",
-                                        "color": "#4A5568"
+                                ], className="premium-feature-card hover", style={
+                                    "padding": "20px",
+                                    "borderRadius": "6px",
+                                    "backgroundColor": "white",
+                                    "boxShadow": "0 2px 8px rgba(0,0,0,0.3)",
+                                    "border": "1px solid rgba(203, 213, 224, 0.3)",
+                                    "textAlign": "center"
+                                }),
+                                
+                                html.Div([
+                                    html.Div([
+                                        html.I(className="fas fa-chart-line", style={
+                                            "color": "#0052CC",
+                                            "fontSize": "18px"
+                                        }),
+                                    ], style={
+                                        "width": "36px",
+                                        "height": "36px",
+                                        "borderRadius": "50%",
+                                        "backgroundColor": "rgba(0, 82, 204, 0.05)",
+                                        "display": "flex",
+                                        "alignItems": "center",
+                                        "justifyContent": "center",
+                                        "marginBottom": "12px"
+                                    }),
+                                    html.H4("Personal AI", style={
+                                        "color": "#0A2540",
+                                        "fontSize": "1.1rem",
+                                        "fontWeight": "500",
+                                        "marginBottom": "8px"
+                                    }),
+                                    html.P("Personal AI financial assistant", style={
+                                        "color": "#4A5568",
+                                        "fontSize": "0.9rem"
                                     })
-                            ], className="quick-tip", style={
-                                "padding": "16px",
-                                "backgroundColor": "#FFFAF0",
-                                "borderRadius": "8px",
-                                "marginTop": "10px",
-                                "border": "1px solid #FEEBC8"
+                                ], className="premium-feature-card", style={
+                                    "padding": "20px",
+                                    "borderRadius": "6px",
+                                    "backgroundColor": "white",
+                                    "boxShadow": "0 2px 8px rgba(0,0,0,0.3)",
+                                    "border": "1px solid rgba(203, 213, 224, 0.3)",
+                                    "textAlign": "center"
+                                }),
+                                
+                                html.Div([
+                                    html.Div([
+                                        html.I(className="fas fa-globe", style={
+                                            "color": "#0052CC",
+                                            "fontSize": "18px"
+                                        }),
+                                    ], style={
+                                        "width": "36px",
+                                        "height": "36px",
+                                        "borderRadius": "50%",
+                                        "backgroundColor": "rgba(0, 82, 204, 0.05)",
+                                        "display": "flex",
+                                        "alignItems": "center",
+                                        "justifyContent": "center",
+                                        "marginBottom": "12px"
+                                    }),
+                                    html.H4("Real-time Insights", style={
+                                        "color": "#0A2540",
+                                        "fontSize": "1.1rem",
+                                        "fontWeight": "500",
+                                        "marginBottom": "8px"
+                                    }),
+                                    html.P("Real-time insights and notifications", style={
+                                        "color": "#4A5568",
+                                        "fontSize": "0.9rem"
+                                    })
+                                ], className="premium-feature-card", style={
+                                    "padding": "20px",
+                                    "borderRadius": "6px",
+                                    "backgroundColor": "white",
+                                    "boxShadow": "0 2px 8px rgba(0,0,0,0.3)",
+                                    "border": "1px solid rgba(203, 213, 224, 0.3)",
+                                    "textAlign": "center"
+                                }),
+                            ], className="premium-features-grid", style={
+                                "display": "grid",
+                                "gridTemplateColumns": "repeat(3, 1fr)",
+                                "gap": "25px",
+                                "marginBottom": "50px"
+                            })
+                        ], className="intro-section", style={
+                            "padding": "0 30px 30px 30px",
+                        }),
+                        
+                        # Video section - minimized and streamlined
+                        html.Div([
+                            # Video with minimal styling
+                            html.Div([
+                                dash_player.DashPlayer(
+                                    id='video-player',
+                                    url='/assets/welcome_video.mp4',
+                                    controls=True,
+                                    width='100%',
+                                    height=400,
+                                    style={
+                                        "borderRadius": "6px",
+                                        "boxShadow": "0 10px 20px rgba(0,0,0,0.1)"
+                                    },
+                                    # Optional configuration parameters
+                                ),
+                            ], className="video-container", style={
+                                "position": "relative",
+                                "maxWidth": "800px",
+                                "margin": "0 auto",
+                                "width": "100%"
                             }),
-                        ], className="welcome-content")
-                    ], className="welcome-main-content", style={
-                        "display": "grid",
-                        "gridTemplateColumns": "45% 55%",
-                        "gap": "20px",
-                        "marginTop": "1px"
-                    }),
+                            
+                        ], className="video-section", style={
+                            "padding": "30px 30px",
+                            "backgroundColor": "#F7FAFC",
+                            "marginBottom": "40px"
+                        }),
+                        
+                        # Get Started section - more minimal command cards
+                        html.Div([
+                            html.H3("Get Started", className="section-title", style={
+                                "color": "#0A2540",
+                                "fontSize": "1.5rem",
+                                "fontWeight": "500",
+                                "marginBottom": "25px",
+                                "textAlign": "center"
+                            }),
+                            
+                            # Command cards with step indicators
+                            html.Div([
+                                # Step 1 - Add Income
+                                html.Div([
+                                    html.H5("Step 1", style={
+                                        "color": "#0052CC",
+                                        "fontWeight": "600",
+                                        "marginBottom": "10px",
+                                        "fontSize": "1rem",
+                                        "textAlign": "center"
+                                    }),
+                                    html.Div([  # Income card
+                                        html.Div([
+                                            html.I(className="fas fa-plus-circle command-icon", style={
+                                                "color": "#0052CC",
+                                                "fontSize": "18px",
+                                                "marginRight": "10px"
+                                            }),
+                                            html.H4("Add Income", className="command-label", style={
+                                                "fontWeight": "500",
+                                                "color": "#0A2540",
+                                                "fontSize": "1.1rem",
+                                                "margin": "0"
+                                            }),
+                                        ], style={
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                            "marginBottom": "12px"
+                                        }),
+                                        html.P("\"I want to add to my income\"", className="command-example", style={
+                                            "color": "#4A5568",
+                                            "margin": "0 0 15px 0",
+                                            "padding": "10px",
+                                            "backgroundColor": "rgba(0, 82, 204, 0.03)",
+                                            "borderRadius": "4px",
+                                            "fontSize": "0.95rem",
+                                            "fontStyle": "italic"
+                                        }),
+                                        html.Button("Try It", id="try-income-cmd", className="try-command-btn", style={
+                                            "backgroundColor": "#0052CC",
+                                            "color": "white",
+                                            "border": "none",
+                                            "borderRadius": "4px",
+                                            "padding": "10px 20px",
+                                            "cursor": "pointer",
+                                            "fontWeight": "500",
+                                            "transition": "all 0.2s ease",
+                                            "fontSize": "0.9rem",
+                                            "width": "100%"
+                                        })
+                                    ], className="command-card", style={
+                                        "padding": "20px",
+                                        "backgroundColor": "white",
+                                        "borderRadius": "6px",
+                                        "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
+                                        "border": "1px solid rgba(203, 213, 224, 0.3)",
+                                        "height": "100%"
+                                    })
+                                ]),
+
+                                # Step 2 - Add Expense
+                                html.Div([
+                                    html.H5("Step 2", style={
+                                        "color": "#0052CC",
+                                        "fontWeight": "600",
+                                        "marginBottom": "10px",
+                                        "fontSize": "1rem",
+                                        "textAlign": "center"
+                                    }),
+                                    html.Div([  # Expense card
+                                        html.Div([
+                                            html.I(className="fas fa-minus-circle command-icon", style={
+                                                "color": "#0052CC",
+                                                "fontSize": "18px",
+                                                "marginRight": "10px"
+                                            }),
+                                            html.H4("Add Expense", className="command-label", style={
+                                                "fontWeight": "500",
+                                                "color": "#0A2540",
+                                                "fontSize": "1.1rem",
+                                                "margin": "0"
+                                            }),
+                                        ], style={
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                            "marginBottom": "12px"
+                                        }),
+                                        html.P("\"I want to add an expense\"", className="command-example", style={
+                                            "color": "#4A5568",
+                                            "margin": "0 0 15px 0",
+                                            "padding": "10px",
+                                            "backgroundColor": "rgba(0, 82, 204, 0.03)",
+                                            "borderRadius": "4px",
+                                            "fontSize": "0.95rem",
+                                            "fontStyle": "italic"
+                                        }),
+                                        html.Button("Try It", id="try-expense-cmd", className="try-command-btn", style={
+                                            "backgroundColor": "#0052CC",
+                                            "color": "white",
+                                            "border": "none",
+                                            "borderRadius": "4px",
+                                            "padding": "10px 20px",
+                                            "cursor": "pointer",
+                                            "fontWeight": "500",
+                                            "transition": "all 0.2s ease",
+                                            "fontSize": "0.9rem",
+                                            "width": "100%"
+                                        })
+                                    ], className="command-card", style={
+                                        "padding": "20px",
+                                        "backgroundColor": "white",
+                                        "borderRadius": "6px",
+                                        "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
+                                        "border": "1px solid rgba(203, 213, 224, 0.3)",
+                                        "height": "100%"
+                                    })
+                                ]),
+
+                                # Step 3 - View Reports
+                                html.Div([
+                                    html.H5("Step 3", style={
+                                        "color": "#0052CC",
+                                        "fontWeight": "600",
+                                        "marginBottom": "10px",
+                                        "fontSize": "1rem",
+                                        "textAlign": "center"
+                                    }),
+                                    html.Div([  # View reports card
+                                        html.Div([
+                                            html.I(className="fas fa-chart-pie command-icon", style={
+                                                "color": "#0052CC",
+                                                "fontSize": "18px",
+                                                "marginRight": "10px"
+                                            }),
+                                            html.H4("View Reports", className="command-label", style={
+                                                "fontWeight": "500",
+                                                "color": "#0A2540",
+                                                "fontSize": "1.1rem",
+                                                "margin": "0"
+                                            }),
+                                        ], style={
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                            "marginBottom": "12px"
+                                        }),
+                                        html.P("\"I want my income breakdown\"", className="command-example", style={
+                                            "color": "#4A5568",
+                                            "margin": "0 0 15px 0",
+                                            "padding": "10px",
+                                            "backgroundColor": "rgba(0, 82, 204, 0.03)",
+                                            "borderRadius": "4px",
+                                            "fontSize": "0.95rem",
+                                            "fontStyle": "italic"
+                                        }),
+                                        html.Button("Try It", id="try-breakdown-cmd", className="try-command-btn", style={
+                                            "backgroundColor": "#0052CC",
+                                            "color": "white",
+                                            "border": "none",
+                                            "borderRadius": "4px",
+                                            "padding": "10px 20px",
+                                            "cursor": "pointer",
+                                            "fontWeight": "500",
+                                            "transition": "all 0.2s ease",
+                                            "fontSize": "0.9rem",
+                                            "width": "100%"
+                                        })
+                                    ], className="command-card", style={
+                                        "padding": "20px",
+                                        "backgroundColor": "white",
+                                        "borderRadius": "6px",
+                                        "boxShadow": "0 4px 12px rgba(0,0,0,0.05)",
+                                        "border": "1px solid rgba(203, 213, 224, 0.3)",
+                                        "height": "100%"
+                                    })
+                                ]),
+                            ], className="command-cards-container", style={
+                                "display": "grid",
+                                "gridTemplateColumns": "repeat(3, 1fr)",
+                                "gap": "25px",
+                                "marginBottom": "30px"
+                            }),
+
+                            
+                            # Expert Tip section - simpler
+                            html.Div([
+                                html.Div([
+                                    html.I(className="fas fa-lightbulb tip-icon", style={
+                                        "color": "#0052CC",
+                                        "fontSize": "16px",
+                                        "marginRight": "10px"
+                                    }),
+                                    html.P([
+                                        "Get the full list of commands with: ",
+                                        html.Strong("\"List of Commands\""),
+                                    ], className="tip-text", style={
+                                        "color": "#4A5568",
+                                        "fontSize": "0.95rem",
+                                        "margin": "0"
+                                    })
+                                ], style={
+                                    "display": "flex",
+                                    "alignItems": "center"
+                                })
+                            ], className="expert-tip", style={
+                                "padding": "15px 20px",
+                                "backgroundColor": "#F7FAFC",
+                                "borderRadius": "6px",
+                                "marginBottom": "30px",
+                                "border": "1px solid #E2E8F0",
+                                "textAlign": "center"
+                            }),
+                        ], className="get-started-section", style={
+                            "padding": "40px 30px"
+                        }),
+                    ], className="welcome-main-content"),
                     
-                    # Bottom accent bar
+                    # Bottom accent bar - subtle
                     html.Div(className="premium-accent-bar", style={
-                        "height": "6px",
-                        "background": "linear-gradient(90deg, #00C7FA 0%, #0052CC 65%, #0A2540 100%)",
+                        "height": "4px",
+                        "background": "linear-gradient(90deg, #0052CC 0%, #0A2540 100%)",
                         "borderRadius": "0 0 4px 4px",
-                        "marginTop": "40px"
                     }),
                 ], className="welcome-container", style={
                     "backgroundColor": "#FFFFFF",
-                    "borderRadius": "8px",
+                    "borderRadius": "6px",
                     "boxShadow": "0 10px 30px rgba(0, 0, 0, 0.08)",
-                    "padding": "0 0 2px 0",  # Minimal padding to show accent bars
-                    "marginBottom": "40px",
-                    "border": "1px solid rgba(203, 213, 224, 0.5)"
+                    "border": "1px solid rgba(203, 213, 224, 0.3)",
+                    "overflow": "hidden",
+                    "maxWidth": "1800px",
+                    "height": "auto",
+                    "marginTop": "0px", 
                 })
-            ], id="empty-dashboard-state", className="premium-welcome-page", style={
-                "margin": "20px 0"
+            ], id="empty-dashboard-state", className="minimal-premium-welcome-page", style={
+                "margin": "10px 0",  # REDUCED TOP/BOTTOM MARGIN (was 30px)
+                "padding": "0 20px"
             }),
 
             # Dashboard grid (updated to dash_draggable)
@@ -3205,7 +3234,7 @@ layout = html.Div([
                     compactType=None,
                     breakpoints={"lg": 1200, "md": 996, "sm": 768, "xs": 480, "xxs": 0},
                     gridCols={"lg": 12, "md": 10, "sm": 6, "xs": 4, "xxs": 2},
-                    style={"backgroundColor": "#f8f9fa", "minHeight": "600px"},  # removed height: 100%
+                    style={"backgroundColor": "#f8f9fa", "minHeight": "200px"},  # removed height: 100%
                     save=True
                 )
             ], style={"marginBottom": "100px", "paddingBottom": "100px"})
@@ -3270,178 +3299,187 @@ layout = html.Div([
 
     # Footer
     html.Footer([
-    # Modern top section with logo and quick links
-    html.Div([
-        # Left side with logo and tagline
+        # Modern top section with logo and quick links
         html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
-                "height": "140px",
-                "marginBottom": "10px",
-                "filter": "brightness(1.1) contrast(1.1)"
+            # Left side with logo and tagline
+            html.Div([
+                html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
+                    "height": "140px",
+                    "marginBottom": "10px",
+                    "filter": "brightness(1.1) contrast(1.1)"
+                }),
+            ], className="footer-branding", style={
+                "flex": "2",
+                "marginRight": "40px"
             }),
-            # html.P("Empowering your financial future", style={
-            #     "color": "#ffffff",
-            #     "fontSize": "14px",
-            #     "fontWeight": "300",
-            #     "letterSpacing": "0.5px",
-            #     "margin": "0"
-            # })
-        ], className="footer-branding", style={
-            "flex": "2",
-            "marginRight": "40px"
+            
+            # Middle section with quick links
+            html.Div([
+                html.H4("Quick Links", style={
+                    "fontSize": "16px",
+                    "fontWeight": "600",
+                    "color": "#ffffff",
+                    "marginBottom": "15px",
+                    "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                    "paddingBottom": "8px"
+                }),
+                html.Ul([
+                    html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("About", href="/about", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("Dashboard", href="/chat", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("Pricing", href="/pricing", className="footer-link"), style={"marginBottom": "8px"}),
+                ], style={
+                    "listStyleType": "none",
+                    "padding": "0",
+                    "margin": "0"
+                })
+            ], className="footer-links", style={"flex": "1"}),
+            
+            # Right section with contact info and feedback form
+            html.Div([
+                html.H4("Contact & Feedback", style={
+                    "fontSize": "16px",
+                    "fontWeight": "600",
+                    "color": "#ffffff",
+                    "marginBottom": "15px",
+                    "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                    "paddingBottom": "8px"
+                }),
+                html.Div([
+                    html.P([
+                        html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
+                        "bluecardfinance@outlook.com"
+                    ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    # html.P([
+                    #     html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
+                    #     "(+44) 555-0XXX"
+                    # ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    html.P([
+                        html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
+                        "United Kingdom, London, LN"
+                    ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    
+                    # Feedback button
+                    html.Button([
+                        html.I(className="fas fa-comment-alt", style={"marginRight": "8px"}),
+                        "Share Feedback"
+                    ], 
+                    id="feedback-toggle-btn",
+                    className="feedback-toggle-btn")
+                ], className="footer-contact-info"),
+            ], className="footer-contact", style={"flex": "1"})
+        ], className="footer-top", style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "padding": "40px 60px",
+            "backgroundColor": "rgba(0,0,0,0.1)",
+            "borderBottom": "1px solid rgba(255,255,255,0.1)",
+            "flexWrap": "wrap",
+            "gap": "30px"
         }),
         
-        # Middle section with quick links
+        # Middle social media section
         html.Div([
-            html.H4("Quick Links", style={
-                "fontSize": "16px",
-                "fontWeight": "600",
+            html.H4("Connect With Us", style={
+                "margin": "0 20px 0 0",
                 "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
-            }),
-            html.Ul([
-                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
-            ], style={
-                "listStyleType": "none",
-                "padding": "0",
-                "margin": "0"
-            })
-        ], className="footer-links", style={"flex": "1"}),
-        
-        # Right section with contact info
-        html.Div([
-            html.H4("Contact", style={
                 "fontSize": "16px",
-                "fontWeight": "600",
-                "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
+                "fontWeight": "400"
             }),
             html.Div([
-                html.P([
-                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
-                    "support@bluecardfinance.com"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
-                    "(+44) 555-0XXX"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
-                    "123 Finance St, London, LN"
-                ], style={"marginBottom": "10px", "fontSize": "14px"})
+                html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon")
+            ], className="social-icons-container")
+        ], className="footer-social", style={
+            "display": "flex",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "padding": "20px 60px",
+            "borderBottom": "1px solid rgba(255,255,255,0.1)"
+        }),
+        
+        # Bottom copyright section
+        html.Div([
+            html.P("© 2025 BlueCard Finance. All rights reserved.", style={
+                "color": "rgba(255,255,255,0.7)",
+                "margin": "0",
+                "fontSize": "14px"
+            }),
+            html.Div([
+                html.A("Privacy Policy", href="#", className="footer-link"),
+                html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+                html.A("Terms of Service", href="#", className="footer-link"),
+                html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+                html.A("Cookie Policy", href="#", className="footer-link")
             ])
-        ], className="footer-contact", style={"flex": "1"})
-    ], className="footer-top", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "40px 60px",
-        "backgroundColor": "rgba(0,0,0,0.1)",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)",
-        "flexWrap": "wrap",
-        "gap": "30px"
-    }),
-    
-    # Middle social media section
-    html.Div([
-        html.H4("Connect With Us", style={
-            "margin": "0 20px 0 0",
-            "color": "#ffffff",
-            "fontSize": "16px",
-            "fontWeight": "400"
+        ], className="footer-bottom", style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "padding": "20px 60px",
+            "flexWrap": "wrap",
+            "gap": "15px"
         }),
+        
+        # Feedback Form Modal (positioned fixed over the page)
         html.Div([
-            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
+            # Close button
+            html.Button(
+                html.I(className="fas fa-times"), 
+                id="feedback-close-btn",
+                className="feedback-close-btn"
+            ),
+            
+            # Form header
+            html.H4("We Value Your Feedback", style={
+                "fontSize": "18px",
+                "fontWeight": "600",
+                "marginBottom": "15px",
+                "color": COLORS['dark'],
+                "borderBottom": f"2px solid {COLORS['accent']}",
+                "paddingBottom": "10px"
             }),
-            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            })
-        ], style={"display": "flex"})
-    ], className="footer-social", style={
-        "display": "flex",
-        "justifyContent": "center",
-        "alignItems": "center",
-        "padding": "20px 60px",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+            
+            # Form fields
+            # dcc.Input(
+            #     id="feedback-email",
+            #     type="email",
+            #     placeholder="Your Email",
+            #     className="feedback-field"
+            # ),
+            
+            dcc.Input(
+                id="feedback-subject",
+                type="text",
+                placeholder="Subject",
+                className="feedback-field"
+            ),
+            
+            dcc.Textarea(
+                id="feedback-message",
+                placeholder="Your message...",
+                className="feedback-field feedback-textarea"
+            ),
+            
+            # Submit button
+            html.Button(
+                "Submit Feedback",
+                id="feedback-submit-btn",
+                className="feedback-submit-btn"
+            ),
+            
+            # Status message area
+            html.Div(id="feedback-status", className="feedback-status")
+            
+        ], id="feedback-form-container", className="feedback-form-container")
+        
+    ], className="dashboard-footer", style={
+        "backgroundColor": '#1a365d',
+        "color": "#ffffff",
+        "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)",
+        "position": "relative"  # Needed for the modal positioning
     }),
-    
-    # Bottom copyright section
-    html.Div([
-        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
-            "color": "rgba(255,255,255,0.7)",
-            "margin": "0",
-            "fontSize": "14px"
-        }),
-        html.Div([
-            html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Terms of Service", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Cookie Policy", href="#", className="footer-link")
-        ])
-    ], className="footer-bottom", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "20px 60px",
-        "flexWrap": "wrap",
-        "gap": "15px"
-    })
-], className="dashboard-footer", style={
-    "backgroundColor": COLORS['primary'],
-    "color": "#ffffff",
-    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
-}),
 
     html.Div(id="listener-setup-trigger-div", style={"display": "none"}),
     html.Div(id="dashboard-event-trigger", style={"display": "none"}),
@@ -3530,7 +3568,7 @@ def handle_chat_input(n_clicks, n_submit, try_income, try_expense, try_breakdown
         current_chat = []
     
     # Add user message to chat
-    user_message_div = html.Div([html.Div(user_message, className="user-message-content")], className="user-message")
+    user_message_div = html.Div([html.Div(user_message, className="user-message-content")], style={'fontSize': '16px'}, className="user-message")
     current_chat.append(user_message_div)
     
     # Process the query and generate response
@@ -3583,6 +3621,16 @@ def handle_chat_input(n_clicks, n_submit, try_income, try_expense, try_breakdown
             insights_modal_data = {"open": False}
             insights_specific_data = dash.no_update
             chart_data = modal_flags  # Pass flags to chart store
+        elif 'open_finance_summary' in modal_flags and modal_flags['open_finance_summary']:
+            print("Setting finance summary modal to open")
+            insights_specific_data = {
+                "open": True, 
+                "type": "finance_summary",
+                "timestamp": datetime.now().isoformat()  # Add timestamp to ensure uniqueness
+            }
+            insights_modal_data = {"open": True, "type": "finance_summary"}
+            add_component_modal_open = False
+            chart_data = None  # Don't update chart data when opening summary modal
     
     print(f"Final return values: chart_data={chart_data}, modal={add_component_modal_open}, " + 
           f"insights_modal={insights_modal_data}, insights_specific={insights_specific_data}")
@@ -3594,22 +3642,22 @@ def process_chat_query(query, user_data):
     query = query.lower().strip()
     income_data = user_data.get('income', [])
     
-    # First, check if it's a general income question that should open the insights modal
-    # Place this check BEFORE other income-related checks
+    # Check for requests to see financial summary cards
     if any(pattern in query for pattern in [
-        "what's my income", 
-        "what is my income",
-        "show me my income",
-        "how much do i earn",
-        "income breakdown",
-        "income overview",
-        "tell me about my income"
+        "what's my summary", 
+        "financial summary",
+        "show me my finances",
+        "dashboard",
+        "financial overview",
+        "my finances",
+        "financial dashboard",
+        "financial insights"
     ]):
-        print('Generating Deep Income Analysis for insights modal')
-        message = "I've prepared a detailed income analysis for you with multiple visualizations. You can view these charts and add any of them to your dashboard."
+        print('Generating Financial Summary Cards')
+        message = "Here's your financial summary with key metrics and goals. You can view these cards to get a quick overview of your financial status."
         
-        # Return a signal to open the income insights modal with multiple charts
-        return message, None, None, {"open_insights_modal": True, "insight_type": "income_analysis"}
+        # Return a signal to open the finance summary modal with cards
+        return message, None, None, {"open_finance_summary": True}
     
     # Check for explicit requests to view or manage income
     if any(phrase in query for phrase in [
@@ -3623,7 +3671,22 @@ def process_chat_query(query, user_data):
         message = "I'll open the income management page for you where you can view and edit your income details."
         return message, None, None, {"open_income_modal": True}
 
-    # Check for explicit requests to view or manage expenses ( THIS OPENS EXPENSE PAGE)
+    elif any(pattern in query for pattern in [
+        "what's my income", 
+        "what is my income",
+        "show me my income",
+        "how much do i earn",
+        "income breakdown",
+        "income overview",
+        "tell me about my income"
+    ]):
+        print('Generating Deep Income Analysis for insights modal')
+        message = "I've prepared a detailed income analysis for you with multiple visualizations. You can view these charts and add any of them to your dashboard."
+        
+        # Return a signal to open the income insights modal with multiple charts
+        return message, None, None, {"open_insights_modal": True, "insight_type": "income_analysis"}
+
+    # Check for explicit requests to view or manage expenses
     elif any(phrase in query for phrase in [
             "add to my expenses",
             "add an expense", 
@@ -3631,22 +3694,23 @@ def process_chat_query(query, user_data):
             "edit my expenses",
             "manage my expenses"
         ]):
-        # Return a flag to open the income modal
-        message = "I'll open the expenses management page for you where you can view and edit your income details."
+        # Return a flag to open the expense modal
+        message = "I'll open the expenses management page for you where you can view and edit your expense details."
         return message, None, None, {"open_expense_modal": True}
     
-    # ( THIS OPEN EXPENSE CHARTS)
-    elif any(phrase in query for phrase in [
-            "what's my expenses", 
-            "what is my expense",
-            "show me my expenses",
-            "how much do i spend",
-            "expense breakdown",
-            "expense overview",
-            "tell me about my expenses"
-        ]):
-        # Return a flag to open the income modal
-        message = "I'll open the expenses management page for you where you can view and edit your income details."
+    elif any(pattern in query for pattern in [
+        "what's my expenses", 
+        "what is my expense",
+        "show me my expenses",
+        "how much do i spend",
+        "expense breakdown",
+        "expense overview",
+        "tell me about my expenses"
+    ]):
+        print('Generating Deep Expense Analysis for insights modal')
+        message = "I've prepared a detailed expense analysis for you with multiple visualizations. You can view these charts and add any of them to your dashboard."
+        
+        # Return a signal to open the income insights modal with multiple charts
         return message, None, None, {"open_insights_modal": True, "insight_type": "expenses_analysis"}
     
     # Handle general financial advice
@@ -3660,23 +3724,41 @@ def process_chat_query(query, user_data):
         4. Take advantage of employer retirement matching
         5. Review your budget regularly
         
-        Would you like me to create a specific chart or analysis to help with any of these areas?
+        Would you like me to show your financial summary to see where you stand?
         """
+        
+        return message, None, None, None
+    
+    elif any(keyword in query for keyword in ["list of commands", "commands"]):
+        message = """
+            Here are some useful commands to get you started:
+
+            Financial Insights:
+            To get financial insights, type "I want my financial insights".
+
+            Income:
+            • To add to your income, type "I want to add to my income".
+            • To see your income breakdown, type "I want my income breakdown".
+
+            Expense:
+            • To add to your expenses, type "I want to add to my expenses".
+            • To see your expense breakdown, type "I want my expense breakdown".
+            """
         
         return message, None, None, None
     
     # Default response for other queries
     else:
         message = """
-        I can help you analyze your finances in various ways. You can ask me to:
+        I can help you manage your personal finances. You can ask me to:
         
-        • Show income forecasts (as line, bar, or area charts)
-        • Create expense breakdowns (as pie or bar charts)
-        • Analyze savings goals
-        • Calculate budget recommendations
-        • Compare spending patterns
+        • Show your financial summary
+        • Add or manage income
+        • Add or manage expenses
+        • Get budget recommendations
+        • Track your savings goals
         
-        Try asking about your income or expenses to get started!
+        Try asking for your "financial summary" to get started!
         """
         
         return message, None, None, None
@@ -3891,8 +3973,8 @@ def generate_dashboard_components(settings, user_data):
                 'y': y,
                 'w': bp_width,
                 'h': h,
-                'minW': 4,  # Minimum width
-                'minH': 4   # Minimum height
+                'minW': 2,  # Minimum width
+                'minH': 2   # Minimum height
             })
         
         # Create the component content
@@ -4079,6 +4161,226 @@ def generate_dashboard_components(settings, user_data):
                 style={"height": "100%", "width": "100%"}
             )
             component_content.append(html.Div(recurring_expenses_graph, style=body_style))
+
+        # Monthly Income Summary Card
+        elif component_type == 'financial_summary_income':
+            metrics = calculate_financial_metrics(user_data)
+            from datetime import datetime
+            current_date = datetime.now()
+            import calendar
+            days_in_month = calendar.monthrange(current_date.year, current_date.month)[1]
+            income_card = html.Div([
+                    html.Div([
+                        html.H4("Monthly Income", className="card-title"),
+                        html.Div([
+                            html.Span(f"${metrics['total_monthly_income']:,.2f}", 
+                                      style={"color": "skyblue", "fontWeight": "bold"}, 
+                                      className="card-value"),
+                            html.Div([
+                                html.Span("Base Daily Budget: ", className="card-label"),
+                                html.Span(f"${metrics['base_daily_budget']:,.2f}", className="card-secondary-value")
+                            ], className="card-secondary-metric"),
+                            # html.Div([
+                            #     html.Span("Adjusted Daily Budget: ", className="card-label"),
+                            #     html.Span(f"${metrics['adjusted_daily_budget']:,.2f}", 
+                            #               style={"color": "#4AE3B5" if metrics['adjusted_daily_budget'] > metrics['base_daily_budget'] else 
+                            #                          "#FF6B6B" if metrics['adjusted_daily_budget'] < metrics['base_daily_budget'] else "inherit",
+                            #                      "fontWeight": "bold"},
+                            #               className="card-secondary-value")
+                            # ], className="card-secondary-metric"),
+                            html.Div([
+                                html.Span("Days Remaining: ", className="card-label"),
+                                html.Span(f"{metrics['days_remaining_in_month']} days", className="card-secondary-value")
+                            ], className="card-secondary-metric"),
+                            html.Div([
+                                html.Span("Month-End Savings Projection: ", className="card-label"),
+                                html.Span(f"${metrics['projected_month_end_savings']:,.2f}", 
+                                          style={"color": "#4AE3B5" if metrics['projected_month_end_savings'] > 0 else "#FF6B6B",
+                                                 "fontWeight": "bold"},
+                                          className="card-secondary-value")
+                            ], className="card-secondary-metric"),
+                            html.Div([ 
+                                html.Div(
+                                    html.Div(
+                                        style={"width": f"{(days_in_month - metrics['days_remaining_in_month']) / days_in_month * 100}%", 
+                                               "height": "6px", 
+                                               "backgroundColor": "skyblue",
+                                               "borderRadius": "3px"}
+                                    ),
+                                    style={"width": "100%", 
+                                           "height": "6px", 
+                                           "backgroundColor": "#EEEEEE", 
+                                           "borderRadius": "3px", 
+                                           "marginTop": "8px",
+                                           "marginBottom": "10px"}
+                                )
+                            ]),
+                        ], className="card-content")
+                    ], className="summary-card income-card", style={
+                    "height": "100%",
+                    "width": "100%",
+                    "borderRadius": "8px",
+                    "padding": "15px",
+                    "background": "#f9fcff",
+                    "border": "1px solid #e0edff"
+                })
+            ], style=body_style)
+            component_content.append(income_card)
+            
+        # Monthly Expenses Summary Card
+        elif component_type == 'financial_summary_expenses':
+            metrics = calculate_financial_metrics(user_data)
+            expenses_card = html.Div([
+                                html.Div([
+                                    html.H4("Monthly Expenses", className="card-title"),
+                                    html.Div([
+                                        html.Span(f"${metrics['total_monthly_expenses']:,.2f}", 
+                                                style={"color": "darkorange", "fontWeight": "bold"}, 
+                                                className="card-value"),
+                                        
+                                        # Planned expenses percentage of income
+                                        html.Div([
+                                            html.Span("Expense % of Income: ", className="card-label"),
+                                            html.Span(f"{metrics['expense_percentage']:.1f}%", 
+                                                    className="card-secondary-value" + 
+                                                    (" warning" if metrics['expense_percentage'] > 80 else ""))
+                                        ], className="card-secondary-metric"),
+                                        
+                                        # NEW: Actual spent percentage of income
+                                        html.Div([
+                                            html.Span("Transaction % of Income: ", className="card-label"),
+                                            html.Span(f"{metrics['income_spent_percentage']:.1f}%", 
+                                                    style={"color": "#FF6B6B" if metrics['income_spent_percentage'] > metrics['expense_percentage'] else "#4AE3B5",
+                                                            "fontWeight": "bold"},
+                                                    className="card-secondary-value")
+                                        ], className="card-secondary-metric"),
+                                        
+                                        # NEW: Month-over-month spending comparison
+                                        html.Div([
+                                            html.Span("vs. Last Month: ", className="card-label"),
+                                            html.Span(
+                                                [
+                                                    html.I(className={"Higher": "fas fa-arrow-up", 
+                                                                    "Lower": "fas fa-arrow-down", 
+                                                                    "Similar": "fas fa-equals"}.get(metrics['spending_trend'], "fas fa-minus")),
+                                                    f" {abs(metrics['spending_trend_value']):.1f}%" if metrics['spending_trend'] != "No Data" else " No Data"
+                                                ],
+                                                style={"color": {"Higher": "#FF6B6B", 
+                                                                "Lower": "#4AE3B5", 
+                                                                "Similar": "#FFC107"}.get(metrics['spending_trend'], "#999999"),
+                                                    "fontWeight": "bold"},
+                                                className="card-secondary-value"
+                                            )
+                                        ], className="card-secondary-metric"),
+                                        
+                                        html.Div([
+                                            html.Span("Remaining: ", className="card-label"),
+                                            html.Span(f"${metrics['remaining_budget']:,.2f}", className="card-secondary-value")
+                                        ], className="card-secondary-metric"),
+                                        
+                                        # NEW: Optional visual progress bar for spending
+                                        html.Div([
+                                            html.Div(
+                                                html.Div(
+                                                    style={"width": f"{min(metrics['income_spent_percentage'], 100)}%", 
+                                                        "height": "6px", 
+                                                        "backgroundColor": "#FF6B6B" if metrics['income_spent_percentage'] > 50 else "#4AE3B5",
+                                                        "borderRadius": "3px"}
+                                                ),
+                                                style={"width": "100%", 
+                                                    "height": "6px", 
+                                                    "backgroundColor": "#EEEEEE", 
+                                                    "borderRadius": "3px", 
+                                                    "marginTop": "8px"}
+                                            )
+                                        ])
+                                        
+                                    ], className="card-content")
+                                ], className="summary-card expenses-card", style={
+                                    "height": "100%",
+                                    "width": "100%",
+                                    "borderRadius": "8px",
+                                    "padding": "15px",
+                                    "background": "#fffdf7",
+                                    "border": "1px solid #ffe8c0"
+                                })
+                            ], style=body_style)
+            component_content.append(expenses_card)
+            
+        elif component_type == 'financial_summary_savings':
+            metrics = calculate_financial_metrics(user_data)
+            savings_card = html.Div([
+                html.Div([
+                    html.H4("Savings Goal", className="card-title"),
+                    html.Span(f"{metrics['savings_target_status']}", 
+                 style={"color": "#4AE3B5" if metrics['savings_target_status'] == "On Track" else "#FF6B6B", 
+                        "fontWeight": "bold"}, 
+                 className="card-status"),
+                    html.Div([
+                        html.Div([
+                            html.Span(f"${metrics['current_savings']:,.2f}", style={"color": "#4ae3b5", "fontWeight": "bold"}, className="card-value"),
+                            html.Span(f" / ${metrics['monthly_savings_target']:,.2f}", className="card-target")
+                        ]),
+                        # Progress bar
+                        html.Div([
+                            html.Div(style={"width": f"{min(100, metrics['savings_progress'])}%", "background": "#4ae3b5"},
+                                    className="progress-bar")
+                        ], className="progress-container", style={
+                            "height": "12px",
+                            "background": "#e9ecef",
+                            "borderRadius": "6px",
+                            "overflow": "hidden",
+                            "margin": "10px 0"
+                        }),
+                        html.Div([
+                            html.Span("Monthly Target: ", className="card-label"),
+                            html.Span(f"${metrics['monthly_savings_target']:,.2f}", className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("Savings Adjusted Daily Budget: ", className="card-label"),
+                            html.Span(f"${metrics['daily_savings_budget']:,.2f}", className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                    ], className="card-content")
+                ], className="summary-card savings-card", style={
+                    "height": "100%",
+                    "width": "100%",
+                    "borderRadius": "8px",
+                    "padding": "15px",
+                    "background": "#f8f9fa",
+                    "border": "1px solid #c0ffed"
+                })
+            ], style=body_style)
+            component_content.append(savings_card)
+            
+        # Net Worth Summary Card
+        elif component_type == 'financial_summary_networth':
+            metrics = calculate_financial_metrics(user_data)
+            networth_card = html.Div([
+                html.Div([
+                    html.H4("Net Worth", className="card-title"),
+                    html.Div([
+                        html.Span(f"${metrics['net_worth']:,.2f}", className="card-value"),
+                        html.Div([
+                            html.Span("Debt-to-Income: ", className="card-label"),
+                            html.Span(f"{metrics['debt_to_income_ratio']*100:.1f}%", 
+                                     className="card-secondary-value" + 
+                                     (" warning" if metrics['debt_to_income_ratio'] > 0.43 else ""))
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("Financial Health: ", className="card-label"),
+                            html.Span(get_financial_health_status(metrics), className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                    ], className="card-content")
+                ], className="summary-card net-worth-card", style={
+                    "height": "100%",
+                    "width": "100%",
+                    "borderRadius": "8px",
+                    "padding": "15px",
+                    "background": "#fbf7fd",
+                    "border": "1px solid #e0c0ff"
+                })
+            ], style=body_style)
+            component_content.append(networth_card)
             
         # Add more component types as needed
         else:
@@ -4097,8 +4399,8 @@ def generate_dashboard_components(settings, user_data):
             style={
                 "width": "100%", 
                 "height": "100%", 
-                "minHeight": "300px",
-                "minWidth": "200px",
+                "minHeight": "100px",
+                "minWidth": "100px",
                 "overflow": "hidden",     # Hide overflow
                 "borderRadius": "8px",    # Rounded corners
                 "boxShadow": "0 4px 20px rgba(0, 0, 0, 0.15)",  # Subtle shadow
@@ -4112,60 +4414,156 @@ def generate_dashboard_components(settings, user_data):
     return components, layouts
 
 def get_component_theme(component_type):
-    """Returns theme colors based on component type - blue gradients for income and orange gradients for expense components"""
+    """Return enhanced theme colors for different component types with gradient backgrounds"""
     
-    # Determine if the component is income or expense based
-    is_expense = 'expense' in component_type.lower()
-    
-    # Set theme based on component type
-    if is_expense:
-        # Orange gradient theme for expense components
-        theme = {
-            'header_bg': 'linear-gradient(135deg, #ff9966 0%, #ff5e62 100%)',  # Orange gradient
-            'header_text': '#ffffff',  # White text
-            'body_bg': '#ffffff',      # White background
-            'border_color': '#ffcccc', # Light orange border
-            'icon_color': '#ffffff'    # White icons
-        }
-    else:
-        # Blue gradient theme for income components
-        theme = {
-            'header_bg': 'linear-gradient(135deg, #0082c8 0%, #0066aa 100%)',  # Deep blue gradient
-            'header_text': '#ffffff',  # White text
-            'body_bg': '#ffffff',      # White background
-            'border_color': '#87ceeb', # Light gray border
-            'icon_color': '#ffffff'    # White icons
-        }
-    
-    # Component-specific icons that better match the visualization types
-    icons = {
-        # Income chart icons
-        'income_chart': 'fa-chart-line',
-        'income_forecast': 'fa-chart-area',
-        'income_breakdown_pie': 'fa-chart-pie',
-        'income_monte_carlo': 'fa-random',
-        'income_heatmap': 'fa-th',
-        'income_seasonality': 'fa-calendar-alt',
-        'income_growth': 'fa-arrow-trend-up',
-        
-        # Expense chart icons
-        'expense_breakdown': 'fa-chart-pie',
-        'expenses_forecast': 'fa-chart-line',
-        'expenses_breakdown_pie': 'fa-chart-pie',
-        'expenses_trends': 'fa-chart-bar',
-        'expenses_heatmap': 'fa-th',
-        'expenses_seasonality': 'fa-calendar-alt',
-        'expenses_growth': 'fa-arrow-trend-down',
-        
-        # Default icon
-        'default': 'fa-th-large'
+    # Default theme
+    default_theme = {
+        "icon": "fa-chart-line",
+        "header_bg": "linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%)",
+        "header_text": "#ffffff",
+        "body_bg": "#ffffff",
+        "border_color": "#e1e5e9",
+        "icon_color": "#ffffff",
+        "shadow": "0 4px 6px rgba(0, 0, 0, 0.1)"
     }
     
-    # Add the appropriate icon to the theme
-    theme['icon'] = icons.get(component_type, icons['default'])
+    # Theme mapping with enhanced gradients and colors
+    themes = {
+        # Income related themes - Blue theme with updated gradient
+        "income_chart": {
+            "icon": "fa-chart-line",
+            "header_bg": "linear-gradient(135deg, #62cff4 0%, #2c67f2 100%)",
+            "header_text": "#ffffff",
+            "body_bg": "#f9fcff",
+            "border_color": "#90caf9",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(33, 150, 243, 0.15)"
+        },
+        "income_forecast": {
+            "icon": "fa-chart-line",
+            "header_bg": "linear-gradient(135deg, #62cff4 0%, #2c67f2 100%)",
+            "header_text": "#ffffff",
+            "body_bg": "#f9fcff",
+            "border_color": "#90caf9",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(33, 150, 243, 0.15)"
+        },
+        "income_breakdown_pie": {
+            "icon": "fa-chart-pie",
+            "header_bg": "linear-gradient(135deg, #62cff4 0%, #2c67f2 100%)",
+            "header_text": "#ffffff",
+            "body_bg": "#f9fcff",
+            "border_color": "#90caf9",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(33, 150, 243, 0.15)"
+        },
+        
+        # Expense related themes - Orange theme with updated gradient
+        "expense_breakdown": {
+            "icon": "fa-chart-bar",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        "expenses_forecast": {
+            "icon": "fa-chart-bar",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        "expenses_breakdown_pie": {
+            "icon": "fa-chart-pie",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        "expenses_trends": {
+            "icon": "fa-chart-line",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        "expenses_heatmap": {
+            "icon": "fa-fire",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        "expenses_seasonality": {
+            "icon": "fa-calendar-alt",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        "expenses_growth": {
+            "icon": "fa-chart-line",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        
+        # Financial summary card themes with updated colors
+        "financial_summary_income": {
+            "icon": "fa-wallet",
+            "header_bg": "linear-gradient(135deg, #62cff4 0%, #2c67f2 100%)",
+            "header_text": "#ffffff",
+            "body_bg": "#f9fcff",
+            "border_color": "#90caf9",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(33, 150, 243, 0.15)"
+        },
+        "financial_summary_expenses": {
+            "icon": "fa-shopping-cart",
+            "header_bg": "linear-gradient(225deg, #F46F1E, #E8B974)",
+            "header_text": "#ffffff",
+            "body_bg": "#fffcf9",
+            "border_color": "#ffcc80",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(255, 152, 0, 0.15)"
+        },
+        "financial_summary_savings": {
+            "icon": "fa-piggy-bank",
+            "header_bg": "linear-gradient(135deg, #4AE3B5 0%, #1BB989 100%)",
+            "header_text": "#ffffff",
+            "body_bg": "#f7fdfb",
+            "border_color": "#a5d6a7",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(76, 175, 80, 0.15)"
+        },
+        "financial_summary_networth": {
+            "icon": "fa-chart-line",
+            "header_bg": "linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)",
+            "header_text": "#ffffff",
+            "body_bg": "#fbf7fd",
+            "border_color": "#ce93d8",
+            "icon_color": "#ffffff",
+            "shadow": "0 4px 8px rgba(156, 39, 176, 0.15)"
+        }
+    }
     
-    return theme
-
+    # Return the theme for the requested component type or the default theme
+    return themes.get(component_type, default_theme)
 
 # Add a ClientsideFunction and callback to handle position updates
 
@@ -4240,7 +4638,7 @@ def update_last_updated(settings):
 def load_user_data(user_id, pathname, session_data):
     """Load user data from the database based on user ID"""
     # print(f"Loading user data, ID: {user_id}, Path: {pathname}")
-    # print('printing session store data', session_data)
+    print('printing session store data', session_data)
     if session_data:
         user_id = session_data['user_id']
     else:
@@ -4692,3 +5090,630 @@ def inspect_dashboard_layout(layouts):
 
 # Add this div to your layout
 layout.children.append(html.Div(id="debug-output", style={"display": "none"}))
+
+
+# Finanical Summary Card Section
+def calculate_financial_metrics(user_data):
+    """
+    Calculate various financial metrics needed for summary cards,
+    including dynamic daily budget and month-over-month comparisons
+    """
+    income_data = user_data.get('income', [])
+    expense_data = user_data.get('expenses', [])
+    savings_target = user_data.get('savings_target', 0)
+    print("Printing Savings Target", savings_target)
+    transaction_data = user_data.get('transactions', [])
+    previous_month_data = user_data.get('previous_month', {})
+    
+    # Calculate total monthly income
+    total_monthly_income = sum(item.get('amount', 0) for item in income_data)
+    
+    # Calculate total monthly expenses (planned)
+    total_monthly_expenses = sum(item.get('amount', 0) for item in expense_data)
+    
+    # Calculate expense percentage
+    expense_percentage = (total_monthly_expenses / total_monthly_income * 100) if total_monthly_income > 0 else 0
+    
+    # Calculate remaining budget (after planned expenses)
+    remaining_budget = total_monthly_income - total_monthly_expenses
+    
+    # Calculate days in month and current day
+    from datetime import datetime
+    current_date = datetime.now()
+    import calendar
+    days_in_month = calendar.monthrange(current_date.year, current_date.month)[1]
+    current_day = current_date.day
+    remaining_days = max(days_in_month - current_day + 1, 1)  # Including today
+    
+    # Calculate daily budget (total income divided by days)
+    daily_budget = total_monthly_income / days_in_month
+    
+    # Calculate actual spending from transactions
+    # Filter to only get transactions from the current month
+    current_month_transactions = []
+    for t in transaction_data:
+        try:
+            # Try multiple date formats to handle various possibilities
+            date_str = t.get('date', '')
+            transaction_date = None
+            
+            # Try ISO format with T separator (like '2025-05-01T00:00:00')
+            if 'T' in date_str:
+                transaction_date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S')
+            # Try simple date format (like '2025-05-01')
+            else:
+                transaction_date = datetime.strptime(date_str, '%Y-%m-%d')
+                
+            # If we successfully parsed the date and it's in the current month, include it
+            if transaction_date and transaction_date.month == current_date.month:
+                current_month_transactions.append(t)
+        except (ValueError, TypeError):
+            # Skip transactions with invalid date formats
+            continue
+    
+    # Calculate total spent so far this month
+    total_spent = sum(t.get('amount', 0) for t in current_month_transactions)
+    
+    # Calculate how much the user should have spent by now based on daily budget
+    expected_spend_to_date = daily_budget * (current_day - 1)
+    
+    # Calculate how much the user has saved (or overspent) so far
+    saved_amount = expected_spend_to_date - total_spent
+    
+    # Adjust daily budget for remaining days based on savings or overspending
+    adjustment_per_day = saved_amount / remaining_days if remaining_days > 0 else 0
+    adjusted_daily_budget = daily_budget + adjustment_per_day
+    
+    # Store the base adjustment amount for later use with savings budget
+    base_adjustment = adjustment_per_day
+    
+    # Calculate savings metrics
+    # If savings_target looks very low, it might be a percentage rather than absolute value
+    if savings_target < 100 and savings_target > 0:
+        # Treat as percentage of income
+        savings_target_amount = (savings_target / 100) * total_monthly_income
+    else:
+        # Treat as absolute amount
+        savings_target_amount = savings_target
+    
+    # For any day of the month, count unspent budget as savings
+    current_savings = saved_amount if saved_amount > 0 else 0
+    
+    # Calculate savings progress
+    savings_progress = (current_savings / savings_target_amount * 100) if savings_target_amount > 0 else 0
+    
+    # Calculate daily savings budget (how much they need to save each day to reach target)
+    remaining_savings_needed = max(savings_target_amount - current_savings, 0)
+    daily_savings_budget = daily_budget + base_adjustment
+    
+    # Calculate additional metrics for net worth
+    assets = user_data.get('assets', [])
+    debts = user_data.get('debts', [])
+    total_assets = sum(item.get('amount', 0) for item in assets)
+    total_debts = sum(item.get('amount', 0) for item in debts)
+    net_worth = total_assets - total_debts
+    debt_to_income_ratio = (total_debts / total_monthly_income) if total_monthly_income > 0 else 0
+    
+    # Project end-of-month savings based on current trend
+    projected_month_end_savings = current_savings + (adjustment_per_day * remaining_days)
+    
+    # Set savings target status based on projected end-of-month savings
+    if projected_month_end_savings >= savings_target_amount:
+        savings_target_status = "On Track"
+    else:
+        savings_target_status = "Behind"
+    
+    # NEW: Calculate income spent percentage (actual transactions vs income)
+    income_spent_percentage = (total_spent / total_monthly_income * 100) if total_monthly_income > 0 else 0
+    
+    # NEW: Month-over-month spending comparison
+    previous_month_spending = previous_month_data.get('total_spent', 0)
+    
+    # Calculate comparable spending (spending adjusted for day of month)
+    # If we're on day 15 of a 30-day month, we'd expect to have spent 50% of the previous month's total
+    previous_month_days = previous_month_data.get('days_in_month', 30)  # Default to 30 if not available
+    comparable_previous_spending = previous_month_spending * (current_day / previous_month_days)
+    
+    # Calculate spending trend
+    if comparable_previous_spending > 0:
+        spending_vs_previous = ((total_spent - comparable_previous_spending) / comparable_previous_spending) * 100
+        spending_trend = "Higher" if spending_vs_previous > 5 else "Lower" if spending_vs_previous < -5 else "Similar"
+        spending_trend_value = spending_vs_previous
+    else:
+        spending_trend = "No Data"
+        spending_trend_value = 0
+    
+    # For debugging
+    print(f"Income: ${total_monthly_income}, Days: {days_in_month}, Daily Budget: ${daily_budget:.2f}")
+    print(f"Current day: {current_day}, Remaining days: {remaining_days}")
+    print(f"Expected spend: ${expected_spend_to_date:.2f}, Actual spend: ${total_spent:.2f}")
+    print(f"Saved amount: ${saved_amount:.2f}, Adjustment: ${adjustment_per_day:.2f}")
+    print(f"Final daily budget: ${adjusted_daily_budget:.2f}, Daily savings budget: ${daily_savings_budget:.2f}")
+    print(f"Savings target: ${savings_target_amount:.2f}, Current savings: ${current_savings:.2f}")
+    print(f"Savings target status: {savings_target_status}")
+    print(f"Income spent percentage: {income_spent_percentage:.1f}%")
+    print(f"Spending trend vs previous month: {spending_trend} ({spending_trend_value:.1f}%)")
+    
+    return {
+        'total_monthly_income': total_monthly_income,
+        'daily_budget': daily_budget,
+        'base_daily_budget': daily_budget,
+        'adjusted_daily_budget': daily_budget,
+        'total_monthly_expenses': total_monthly_expenses,
+        'expense_percentage': expense_percentage,
+        'remaining_budget': remaining_budget,
+        'monthly_savings_target': savings_target_amount,
+        'current_savings': current_savings,
+        'savings_progress': savings_progress,
+        'daily_savings_budget': daily_savings_budget,
+        'saved_amount_to_date': saved_amount,
+        'projected_month_end_savings': projected_month_end_savings,
+        'savings_target_status': savings_target_status,
+        'net_worth': net_worth,
+        'debt_to_income_ratio': debt_to_income_ratio,
+        'days_remaining_in_month': remaining_days,
+        # New metrics
+        'income_spent_percentage': income_spent_percentage,
+        'spending_trend': spending_trend,
+        'spending_trend_value': spending_trend_value,
+        'total_spent': total_spent
+    }
+
+def generate_summary_cards(user_data):
+    """Generate the four financial summary cards"""
+    metrics = calculate_financial_metrics(user_data)
+    
+    import calendar
+    import datetime
+    now = datetime.datetime.now()
+    days_in_month = calendar.monthrange(now.year, now.month)[1]
+    
+    cards_content = html.Div([
+        html.H3("Financial Summary", className="summary-cards-title"),
+        
+        # Grid container for the cards
+        html.Div([
+            # First Row
+            html.Div([
+                # Card 1: Monthly Income
+                html.Div([
+                    html.H4("Monthly Income", className="card-title"),
+                    html.Div([
+                        html.Span(f"${metrics['total_monthly_income']:,.2f}", 
+                                  style={"color": "skyblue", "fontWeight": "bold"}, 
+                                  className="card-value"),
+                        html.Div([
+                            html.Span("Base Daily Budget: ", className="card-label"),
+                            html.Span(f"${metrics['base_daily_budget']:,.2f}", className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("Adjusted Daily Budget: ", className="card-label"),
+                            html.Span(f"${metrics['adjusted_daily_budget']:,.2f}", 
+                                      style={"color": "#4AE3B5" if metrics['adjusted_daily_budget'] > metrics['base_daily_budget'] else 
+                                                 "#FF6B6B" if metrics['adjusted_daily_budget'] < metrics['base_daily_budget'] else "inherit",
+                                             "fontWeight": "bold"},
+                                      className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("Days Remaining: ", className="card-label"),
+                            html.Span(f"{metrics['days_remaining_in_month']} days", className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("Month-End Projection: ", className="card-label"),
+                            html.Span(f"${metrics['projected_month_end_savings']:,.2f}", 
+                                      style={"color": "#4AE3B5" if metrics['projected_month_end_savings'] > 0 else "#FF6B6B",
+                                             "fontWeight": "bold"},
+                                      className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Div([ 
+                            html.Div(
+                                html.Div(
+                                    style={"width": f"{(days_in_month - metrics['days_remaining_in_month']) / days_in_month * 100}%", 
+                                           "height": "6px", 
+                                           "backgroundColor": "skyblue",
+                                           "borderRadius": "3px"}
+                                ),
+                                style={"width": "100%", 
+                                       "height": "6px", 
+                                       "backgroundColor": "#EEEEEE", 
+                                       "borderRadius": "3px", 
+                                       "marginTop": "8px",
+                                       "marginBottom": "10px"}
+                            )
+                        ]),
+                        html.Button("Add to Dashboard", id={"type": "add-insight-chart", "index": 10}, className="add-chart-btn"),
+                    ], className="card-content")
+                ], className="summary-card income-card"),
+
+                # Card 2: Monthly Expenses
+                html.Div([
+                    html.H4("Monthly Expenses", className="card-title"),
+                    html.Div([
+                        html.Span(f"${metrics['total_monthly_expenses']:,.2f}", 
+                                  style={"color": "darkorange", "fontWeight": "bold"}, 
+                                  className="card-value"),
+                        html.Div([
+                            html.Span("Planned % of Income: ", className="card-label"),
+                            html.Span(f"{metrics['expense_percentage']:.1f}%", 
+                                      className="card-secondary-value" + 
+                                      (" warning" if metrics['expense_percentage'] > 80 else "")),
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("Spent % of Income: ", className="card-label"),
+                            html.Span(f"{metrics['income_spent_percentage']:.1f}%", 
+                                      style={"color": "#FF6B6B" if metrics['income_spent_percentage'] > metrics['expense_percentage'] else "#4AE3B5",
+                                             "fontWeight": "bold"},
+                                      className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("vs. Last Month: ", className="card-label"),
+                            html.Span(
+                                [
+                                    html.I(className={"Higher": "fas fa-arrow-up", 
+                                                       "Lower": "fas fa-arrow-down", 
+                                                       "Similar": "fas fa-equals"}.get(metrics['spending_trend'], "fas fa-minus")),
+                                    f" {abs(metrics['spending_trend_value']):.1f}%" if metrics['spending_trend'] != "No Data" else " No Data"
+                                ],
+                                style={"color": {"Higher": "#FF6B6B", 
+                                                 "Lower": "#4AE3B5", 
+                                                 "Similar": "#FFC107"}.get(metrics['spending_trend'], "#999999"),
+                                       "fontWeight": "bold"},
+                                className="card-secondary-value"
+                            )
+                        ], className="card-secondary-metric"),
+                        html.Div([
+                            html.Span("Remaining: ", className="card-label"),
+                            html.Span(f"${metrics['remaining_budget']:,.2f}", className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Div([ 
+                            html.Div(
+                                html.Div(
+                                    style={"width": f"{min(metrics['income_spent_percentage'], 100)}%", 
+                                           "height": "6px", 
+                                           "backgroundColor": "#FF6B6B" if metrics['income_spent_percentage'] > 50 else "#4AE3B5",
+                                           "borderRadius": "3px"}
+                                ),
+                                style={"width": "100%", 
+                                       "height": "6px", 
+                                       "backgroundColor": "#EEEEEE", 
+                                       "borderRadius": "3px", 
+                                       "marginTop": "8px",
+                                       "marginBottom": "10px"}
+                            )
+                        ]),
+                        html.Button("Add to Dashboard", id={"type": "add-insight-chart", "index": 20}, className="add-chart-btn"),
+                    ], className="card-content")
+                ], className="summary-card expenses-card"),
+            ], className="card-row"),
+
+            # Second Row
+            html.Div([
+                # Card 3: Savings Goal
+                html.Div([
+                    html.H4("Savings Goal", className="card-title"),
+                    html.Span(f"{metrics['savings_target_status']}", 
+                              style={"color": "#4AE3B5" if metrics['savings_target_status'] == "On Track" else "#FF6B6B", 
+                                     "fontWeight": "bold"}, 
+                              className="card-status"),
+                    html.Div([
+                        html.Div([ 
+                            html.Span(f"${metrics['current_savings']:,.2f}", style={"color": "#4AE3B5", "fontWeight": "bold"}, className="card-value"),
+                            html.Span(f" / ${metrics['monthly_savings_target']:,.2f}", className="card-target")
+                        ]),
+                        html.Div([ 
+                            html.Div(style={"width": f"{min(100, metrics['savings_progress'])}%", 'background': '#4AE3B5'}, 
+                                     className="progress-bar")
+                        ], className="progress-container"),
+                        html.Div([
+                            html.Span("Monthly Target: ", className="card-label"),
+                            html.Span(f"${metrics['monthly_savings_target']:,.2f}", className="card-secondary-value")
+                        ], className="card-secondary-metric"),
+                        html.Button("Add to Dashboard", id={"type": "add-insight-chart", "index": 30}, className="add-chart-btn"),
+                    ], className="card-content")
+                ], className="summary-card savings-card"),
+
+                # # Card 4: Credit Utilization 
+                # html.Div([
+                #     html.H4("Credit Utilization", className="card-title"),
+                #     html.Div([
+                #         html.Span(f"{metrics['credit_utilization']:.1f}%", 
+                #                   style={"color": "#4AE3B5" if metrics['credit_utilization'] < 30 else 
+                #                              "#FFC107" if metrics['credit_utilization'] < 50 else "#FF6B6B", 
+                #                          "fontWeight": "bold"}, 
+                #                   className="card-value"),
+                #         html.Div([ 
+                #             html.Div(style={"width": f"{min(100, metrics['credit_utilization'])}%", 
+                #                            "background": "#4AE3B5" if metrics['credit_utilization'] < 30 else 
+                #                                        "#FFC107" if metrics['credit_utilization'] < 50 else "#FF6B6B"}, 
+                #                      className="progress-bar")
+                #         ], className="progress-container"),
+                #         html.Div([
+                #             html.Span("Available Credit: ", className="card-label"),
+                #             html.Span(f"${metrics['available_credit']:,.2f}", className="card-secondary-value")
+                #         ], className="card-secondary-metric"),
+                #         html.Div([
+                #             html.Span("Utilization Target: ", className="card-label"),
+                #             html.Span("< 30%", className="card-secondary-value")
+                #         ], className="card-secondary-metric"),
+                #         html.Button("Add to Dashboard", id={"type": "add-insight-chart", "index": 40}, className="add-chart-btn"),
+                #     ], className="card-content")
+                # ], className="summary-card credit-card"),
+            ], className="card-row"),
+        ], className="summary-cards-container")
+    ])
+    
+    return cards_content
+
+
+def get_financial_health_status(metrics):
+    """Determine financial health status based on metrics"""
+    if metrics['expense_percentage'] > 90:
+        return "Critical"
+    elif metrics['expense_percentage'] > 80:
+        return "At Risk"
+    elif metrics['expense_percentage'] > 70:
+        return "Cautious"
+    elif metrics['debt_to_income_ratio'] > 0.43:
+        return "Overleveraged"
+    elif metrics['savings_progress'] < 10:
+        return "Building"
+    else:
+        return "Healthy"
+
+# # Define a function to send emails (you would implement this with your email service)
+# def send_feedback_email(subject, message): #user_email
+#     """
+#     Send feedback email using SMTP
+#     In production, you would use a service like SendGrid, Mailgun, etc.
+#     This is a simple example using SMTP
+#     """
+#     try:
+#         # You'll need to set these environment variables or use configuration management
+#         sender_email = os.environ.get("EMAIL_USER", "notifications@bluecardfinance.com")
+#         sender_password = os.environ.get("EMAIL_PASSWORD", "")
+#         recipient_email = "support@bluecardfinance.com"
+        
+#         # Create the email
+#         msg = MIMEMultipart()
+#         msg['From'] = sender_email
+#         msg['To'] = recipient_email
+#         msg['Subject'] = f"Feedback: {subject}"
+        
+#         # Email body includes user's email for reply
+#         body = f"""
+#         Feedback received:
+        
+#         Subject: {subject}
+        
+#         Message:
+#         {message}
+#         """
+        
+#         msg.attach(MIMEText(body, 'plain'))
+        
+#         # Connect to SMTP server and send email
+#         with smtplib.SMTP('smtp.yourprovider.com', 587) as server:
+#             server.starttls()
+#             server.login(sender_email, sender_password)
+#             server.send_message(msg)
+            
+#         return True
+#     except Exception as e:
+#         print(f"Failed to send email: {e}")
+#         return False
+
+# # Define the feedback form component
+# def create_feedback_form():
+#     return html.Div([
+#         html.Button([
+#             html.I(className="fas fa-comment-alt", style={"marginRight": "8px"}),
+#             "Share Feedback"
+#         ], 
+#         id="feedback-toggle-btn",
+#         style={
+#             "backgroundColor": COLORS['accent'],
+#             "color": "white",
+#             "border": "none",
+#             "padding": "8px 12px",
+#             "borderRadius": "4px",
+#             "fontSize": "14px",
+#             "cursor": "pointer",
+#             "display": "flex",
+#             "alignItems": "center",
+#             "marginTop": "15px",
+#             "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+#             "transition": "all 0.3s ease"
+#         }),
+        
+#         # Feedback form modal/popup
+#         html.Div([
+#             # Close button
+#             html.Button(
+#                 html.I(className="fas fa-times"), 
+#                 id="feedback-close-btn",
+#                 style={
+#                     "position": "absolute",
+#                     "top": "12px",
+#                     "right": "12px",
+#                     "background": "transparent",
+#                     "border": "none",
+#                     "color": COLORS['dark'],
+#                     "fontSize": "16px",
+#                     "cursor": "pointer"
+#                 }
+#             ),
+            
+#             # Form header
+#             html.H4("We Value Your Feedback", style={
+#                 "fontSize": "18px",
+#                 "fontWeight": "600",
+#                 "marginBottom": "15px",
+#                 "color": COLORS['dark'],
+#                 "borderBottom": f"2px solid {COLORS['accent']}",
+#                 "paddingBottom": "10px"
+#             }),
+            
+#             # # Form fields
+#             # dcc.Input(
+#             #     id="feedback-email",
+#             #     type="email",
+#             #     placeholder="Your Email",
+#             #     style={
+#             #         "width": "100%",
+#             #         "padding": "10px",
+#             #         "marginBottom": "12px",
+#             #         "borderRadius": "4px",
+#             #         "border": "1px solid #ddd",
+#             #         "fontSize": "14px"
+#             #     }
+#             # ),
+            
+#             dcc.Input(
+#                 id="feedback-subject",
+#                 type="text",
+#                 placeholder="Subject",
+#                 style={
+#                     "width": "100%",
+#                     "padding": "10px",
+#                     "marginBottom": "12px",
+#                     "borderRadius": "4px",
+#                     "border": "1px solid #ddd",
+#                     "fontSize": "14px"
+#                 }
+#             ),
+            
+#             dcc.Textarea(
+#                 id="feedback-message",
+#                 placeholder="Your message...",
+#                 style={
+#                     "width": "100%",
+#                     "padding": "10px",
+#                     "marginBottom": "15px",
+#                     "borderRadius": "4px",
+#                     "border": "1px solid #ddd",
+#                     "minHeight": "120px",
+#                     "fontSize": "14px",
+#                     "resize": "vertical"
+#                 }
+#             ),
+            
+#             # Submit button
+#             html.Button(
+#                 "Submit Feedback",
+#                 id="feedback-submit-btn",
+#                 style={
+#                     "width": "100%",
+#                     "backgroundColor": COLORS['primary'],
+#                     "color": "white",
+#                     "border": "none",
+#                     "padding": "12px",
+#                     "borderRadius": "4px",
+#                     "fontSize": "14px",
+#                     "fontWeight": "600",
+#                     "cursor": "pointer",
+#                     "transition": "all 0.3s ease"
+#                 }
+#             ),
+            
+#             # Status message area
+#             html.Div(id="feedback-status", style={
+#                 "marginTop": "12px",
+#                 "fontSize": "14px",
+#                 "textAlign": "center",
+#                 "padding": "8px",
+#                 "borderRadius": "4px",
+#                 "display": "none"
+#             })
+            
+#         ], id="feedback-form-container", style={
+#             "position": "fixed",
+#             "width": "350px",
+#             "backgroundColor": "white",
+#             "boxShadow": "0 5px 20px rgba(0,0,0,0.25)",
+#             "borderRadius": "8px",
+#             "padding": "20px",
+#             "bottom": "80px",
+#             "right": "60px",
+#             "zIndex": "1000",
+#             "display": "none",
+#             "transition": "all 0.3s ease"
+#         })
+#     ])
+
+# # Toggle feedback form visibility
+# @callback(
+#     Output("feedback-form-container", "style"),
+#     Input("feedback-toggle-btn", "n_clicks"),
+#     Input("feedback-close-btn", "n_clicks"),
+#     State("feedback-form-container", "style"),
+#     prevent_initial_call=True
+# )
+# def toggle_feedback_form(open_clicks, close_clicks, current_style):
+#     ctx = dash.callback_context
+    
+#     if not ctx.triggered:
+#         return current_style
+    
+#     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+#     if current_style is None:
+#         current_style = {}
+    
+#     if trigger_id == "feedback-toggle-btn":
+#         current_style.update({"display": "block"})
+#         return current_style
+#     elif trigger_id == "feedback-close-btn":
+#         current_style.update({"display": "none"})
+#         return current_style
+    
+#     return current_style
+
+# # Handle feedback submission
+# @callback(
+#     [Output("feedback-status", "children"),
+#      Output("feedback-status", "style"),
+#     #  Output("feedback-email", "value"),
+#      Output("feedback-subject", "value"),
+#      Output("feedback-message", "value")],
+#     Input("feedback-submit-btn", "n_clicks"),
+#     [
+#      # State("feedback-email", "value"),
+#      State("feedback-subject", "value"),
+#      State("feedback-message", "value")],
+#     prevent_initial_call=True
+# )
+# def submit_feedback(n_clicks, subject, message): # email
+#     if n_clicks is None:
+#         raise PreventUpdate
+    
+#     # Validate inputs
+#     if not subject or not message:
+#         return (
+#             "Please fill in all fields", 
+#             {"display": "block", "backgroundColor": "#ffebee", "color": "#c62828", "border": "1px solid #ef9a9a"},
+#             subject, message
+#         )
+    
+#     # # Validate email format
+#     # if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+#     #     return (
+#     #         "Please enter a valid email address", 
+#     #         {"display": "block", "backgroundColor": "#ffebee", "color": "#c62828", "border": "1px solid #ef9a9a"},
+#     #         email, subject, message
+#     #     )
+    
+#     # Send email
+#     success = send_feedback_email(subject, message)
+    
+#     if success:
+#         return (
+#             "Thank you! Your feedback has been sent.", 
+#             {"display": "block", "backgroundColor": "#e8f5e9", "color": "#2e7d32", "border": "1px solid #a5d6a7"},
+#             "", "", ""  # Clear form fields
+#         )
+#     else:
+#         return (
+#             "There was an error sending your feedback. Please try again later.", 
+#             {"display": "block", "backgroundColor": "#ffebee", "color": "#c62828", "border": "1px solid #ef9a9a"},
+#             subject, message
+#         )

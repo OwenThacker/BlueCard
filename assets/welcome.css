@@ -9,6 +9,8 @@
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 80vh;
+    margin-top: 0px !important;
 }
 
 .welcome-container:hover {

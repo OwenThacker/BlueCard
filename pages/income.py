@@ -562,6 +562,13 @@ layout = html.Div([
     dcc.Store(id='user-id', storage_type='local'),  # Make sure this is included
     dcc.Location(id='url', refresh=False),
 
+    # Interval Loading
+    dcc.Interval(
+        id='interval-component',
+        interval=1000,  # in milliseconds (1 second)
+        n_intervals=0   # starting value
+    ),
+
     # Header
     # html.Div([
         html.Img(src="/assets/Logo_slogan.PNG", className="dashboard-logo"),
@@ -751,7 +758,8 @@ layout = html.Div([
                                     className="mb-3 my-custom-radio"
                                 ),
                             ], width=6),
-                        ]),
+                        ], style={'display': 'none'}
+                        ),
 
                         html.Button("Add Income Source", id="add-income-button", className="btn btn-primary w-100", style={"backgroundColor": COLORS['accent'], "border": "none", "color": "white"}),
                         html.Div(id="income-add-success-message", className="mt-3"),
@@ -860,184 +868,6 @@ layout = html.Div([
     
     # Hidden div for triggering callbacks
     html.Div(id="hidden-div-trigger", style={"display": "none"}),
-
-    # Footer
-    html.Footer([
-    # Modern top section with logo and quick links
-    html.Div([
-        # Left side with logo and tagline
-        html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
-                "height": "140px",
-                "marginBottom": "10px",
-                "filter": "brightness(1.1) contrast(1.1)"
-            }),
-            # html.P("Empowering your financial future", style={
-            #     "color": "#ffffff",
-            #     "fontSize": "14px",
-            #     "fontWeight": "300",
-            #     "letterSpacing": "0.5px",
-            #     "margin": "0"
-            # })
-        ], className="footer-branding", style={
-            "flex": "2",
-            "marginRight": "40px"
-        }),
-        
-        # Middle section with quick links
-        html.Div([
-            html.H4("Quick Links", style={
-                "fontSize": "16px",
-                "fontWeight": "600",
-                "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
-            }),
-            html.Ul([
-                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
-            ], style={
-                "listStyleType": "none",
-                "padding": "0",
-                "margin": "0"
-            })
-        ], className="footer-links", style={"flex": "1"}),
-        
-        # Right section with contact info
-        html.Div([
-            html.H4("Contact", style={
-                "fontSize": "16px",
-                "fontWeight": "600",
-                "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
-            }),
-            html.Div([
-                html.P([
-                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
-                    "support@bluecardfinance.com"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
-                    "(+44) 555-0XXX"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
-                    "123 Finance St, London, LN"
-                ], style={"marginBottom": "10px", "fontSize": "14px"})
-            ])
-        ], className="footer-contact", style={"flex": "1"})
-    ], className="footer-top", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "40px 60px",
-        "backgroundColor": "rgba(0,0,0,0.1)",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)",
-        "flexWrap": "wrap",
-        "gap": "30px"
-    }),
-    
-    # Middle social media section
-    html.Div([
-        html.H4("Connect With Us", style={
-            "margin": "0 20px 0 0",
-            "color": "#ffffff",
-            "fontSize": "16px",
-            "fontWeight": "400"
-        }),
-        html.Div([
-            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            })
-        ], style={"display": "flex"})
-    ], className="footer-social", style={
-        "display": "flex",
-        "justifyContent": "center",
-        "alignItems": "center",
-        "padding": "20px 60px",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)"
-    }),
-    
-    # Bottom copyright section
-    html.Div([
-        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
-            "color": "rgba(255,255,255,0.7)",
-            "margin": "0",
-            "fontSize": "14px"
-        }),
-        html.Div([
-            html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Terms of Service", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Cookie Policy", href="#", className="footer-link")
-        ]),
-
-    html.Div(id="user-id-debug", style={"display": "none"}),
-
-    ], className="footer-bottom", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "20px 60px",
-        "flexWrap": "wrap",
-        "gap": "15px"
-    })
-], className="dashboard-footer", style={
-    "backgroundColor": COLORS['primary'],
-    "color": "#ffffff",
-    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
-})
 
 ])
 
@@ -1287,6 +1117,7 @@ def initialize_page(n_intervals, user_id, page_loaded):
     return True, cards, no_sources_msg, total_display, sources_count, pie_fig, timeline_fig, dropdown_options, dropdown_value, stored_income_sources
 
 # Modify the manage_income_sources callback to use PostgreSQL
+# Modify the manage_income_sources callback to properly handle trigger conditions
 @callback(
     [Output("income-add-success-message", "children"),
      Output("income-source-name", "value"),
@@ -1300,12 +1131,13 @@ def initialize_page(n_intervals, user_id, page_loaded):
      State("income-frequency", "value"),
      State("income-type", "value"),
      State("income-consistency", "value"),
-     State("income-category", "value")],
+     State("income-category", "value"),
+     State("income-sources-store", "data")],
     prevent_initial_call=True
 )
 def manage_income_sources(
     add_n_clicks, delete_n_clicks_list,
-    user_id, source_name, amount, frequency, income_type, consistency, category
+    user_id, source_name, amount, frequency, income_type, consistency, category, current_income_sources
 ):
     ctx = dash.callback_context
     if not ctx.triggered:
@@ -1313,23 +1145,35 @@ def manage_income_sources(
 
     # Determine which input triggered the callback
     triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
+    
     # Handle adding a new income source
-    if triggered_id == "add-income-button":
-        if add_n_clicks is None or add_n_clicks <= 0:
-            raise PreventUpdate
+    if triggered_id == "add-income-button" and add_n_clicks is not None and add_n_clicks > 0:
+        print("Add button triggered")
 
         if not source_name or not amount:
             return html.Div(
                 "Please fill in all required fields.", className="alert alert-warning p-2"
-            ), dash.no_update, dash.no_update, dash.no_update  # Correct the return length
+            ), dash.no_update, dash.no_update, dash.no_update
 
         try:
             amount = float(amount)
         except (TypeError, ValueError):
             return html.Div(
                 "Amount must be a valid number.", className="alert alert-warning p-2"
-            ), dash.no_update, dash.no_update, dash.no_update  # Correct the return length
+            ), dash.no_update, dash.no_update, dash.no_update
+
+        # Set default values for hidden inputs if they're None
+        if income_type is None:
+            income_type = "after_tax"  # Default value
+            
+        if consistency is None:
+            consistency = "fixed"  # Default value
+            
+        if frequency is None:
+            frequency = "monthly"  # Assuming monthly is the default
+            
+        if category is None:
+            category = "other"  # Default category
 
         # Normalize monthly amount based on frequency
         monthly_amount = amount
@@ -1357,51 +1201,114 @@ def manage_income_sources(
             "category": category
         }
 
-        # Add to PostgreSQL database
-        income_id = add_income(user_id, income_data)
-
-        # Return success message and clear input fields
-        success_msg = html.Div(
-            f"Added {source_name} ({frequency}) as a new income source.",
-            className="alert alert-success p-2"
-        )
-
-        # Return updated income table data
-        updated_data = get_income_sources(user_id)  # Get updated income sources from DB
-        return success_msg, None, None, updated_data  # Correct the return length
+        try:
+            # Add to PostgreSQL database
+            income_id = add_income(user_id, income_data)
+            print(f"Successfully added income with ID: {income_id}")
+            
+            # Return success message and clear input fields
+            success_msg = html.Div(
+                f"Added {source_name} ({frequency}) as a new income source.",
+                className="alert alert-success p-2"
+            )
+            
+            # Return updated income table data
+            updated_data = get_income_sources(user_id)  # Get updated income sources from DB
+            return success_msg, None, None, updated_data
+            
+        except Exception as e:
+            print(f"Error adding income: {e}")
+            error_msg = html.Div(
+                f"Error adding income: {str(e)}",
+                className="alert alert-danger p-2"
+            )
+            return error_msg, dash.no_update, dash.no_update, dash.no_update
 
     # Handle deleting an income source
-    elif "delete-income" in triggered_id:
-        # Check if any delete button was clicked
-        if not delete_n_clicks_list or all(n_clicks is None or n_clicks == 0 for n_clicks in delete_n_clicks_list):
-            raise PreventUpdate
-
-        # Find which delete button was clicked
-        for i, n_clicks in enumerate(delete_n_clicks_list):
-            if n_clicks:
-                button_id = ctx.inputs_list[1][i]["id"]["index"]
+    elif "index" in triggered_id:
+        try:
+            # Parse the JSON from the triggered_id
+            button_data = json.loads(triggered_id)
+            
+            # Verify it's a delete button and has been clicked
+            if button_data.get("type") == "delete-income":
+                # Get the index of the button that was clicked
+                button_index = None
+                for i, button_id in enumerate(ctx.inputs_list[1]):
+                    if isinstance(button_id, dict) and button_id.get("id", {}).get("index") == button_data["index"]:
+                        button_index = i
+                        break
                 
-                try:
-                    income_id = int(button_id)
-                except (ValueError, TypeError):
-                    print(f"Error converting button ID to integer: {button_id}")
-                    income_id = button_id  # fallback if it's not convertible
+                # Check if we found the button and it was actually clicked
+                if button_index is not None and delete_n_clicks_list[button_index] is not None and delete_n_clicks_list[button_index] > 0:
+                    income_id = button_data["index"]
+                    print(f"Delete button clicked for income ID: {income_id}")
+                    
+                    try:
+                        # Delete from PostgreSQL
+                        delete_income(income_id)
+                        print(f"Successfully deleted income with ID: {income_id}")
+                        
+                        # Return updated income table data
+                        updated_data = get_income_sources(user_id)
+                        return None, dash.no_update, dash.no_update, updated_data
+                    except Exception as e:
+                        print(f"Error deleting income: {e}")
+                        return html.Div(
+                            f"Error deleting income: {str(e)}",
+                            className="alert alert-danger p-2"
+                        ), dash.no_update, dash.no_update, dash.no_update
+        except json.JSONDecodeError:
+            # Not a valid JSON, so not a delete button
+            pass
 
-                # Delete from PostgreSQL
-                delete_income(income_id)
-                
-                break
-        else:
+    # Update the refresh trigger for income-sources-store
+    @callback(
+        Output("refresh-income-trigger", "data"),
+        [Input("add-income-button", "n_clicks"),
+         Input({"type": "delete-income", "index": ALL}, "n_clicks"),
+         Input({"type": "save-historical", "index": ALL}, "n_clicks")],
+        State("refresh-income-trigger", "data"),
+        prevent_initial_call=True
+    )
+    def trigger_income_refresh(add_clicks, delete_clicks, save_clicks, current_count):
+        # Check if any relevant action happened
+        ctx = dash.callback_context
+        if not ctx.triggered:
             raise PreventUpdate
+            
+        # Only increment if we know a button was actually clicked
+        triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        if triggered_id == "add-income-button" and add_clicks is not None and add_clicks > 0:
+            return current_count + 1
+        
+        # For pattern-matching delete buttons, check they were actually clicked
+        try:
+            button_data = json.loads(triggered_id)
+            if button_data.get("type") == "delete-income":
+                for i, clicks in enumerate(delete_clicks):
+                    if clicks is not None and clicks > 0:
+                        return current_count + 1
+        except (json.JSONDecodeError, TypeError):
+            pass
+            
+        # For save historical buttons
+        try:
+            button_data = json.loads(triggered_id)
+            if button_data.get("type") == "save-historical":
+                for i, clicks in enumerate(save_clicks):
+                    if clicks is not None and clicks > 0:
+                        return current_count + 1
+        except (json.JSONDecodeError, TypeError):
+            pass
+            
+        # No action detected
+        return current_count
 
-        # Return updated income table data
-        updated_data = get_income_sources(user_id)  # Get updated income sources from DB
-        return None, dash.no_update, dash.no_update, updated_data  # Correct the return length
-
+    print("No condition met, preventing update")
     raise PreventUpdate
 
-
-# Update UI elements when actions happen that change data
+# Add a separate callback to update UI elements when income sources change
 @callback(
     [Output("income-sources-container", "children"),
      Output("no-income-sources-message", "children"),
@@ -1411,17 +1318,13 @@ def manage_income_sources(
      Output("income-timeline-chart", "figure"),
      Output("income-source-whatif-dropdown", "options"),
      Output("income-source-whatif-dropdown", "value")],
-    [Input("refresh-income-trigger", "data")],  # This could be the result of the save or update operation
-    [State("user-id", "data")],
+    [Input("income-sources-store", "data"),
+     Input("refresh-income-trigger", "data")],
     prevent_initial_call=True
 )
-def update_all_ui_elements(refresh_trigger, user_id):
-    # Fetch latest income sources from PostgreSQL
-    income_sources = get_income_sources(user_id)
-    
-    # Print for debugging
-    print(f"Using user ID for get_income_sources: {user_id}")
-    print(f"Refreshing UI with {len(income_sources)} sources")
+def update_income_ui(income_sources, refresh_trigger):
+    if not income_sources:
+        income_sources = []  # Ensure it's at least an empty list
     
     # Generate cards and other UI elements
     cards, no_sources_msg, total_display, sources_count = generate_income_cards(income_sources)
@@ -1433,7 +1336,7 @@ def update_all_ui_elements(refresh_trigger, user_id):
     timeline_fig = create_timeline_chart(income_sources)
     
     # Create dropdown options for what-if analysis
-    dropdown_options = [{"label": source.get("name", source.get("source", f"Income Source {i+1}")), "value": source["id"]} 
+    dropdown_options = [{"label": source.get("name", f"Income Source {i+1}"), "value": source["id"]} 
                        for i, source in enumerate(income_sources)]
     dropdown_value = dropdown_options[0]["value"] if dropdown_options else None
     

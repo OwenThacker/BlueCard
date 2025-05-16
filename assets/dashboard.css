@@ -372,7 +372,7 @@
 /* Card Styling
 /* THIS IS WHAT IT WAS */
 .react-grid-item {
-    min-height: 600px !important;
+    min-height: 310px !important;
     min-width: 400px !important;
 }
 

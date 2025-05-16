@@ -1,0 +1,111 @@
+/* Summary Cards Grid Layout */
+.summary-cards-title {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.summary-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.card-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+.summary-card {
+    flex: 1;  /* Equal width cards */
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    min-height: 200px;
+}
+
+/* Card Content Styling */
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #555;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card-value {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.card-secondary-metric {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.card-label {
+    color: #777;
+}
+
+.card-secondary-value {
+    font-weight: 500;
+}
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background-color: #EEEEEE;
+    border-radius: 4px;
+    margin: 10px 0 15px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+
+
+/* Card-specific styles */
+.income-card .card-title {
+    border-bottom: 2px solid skyblue;
+    padding-bottom: 8px;
+}
+
+.expenses-card .card-title {
+    border-bottom: 2px solid darkorange;
+    padding-bottom: 8px;
+}
+
+.savings-card .card-title {
+    border-bottom: 2px solid #4AE3B5;
+    padding-bottom: 8px;
+}
+
+.credit-card .card-title {
+    border-bottom: 2px solid #7f8fa6;
+    padding-bottom: 8px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .card-row {
+        flex-direction: column;
+    }
+    
+    .summary-card {
+        width: 100%;
+    }
+}

@@ -1,5 +1,6 @@
 import dash
 from dash import dcc, html, callback
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -11,6 +12,7 @@ from dotenv import load_dotenv
 from dash.dependencies import Input, Output, State
 from datetime import datetime, timedelta
 import requests
+from pages.feedback import add_feedback_to_app
 
 # Load .env for the database URL
 load_dotenv()
@@ -144,6 +146,9 @@ app.layout = html.Div([
 
     # Main Content
     html.Div(dash.page_container, id='page-content'),
+
+    # Feedback form
+    add_feedback_to_app(app),
 
     # Authentication Overlay
     html.Div(
@@ -456,5 +461,5 @@ app.clientside_callback(
 
 # Run the app
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8050))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 8050))  # Render sets PORT as an env variable
+    app.run(debug=False, host="0.0.0.0", port=port)

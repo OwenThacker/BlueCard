@@ -493,6 +493,13 @@ layout = html.Div([
     dcc.Store(id='user-id-store', storage_type='local'),
     dcc.Store(id='user-data-store', storage_type='session'),
 
+    # Interval
+    # dcc.Interval(
+    #     id='interval-component',
+    #     interval=1000,  # in milliseconds (1 second)
+    #     n_intervals=0   # starting value
+    # ),
+
     # Local storage for expenses and other variables
     dcc.Store(id='expenses-store', storage_type='local'),
     dcc.Store(id='salary-store', storage_type='local'),
@@ -510,182 +517,7 @@ layout = html.Div([
     dcc.Store(id='current-user-store', storage_type='memory', data='user1'),
     
     # Interval for initialization (runs once)
-    dcc.Interval(id='interval-component', interval=1000, max_intervals=1),
-
-    # Footer
-    html.Footer([
-    # Modern top section with logo and quick links
-    html.Div([
-        # Left side with logo and tagline
-        html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
-                "height": "140px",
-                "marginBottom": "10px",
-                "filter": "brightness(1.1) contrast(1.1)"
-            }),
-            # html.P("Empowering your financial future", style={
-            #     "color": "#ffffff",
-            #     "fontSize": "14px",
-            #     "fontWeight": "300",
-            #     "letterSpacing": "0.5px",
-            #     "margin": "0"
-            # })
-        ], className="footer-branding", style={
-            "flex": "2",
-            "marginRight": "40px"
-        }),
-        
-        # Middle section with quick links
-        html.Div([
-            html.H4("Quick Links", style={
-                "fontSize": "16px",
-                "fontWeight": "600",
-                "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
-            }),
-            html.Ul([
-                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
-            ], style={
-                "listStyleType": "none",
-                "padding": "0",
-                "margin": "0"
-            })
-        ], className="footer-links", style={"flex": "1"}),
-        
-        # Right section with contact info
-        html.Div([
-            html.H4("Contact", style={
-                "fontSize": "16px",
-                "fontWeight": "600",
-                "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
-            }),
-            html.Div([
-                html.P([
-                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
-                    "support@bluecardfinance.com"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
-                    "(+44) 555-0XXX"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
-                    "123 Finance St, London, LN"
-                ], style={"marginBottom": "10px", "fontSize": "14px"})
-            ])
-        ], className="footer-contact", style={"flex": "1"})
-    ], className="footer-top", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "40px 60px",
-        "backgroundColor": "rgba(0,0,0,0.1)",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)",
-        "flexWrap": "wrap",
-        "gap": "30px"
-    }),
-    
-    # Middle social media section
-    html.Div([
-        html.H4("Connect With Us", style={
-            "margin": "0 20px 0 0",
-            "color": "#ffffff",
-            "fontSize": "16px",
-            "fontWeight": "400"
-        }),
-        html.Div([
-            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            })
-        ], style={"display": "flex"})
-    ], className="footer-social", style={
-        "display": "flex",
-        "justifyContent": "center",
-        "alignItems": "center",
-        "padding": "20px 60px",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)"
-    }),
-    
-    # Bottom copyright section
-    html.Div([
-        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
-            "color": "rgba(255,255,255,0.7)",
-            "margin": "0",
-            "fontSize": "14px"
-        }),
-        html.Div([
-            html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Terms of Service", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Cookie Policy", href="#", className="footer-link")
-        ])
-    ], className="footer-bottom", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "20px 60px",
-        "flexWrap": "wrap",
-        "gap": "15px"
-    })
-], className="dashboard-footer", style={
-    "backgroundColor": COLORS['primary'],
-    "color": "#ffffff",
-    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
-})
+    dcc.Interval(id='interval-component', interval=1000, max_intervals=0),
 
 ])
 
@@ -892,6 +724,8 @@ def delete_expense(n_clicks_list, expenses, user_id):
     
     # Extract the index from the triggered ID
     expense_index = triggered_id.get('index')
+
+    print('Removing Expense at index:', expense_index)
     
     # Find the expense to delete
     if expense_index < len(expenses):
@@ -930,12 +764,14 @@ def delete_expense(n_clicks_list, expenses, user_id):
 # Update savings target callback
 @callback(
     Output("savings-target-store", "data", allow_duplicate=True),
-    [Input("update-savings-goal", "n_clicks")],
+    Output("user-data-store", "data", allow_duplicate=True),
+    [Input("update-savings-goal", "n_clicks"),
+     Input("user-data-store", "data")],
     [State("savings-goal-input", "value"),
      State("user-id", "data")],
     prevent_initial_call=True
 )
-def update_savings_target(n_clicks, savings_goal, user_id):
+def update_savings_target(n_clicks, user_data, savings_goal, user_id):
     """Update the savings target in the database and store"""
     # Extract the actual user ID value from the dictionary
     if isinstance(user_id, dict):
@@ -950,6 +786,8 @@ def update_savings_target(n_clicks, savings_goal, user_id):
     today = date.today()
 
     savings_amount = float(savings_goal)
+
+    user_data['savings_target'] = savings_amount
     
     # Update database
     conn = get_db_connection()
@@ -978,7 +816,7 @@ def update_savings_target(n_clicks, savings_goal, user_id):
         finally:
             conn.close()
     
-    return savings_amount
+    return savings_amount, user_data
 
 # Tab switching callbacks
 @callback(

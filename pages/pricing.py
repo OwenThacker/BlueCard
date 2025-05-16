@@ -33,8 +33,19 @@ def create_pricing_card(tier, price, period, description, features, cta_text, is
         yearly_price = price * 12 * 0.8
     
     return html.Div([
-        # Popular badge for highlighted plan
-        html.Div("MOST POPULAR", className="popular-badge") if is_highlighted else None,
+        # Popular badge for highlighted plan - adjusted position down and right
+        html.Div("MOST POPULAR", className="popular-badge", style={
+            'position': 'absolute',
+            'top': '30px',     # Moved down from default position
+            'right': '-50px',   # Moved right from default position
+            'backgroundColor': COLORS['accent'],
+            'color': COLORS['white'],
+            'padding': '10px 60px',
+            'fontSize': '0.7rem',
+            'fontWeight': '600',
+            'borderRadius': '3px',
+            'zIndex': '20'
+        }) if is_highlighted else None,
         
         # Tier name
         html.H3(tier, className="pricing-tier-title", style={
@@ -138,7 +149,7 @@ layout = html.Div([
             html.Ul([
                 html.Li(html.A([html.Span(className="nav-icon"), "Home"], href="/", className="nav-link"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "About"], href="/about", className="nav-link"), className="nav-item"),
-                html.Li(html.A([html.Span(className="nav-icon"), "Chat"], href="/chat", className="nav-link"), className="nav-item"),
+                html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/chat", className="nav-link"), className="nav-item"),
                 html.Li(html.A([html.Span(className="nav-icon"), "Pricing"], href="/pricing", className="nav-link active"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Dashboard"], href="/dashboard", className="nav-link"), className="nav-item"),
                 # html.Li(html.A([html.Span(className="nav-icon"), "Income"], href="/income", className="nav-link"), className="nav-item"),
@@ -218,7 +229,7 @@ layout = html.Div([
                 "Access to all AI insights",
                 "5 dashboard components",
                 "10 AI inputs per month",
-                "Basic financial reports",
+                "Only 1 Dashboard Tab",
                 "Email support"
             ],
             cta_text="Get Started Free",
@@ -234,13 +245,11 @@ layout = html.Div([
             features=[
                 "Unlimited dashboard components",
                 "Unlimited AI inputs",
-                "Advanced financial reports",
-                "Custom financial insights",
-                "Portfolio optimization suggestions",
+                "Up to 3 Dashboard Tabs",
                 "Priority customer support",
-                "Expense categorization automation"
             ],
-            cta_text="Start Premium",
+            # cta_text="Start Premium",
+            cta_text="Free for Beta Testers",
             is_highlighted=True
         ),
         
@@ -252,6 +261,7 @@ layout = html.Div([
             description="Advanced solutions for businesses and teams",
             features=[
                 "All Premium features",
+                "Unlimited Dashboard Tabs",
                 "Multiple user accounts",
                 "Team collaboration tools",
                 "API access",
@@ -259,7 +269,8 @@ layout = html.Div([
                 "Dedicated account manager",
                 "Compliance reporting"
             ],
-            cta_text="Contact Sales",
+            # cta_text="Contact Sales",
+            cta_text="Coming Soon",
             is_highlighted=False
         ),
         
@@ -531,185 +542,194 @@ layout = html.Div([
 
     # Footer
     html.Footer([
-    # Modern top section with logo and quick links
-    html.Div([
-        # Left side with logo and tagline
+        # Modern top section with logo and quick links
         html.Div([
-            html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
-                "height": "140px",
-                "marginBottom": "10px",
-                "filter": "brightness(1.1) contrast(1.1)"
+            # Left side with logo and tagline
+            html.Div([
+                html.Img(src="/assets/Logo_slogan.PNG", className="footer-logo", style={
+                    "height": "140px",
+                    "marginBottom": "10px",
+                    "filter": "brightness(1.1) contrast(1.1)"
+                }),
+            ], className="footer-branding", style={
+                "flex": "2",
+                "marginRight": "40px"
             }),
-            # html.P("Empowering your financial future", style={
-            #     "color": "#ffffff",
-            #     "fontSize": "14px",
-            #     "fontWeight": "300",
-            #     "letterSpacing": "0.5px",
-            #     "margin": "0"
-            # })
-        ], className="footer-branding", style={
-            "flex": "2",
-            "marginRight": "40px"
+            
+            # Middle section with quick links
+            html.Div([
+                html.H4("Quick Links", style={
+                    "fontSize": "16px",
+                    "fontWeight": "600",
+                    "color": "#ffffff",
+                    "marginBottom": "15px",
+                    "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                    "paddingBottom": "8px"
+                }),
+                html.Ul([
+                    html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("About", href="/about", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("Dashboard", href="/chat", className="footer-link"), style={"marginBottom": "8px"}),
+                    html.Li(html.A("Pricing", href="/pricing", className="footer-link"), style={"marginBottom": "8px"}),
+                ], style={
+                    "listStyleType": "none",
+                    "padding": "0",
+                    "margin": "0"
+                })
+            ], className="footer-links", style={"flex": "1"}),
+            
+            # Right section with contact info and feedback form
+            html.Div([
+                html.H4("Contact & Feedback", style={
+                    "fontSize": "16px",
+                    "fontWeight": "600",
+                    "color": "#ffffff",
+                    "marginBottom": "15px",
+                    "borderBottom": "2px solid rgba(255,255,255,0.2)",
+                    "paddingBottom": "8px"
+                }),
+                html.Div([
+                    html.P([
+                        html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
+                        "bluecardfinance@outlook.com"
+                    ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    # html.P([
+                    #     html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
+                    #     "(+44) 555-0XXX"
+                    # ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    html.P([
+                        html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
+                        "United Kingdom, London, LN"
+                    ], style={"marginBottom": "10px", "fontSize": "14px"}),
+                    
+                    # Feedback button
+                    html.Button([
+                        html.I(className="fas fa-comment-alt", style={"marginRight": "8px"}),
+                        "Share Feedback"
+                    ], 
+                    id="feedback-toggle-btn",
+                    className="feedback-toggle-btn")
+                ], className="footer-contact-info"),
+            ], className="footer-contact", style={"flex": "1"})
+        ], className="footer-top", style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "padding": "40px 60px",
+            "backgroundColor": "rgba(0,0,0,0.1)",
+            "borderBottom": "1px solid rgba(255,255,255,0.1)",
+            "flexWrap": "wrap",
+            "gap": "30px"
         }),
         
-        # Middle section with quick links
+        # Middle social media section
         html.Div([
-            html.H4("Quick Links", style={
-                "fontSize": "16px",
-                "fontWeight": "600",
+            html.H4("Connect With Us", style={
+                "margin": "0 20px 0 0",
                 "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
-            }),
-            html.Ul([
-                html.Li(html.A("Home", href="/", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Dashboard", href="/dashboard", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Income", href="/income", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Expenses", href="/expenses", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Savings Analysis", href="/savings", className="footer-link"), style={"marginBottom": "8px"}),
-                html.Li(html.A("Settings", href="/settings", className="footer-link"), style={"marginBottom": "8px"}),
-            ], style={
-                "listStyleType": "none",
-                "padding": "0",
-                "margin": "0"
-            })
-        ], className="footer-links", style={"flex": "1"}),
-        
-        # Right section with contact info
-        html.Div([
-            html.H4("Contact", style={
                 "fontSize": "16px",
-                "fontWeight": "600",
-                "color": "#ffffff",
-                "marginBottom": "15px",
-                "borderBottom": "2px solid rgba(255,255,255,0.2)",
-                "paddingBottom": "8px"
+                "fontWeight": "400"
             }),
             html.Div([
-                html.P([
-                    html.I(className="fas fa-envelope", style={"width": "20px", "marginRight": "10px"}),
-                    "support@bluecardfinance.com"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-phone", style={"width": "20px", "marginRight": "10px"}),
-                    "(+44) 555-0XXX"
-                ], style={"marginBottom": "10px", "fontSize": "14px"}),
-                html.P([
-                    html.I(className="fas fa-map-marker-alt", style={"width": "20px", "marginRight": "10px"}),
-                    "123 Finance St, London, LN"
-                ], style={"marginBottom": "10px", "fontSize": "14px"})
+                html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon"),
+                html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon")
+            ], className="social-icons-container")
+        ], className="footer-social", style={
+            "display": "flex",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "padding": "20px 60px",
+            "borderBottom": "1px solid rgba(255,255,255,0.1)"
+        }),
+        
+        # Bottom copyright section
+        html.Div([
+            html.P("© 2025 BlueCard Finance. All rights reserved.", style={
+                "color": "rgba(255,255,255,0.7)",
+                "margin": "0",
+                "fontSize": "14px"
+            }),
+            html.Div([
+                html.A("Privacy Policy", href="#", className="footer-link"),
+                html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+                html.A("Terms of Service", href="#", className="footer-link"),
+                html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
+                html.A("Cookie Policy", href="#", className="footer-link")
             ])
-        ], className="footer-contact", style={"flex": "1"})
-    ], className="footer-top", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "40px 60px",
-        "backgroundColor": "rgba(0,0,0,0.1)",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)",
-        "flexWrap": "wrap",
-        "gap": "30px"
-    }),
-    
-    # Middle social media section
-    html.Div([
-        html.H4("Connect With Us", style={
-            "margin": "0 20px 0 0",
-            "color": "#ffffff",
-            "fontSize": "16px",
-            "fontWeight": "400"
+        ], className="footer-bottom", style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "padding": "20px 60px",
+            "flexWrap": "wrap",
+            "gap": "15px"
         }),
+        
+        # Feedback Form Modal (positioned fixed over the page)
         html.Div([
-            html.A(html.I(className="fab fa-facebook-f"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
+            # Close button
+            html.Button(
+                html.I(className="fas fa-times"), 
+                id="feedback-close-btn",
+                className="feedback-close-btn"
+            ),
+            
+            # Form header
+            html.H4("We Value Your Feedback", style={
+                "fontSize": "18px",
+                "fontWeight": "600",
+                "marginBottom": "15px",
+                "color": COLORS['dark'],
+                "borderBottom": f"2px solid {COLORS['accent']}",
+                "paddingBottom": "10px"
             }),
-            html.A(html.I(className="fab fa-twitter"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-linkedin-in"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            }),
-            html.A(html.I(className="fab fa-instagram"), href="#", className="social-icon", style={
-                "backgroundColor": "rgba(255,255,255,0.1)",
-                "color": "#ffffff",
-                "width": "40px",
-                "height": "40px",
-                "borderRadius": "50%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginRight": "12px",
-                "fontSize": "16px"
-            })
-        ], style={"display": "flex"})
-    ], className="footer-social", style={
-        "display": "flex",
-        "justifyContent": "center",
-        "alignItems": "center",
-        "padding": "20px 60px",
-        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+            
+            # Form fields
+            # dcc.Input(
+            #     id="feedback-email",
+            #     type="email",
+            #     placeholder="Your Email",
+            #     className="feedback-field"
+            # ),
+            
+            dcc.Input(
+                id="feedback-subject",
+                type="text",
+                placeholder="Subject",
+                className="feedback-field"
+            ),
+            
+            dcc.Textarea(
+                id="feedback-message",
+                placeholder="Your message...",
+                className="feedback-field feedback-textarea"
+            ),
+            
+            # Submit button
+            html.Button(
+                "Submit Feedback",
+                id="feedback-submit-btn",
+                className="feedback-submit-btn"
+            ),
+            
+            # Status message area
+            html.Div(id="feedback-status", className="feedback-status")
+            
+        ], id="feedback-form-container", className="feedback-form-container")
+        
+    ], className="dashboard-footer", style={
+        "backgroundColor": COLORS['primary'],
+        "color": "#ffffff",
+        "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)",
+        "position": "relative"  # Needed for the modal positioning
     }),
-    
-    # Bottom copyright section
-    html.Div([
-        html.P("© 2025 BlueCard Finance. All rights reserved.", style={
-            "color": "rgba(255,255,255,0.7)",
-            "margin": "0",
-            "fontSize": "14px"
-        }),
-        html.Div([
-            html.A("Privacy Policy", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Terms of Service", href="#", className="footer-link"),
-            html.Span("•", style={"color": "rgba(255,255,255,0.4)", "margin": "0 10px"}),
-            html.A("Cookie Policy", href="#", className="footer-link")
-        ])
-    ], className="footer-bottom", style={
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "20px 60px",
-        "flexWrap": "wrap",
-        "gap": "15px"
-    })
-], className="dashboard-footer", style={
-    "backgroundColor": COLORS['primary'],
-    "color": "#ffffff",
-    "boxShadow": "0px -4px 10px rgba(0,0,0,0.1)"
-})
     
 ], className="pricing-page-container", style={
     'backgroundColor': COLORS['background'],
     'fontFamily': '"Segoe UI", Arial, sans-serif',
     'color': COLORS['dark'],
     'minHeight': '100vh',
-    'paddingBottom': '50px'
+    'paddingBottom': '0px'
 })
 
 # Callbacks for pricing toggle and other interactive elements

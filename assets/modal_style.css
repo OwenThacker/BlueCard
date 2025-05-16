@@ -62,3 +62,129 @@
 .add-chart-btn:hover {
     background-color: #2980b9;
 }
+
+/* CSS styles for the summary cards  */
+.summary-cards-container {
+    padding: 20px;
+    width: 100%;
+}
+
+.summary-cards-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.summary-cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.card-row {
+    display: flex;
+    gap: 20px;
+}
+
+.card-col {
+    flex: 1;
+}
+
+.summary-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.card-title {
+    font-size: 1.1rem;
+    color: #ffffff;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.card-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.card-target {
+    font-size: 1.2rem;
+    color: #888;
+}
+
+.card-secondary-metric {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.card-label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.card-secondary-value {
+    font-weight: 600;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+.card-secondary-value.warning {
+    color: #e74c3c;
+}
+
+.progress-container {
+    width: 100%;
+    background-color: #eee;
+    height: 8px;
+    border-radius: 4px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #3498db;
+    border-radius: 4px;
+}
+
+.income-card {
+    border-top: none;
+}
+
+.expenses-card {
+    border-top: none;
+}
+
+.savings-card {
+    border-top: none;
+}
+
+.net-worth-card {
+    border-top: none;
+}
+
+@media (max-width: 768px) {
+    .card-row {
+        flex-direction: column;
+    }
+}
+
+.premium-feature-card:hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(100, 116, 139, 0.7);
+}

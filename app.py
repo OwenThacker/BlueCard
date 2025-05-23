@@ -376,7 +376,7 @@ def update_login_overlay(session_data, pathname):
     print(f"DEBUG - session_data: {session_data}")
     print(f"DEBUG - session_data type: {type(session_data)}")
     
-    if pathname == '/': 
+    if pathname != '/chat': 
         return {'display': 'none'}
  
     if not session_data or 'user_id' not in session_data: 

@@ -1,5 +1,9 @@
+import os
 import psycopg2
 from psycopg2 import sql
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Database connection parameters
 DB_PARAMS = {
@@ -10,10 +14,12 @@ DB_PARAMS = {
     'port': '5432',
 }
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 # Create a connection to the database
 def init_db():
     # Establish the connection
-    conn = psycopg2.connect(**DB_PARAMS)
+    conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
 
     # Drop existing tables if they exist (for development purposes)

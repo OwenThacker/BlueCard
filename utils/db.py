@@ -1,9 +1,13 @@
+import os
 import psycopg2
 import psycopg2.extras
 from psycopg2.extras import RealDictCursor, Json  # Add Json here
 from hashlib import sha256
 import bcrypt
 import json  # Make sure json is imported too
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Database connection parameters
 DB_PARAMS = {
@@ -14,9 +18,11 @@ DB_PARAMS = {
     'port': '5432',
 }
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 # Function to connect to the database
 def connect_db():
-    conn = psycopg2.connect(**DB_PARAMS)
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 # Function to register a new user

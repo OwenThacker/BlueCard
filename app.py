@@ -365,30 +365,37 @@ def protect_data_endpoints():
     
 from dash import callback_context
 
-@callback(
-    Output("login-overlay", "style"),
-    [Input("session-data-store", "data"),
-     Input("url", "pathname")]
-)
-def update_login_overlay(session_data, pathname):
-    if pathname == '/':
-        return {'display': 'none'}  # No overlay on the home page
-
-    if not session_data or 'user_id' not in session_data:
-        return {
-            'display': 'flex',  # Changed to flex to make it visible and centered
-            'backgroundColor': 'rgba(0, 0, 0, 0.7)',
-            'position': 'fixed',
-            'top': '0',
-            'left': '0',
-            'width': '100%',
-            'height': '100%',
-            'zIndex': '1000',
-            'justifyContent': 'center',
-            'alignItems': 'center',
-        }
-
-    return {'display': 'none'}  # Hide overlay if user is logged in
+@callback( 
+    Output("login-overlay", "style"), 
+    [Input("session-data-store", "data"), 
+     Input("url", "pathname")] 
+) 
+def update_login_overlay(session_data, pathname): 
+    # Add debugging
+    print(f"DEBUG - pathname: {pathname}")
+    print(f"DEBUG - session_data: {session_data}")
+    print(f"DEBUG - session_data type: {type(session_data)}")
+    
+    if pathname == '/': 
+        return {'display': 'none'}
+ 
+    if not session_data or 'user_id' not in session_data: 
+        print("DEBUG - No valid session data found")
+        return { 
+            'display': 'flex',
+            'backgroundColor': 'rgba(0, 0, 0, 0.7)', 
+            'position': 'fixed', 
+            'top': '0', 
+            'left': '0', 
+            'width': '100%', 
+            'height': '100%', 
+            'zIndex': '1000', 
+            'justifyContent': 'center', 
+            'alignItems': 'center', 
+        } 
+ 
+    print("DEBUG - Valid session found, hiding overlay")
+    return {'display': 'none'}
 
 @app.callback(
     Output("auth-content", "children"),
